@@ -1,0 +1,2352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neerada School Tuition Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@400;500;600;700&family=Kalam:wght@400;700&family=Patrick+Hand&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --theme-bg-primary: #f8fafc; /* slate-50 */
+            --theme-bg-secondary: #ffffff; /* white */
+            --theme-bg-tertiary: #f1f5f9; /* slate-100 */
+            --theme-text-primary: #0f172a; /* slate-900 */
+            --theme-text-secondary: #475569; /* slate-600 */
+            --theme-border: #e2e8f0; /* slate-200 */
+            --theme-primary: #3b82f6; /* blue-500 */
+            --theme-primary-hover: #2563eb; /* blue-600 */
+            --theme-font: 'Inter', sans-serif;
+        }
+
+        .theme-dark {
+            --theme-bg-primary: #0f172a;
+            --theme-bg-secondary: #1e293b;
+            --theme-bg-tertiary: #334155;
+            --theme-text-primary: #f8fafc;
+            --theme-text-secondary: #cbd5e1;
+            --theme-border: #475569;
+            --theme-primary: #60a5fa;
+            --theme-primary-hover: #3b82f6;
+        }
+
+        .theme-pastel {
+            --theme-bg-primary: #fdf2f8; /* pink-50 */
+            --theme-bg-secondary: #ffffff;
+            --theme-bg-tertiary: #fce7f3; /* pink-100 */
+            --theme-text-primary: #581c87; /* purple-900 */
+            --theme-text-secondary: #7e22ce; /* purple-700 */
+            --theme-border: #f5d0fe; /* purple-200 */
+            --theme-primary: #c084fc; /* purple-400 */
+            --theme-primary-hover: #a855f7; /* purple-500 */
+        }
+        
+        .font-doodle { --theme-font: 'Patrick Hand', cursive; }
+        .font-handwritten { --theme-font: 'Kalam', cursive; }
+        .font-normal { --theme-font: 'Inter', sans-serif; }
+
+        body {
+            background-color: var(--theme-bg-primary);
+            color: var(--theme-text-primary);
+            font-family: var(--theme-font);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .bg-primary { background-color: var(--theme-bg-primary); }
+        .bg-secondary { background-color: var(--theme-bg-secondary); }
+        .bg-tertiary { background-color: var(--theme-bg-tertiary); }
+        .text-primary { color: var(--theme-text-primary); }
+        .text-secondary { color: var(--theme-text-secondary); }
+        .border-color { border-color: var(--theme-border); }
+        .btn-primary { 
+            background-color: var(--theme-primary);
+            color: white;
+            transition: background-color 0.2s;
+        }
+        .btn-primary:hover { background-color: var(--theme-primary-hover); }
+        .ring-primary:focus {
+            --tw-ring-color: var(--theme-primary);
+        }
+        .sidebar-item:hover, .sidebar-item.active {
+            background-color: var(--theme-primary);
+            color: white;
+        }
+        .sidebar-item:hover svg, .sidebar-item.active svg {
+            color: white;
+        }
+        .modal-backdrop {
+            background-color: rgba(0,0,0,0.5);
+            -webkit-backdrop-filter: blur(4px);
+            backdrop-filter: blur(4px);
+        }
+        .hidden { display: none; }
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: var(--theme-bg-tertiary); }
+        .custom-scroll::-webkit-scrollbar-thumb { background: var(--theme-primary); border-radius: 3px; }
+        .active-lang {
+            outline: 2px solid var(--theme-primary);
+            border-radius: 50%;
+        }
+        .active-tab {
+            border-bottom-color: var(--theme-primary) !important;
+            color: var(--theme-primary) !important;
+            font-weight: 600;
+        }
+        .settings-tab {
+            padding: 0.5rem 1rem;
+            border-bottom: 2px solid transparent;
+            color: var(--theme-text-secondary);
+        }
+
+        /* Splash and Login Specific Styles */
+        #splash-screen {
+            background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
+            color: #0f172a; /* Dark Slate */
+            transition: opacity 0.5s ease-out;
+        }
+        #splash-screen h1 {
+            font-family: 'Cinzel', serif;
+            text-shadow: 0px 1px 1px rgba(255,255,255,0.6);
+        }
+        #splash-screen p {
+             text-shadow: none;
+        }
+        #splash-screen footer p {
+             color: rgba(0,0,0,0.6);
+        }
+        #login-screen {
+            transition: opacity 0.5s ease-in;
+            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+        }
+    </style>
+</head>
+<body class="font-normal">
+
+    <!-- Splash Screen -->
+    <div id="splash-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center">
+        <div class="text-center">
+            <img id="splash-logo" src="https://placehold.co/128x128/FFFFFF/3b82f6?text=NS" alt="School Logo" class="h-32 w-32 mx-auto mb-6 rounded-full object-cover shadow-lg">
+            <h1 class="text-5xl md:text-7xl font-bold tracking-widest">NEERADA SCHOOL</h1>
+            <p class="text-2xl mt-2 opacity-90">Tuition Tracker</p>
+        </div>
+        <div class="w-4/5 max-w-md mt-12">
+            <div class="w-full bg-black/10 rounded-full h-2.5">
+                <div id="progress-bar" class="bg-slate-800 h-2.5 rounded-full" style="width: 0%"></div>
+            </div>
+            <p id="progress-text" class="text-center mt-2">Loading... 0%</p>
+        </div>
+        <footer class="absolute bottom-4 text-sm">
+            <p>&copy; <span id="splash-year"></span> Neerada School. All Rights Reserved.</p>
+        </footer>
+    </div>
+
+    <!-- Login Screen -->
+    <div id="login-screen" class="fixed inset-0 z-40 flex items-center justify-center opacity-0 hidden">
+        <button id="login-settings-btn" class="absolute top-4 right-4 p-3 rounded-full bg-white/20 hover:bg-white/40 text-white transition">
+             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+        <input type="file" id="login-logo-upload" accept="image/*" class="hidden">
+
+        <div class="w-full max-w-sm p-8 space-y-6 bg-secondary rounded-2xl shadow-2xl">
+            <div class="text-center">
+                 <img id="login-logo" src="https://placehold.co/80x80/3b82f6/FFFFFF?text=NS" alt="School Logo" class="h-20 w-20 mx-auto mb-4 rounded-full object-cover">
+                <h1 class="text-3xl font-bold text-primary">Welcome Back</h1>
+                <p class="text-secondary">Sign in to the Tuition Tracker</p>
+            </div>
+            <form id="login-form" class="space-y-6">
+                <div>
+                    <label for="username" class="text-sm font-medium text-secondary block mb-2">Username</label>
+                    <input type="text" id="username" class="w-full px-4 py-2 border border-color rounded-lg bg-tertiary focus:outline-none focus:ring-2 ring-primary" required>
+                </div>
+                <div>
+                    <label for="password" class="text-sm font-medium text-secondary block mb-2">Password</label>
+                    <div class="relative">
+                        <input type="password" id="password" class="w-full px-4 py-2 border border-color rounded-lg bg-tertiary focus:outline-none focus:ring-2 ring-primary" required>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <input id="remember-me" name="remember-me" type="checkbox" class="h-4 w-4 rounded border-color text-primary focus:ring-primary">
+                        <label for="remember-me" class="ml-2 block text-sm text-secondary">Remember Me</label>
+                    </div>
+                     <div class="flex items-center">
+                        <input id="show-password" type="checkbox" class="h-4 w-4 rounded border-color text-primary focus:ring-primary">
+                        <label for="show-password" class="ml-2 block text-sm text-secondary">Show Password</label>
+                    </div>
+                </div>
+                 <p id="login-error" class="text-sm text-red-500 text-center hidden">Invalid username or password.</p>
+                <button type="submit" class="w-full btn-primary font-semibold py-2.5 rounded-lg">Log In</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Application Container (Initially Hidden) -->
+    <div id="app-container" class="hidden flex h-screen bg-primary text-primary">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="w-64 bg-secondary flex-shrink-0 flex flex-col border-r border-color transition-all duration-300">
+            <div class="flex items-center justify-center h-20 border-b border-color px-4">
+                <img id="school-logo-sidebar" src="https://placehold.co/40x40/3b82f6/FFFFFF?text=NS" alt="School Logo" class="h-10 w-10 mr-3 rounded-full object-cover">
+                <h1 class="text-xl font-bold whitespace-nowrap" data-translate-key="school_name">Neerada School</h1>
+            </div>
+            <nav class="flex-1 px-4 py-6 space-y-2">
+                <a href="#dashboard" data-page="dashboard" class="sidebar-item active flex items-center px-4 py-3 rounded-lg text-secondary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 mr-3"><path d="M2 12h20M2 6h20M2 18h20"/></svg>
+                    <span data-translate-key="dashboard">Dashboard</span>
+                </a>
+                <a href="#students" data-page="students" class="sidebar-item flex items-center px-4 py-3 rounded-lg text-secondary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 mr-3"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    <span data-translate-key="students_roster">Students Roster</span>
+                </a>
+                <a href="#manage" data-page="manage" class="sidebar-item flex items-center px-4 py-3 rounded-lg text-secondary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 mr-3"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>
+                    <span data-translate-key="manage_classes">Manage Classes</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col">
+            <!-- Header -->
+            <header class="flex items-center justify-between h-20 px-6 bg-secondary border-b border-color">
+                <h2 id="page-title" class="text-2xl font-semibold">Dashboard</h2>
+                <div class="flex items-center space-x-2">
+                    <button id="undo-btn" title="Undo" class="p-2 rounded-full hover:bg-tertiary disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-secondary"><path d="M3 9h13a5 5 0 0 1 5 5v7"/><path d="M7 5 3 9l4 4"/></svg>
+                    </button>
+                    <button id="redo-btn" title="Redo" class="p-2 rounded-full hover:bg-tertiary disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-secondary"><path d="m21 9-4-4-4 4"/><path d="M3 20v-7a5 5 0 0 1 5-5h11"/></svg>
+                    </button>
+                    <div class="h-6 w-px bg-tertiary mx-2"></div>
+                    <div id="lang-selector" class="flex items-center space-x-2">
+                        <img src="https://flagcdn.com/w20/us.png" alt="English" class="w-6 h-auto cursor-pointer" title="English" data-lang="en">
+                        <img src="https://flagcdn.com/w20/la.png" alt="Lao" class="w-6 h-auto cursor-pointer" title="Lao" data-lang="lo">
+                    </div>
+                    <button id="settings-btn" class="p-2 rounded-full hover:bg-tertiary">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-secondary"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <div class="flex-1 p-6 overflow-y-auto custom-scroll">
+                <!-- Dashboard Page -->
+                <div id="dashboard-page" class="page">
+                    <!-- Dashboard Filters -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div class="bg-secondary p-4 rounded-lg shadow">
+                            <label for="dashboard-sy-filter" class="block text-sm font-medium text-secondary mb-1" data-translate-key="school_year">School Year</label>
+                            <select id="dashboard-sy-filter" class="w-full p-2 border border-color rounded-md bg-secondary focus:ring-1 ring-primary"></select>
+                        </div>
+                        <div class="bg-secondary p-4 rounded-lg shadow">
+                            <label for="dashboard-month-filter" class="block text-sm font-medium text-secondary mb-1" data-translate-key="month">Month</label>
+                            <select id="dashboard-month-filter" class="w-full p-2 border border-color rounded-md bg-secondary focus:ring-1 ring-primary"></select>
+                        </div>
+                    </div>
+                    <!-- Dashboard Stats -->
+                    <div id="dashboard-stats" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6"></div>
+                    <!-- Student Enrollment Summary -->
+                    <div class="bg-secondary p-6 rounded-lg shadow">
+                       <h3 class="text-xl font-semibold mb-4" data-translate-key="student_enrollment">Student Enrollment</h3>
+                       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                           <div>
+                               <label for="dashboard-campus-filter" class="block text-sm font-medium text-secondary mb-1" data-translate-key="filter_by_campus">Filter by Campus</label>
+                               <select id="dashboard-campus-filter" class="w-full p-2 border border-color rounded-md bg-secondary focus:ring-1 ring-primary"></select>
+                           </div>
+                           <div>
+                               <label for="dashboard-dept-filter" class="block text-sm font-medium text-secondary mb-1" data-translate-key="filter_by_department">Filter by Department</label>
+                               <select id="dashboard-dept-filter" class="w-full p-2 border border-color rounded-md bg-secondary focus:ring-1 ring-primary"></select>
+                           </div>
+                           <div>
+                               <label for="dashboard-class-filter" class="block text-sm font-medium text-secondary mb-1" data-translate-key="class_section">Class & Section</label>
+                               <select id="dashboard-class-filter" class="w-full p-2 border border-color rounded-md bg-secondary focus:ring-1 ring-primary"></select>
+                           </div>
+                       </div>
+                       <div id="enrollment-summary" class="text-2xl font-bold text-primary"></div>
+                    </div>
+                </div>
+
+                <!-- Students Roster Page -->
+                <div id="students-page" class="page hidden">
+                    <!-- Roster Controls -->
+                    <div class="mb-4 bg-secondary p-4 rounded-lg shadow">
+                        <div class="flex flex-wrap items-center justify-between gap-4">
+                            <div class="flex-grow max-w-xs">
+                                <div class="relative">
+                                    <input type="text" id="student-search-bar" placeholder="Search student name..." data-translate-key="search_student_placeholder" class="w-full p-2 pl-10 border border-color rounded-md bg-secondary focus:ring-1 ring-primary">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                                </div>
+                            </div>
+                             <div class="flex items-center space-x-2">
+                                 <span class="text-sm font-medium" data-translate-key="legend">Legend:</span>
+                                 <div class="flex items-center space-x-1"><div class="w-4 h-4 bg-green-500 rounded-sm"></div> <span class="text-xs" data-translate-key="paid">Paid</span></div>
+                                 <div class="flex items-center space-x-1"><div class="w-4 h-4 bg-red-500 rounded-sm"></div> <span class="text-xs" data-translate-key="unpaid">Unpaid</span></div>
+                                 <div class="flex items-center space-x-1"><div class="w-4 h-4 bg-yellow-400 rounded-sm"></div> <span class="text-xs" data-translate-key="summer">Summer</span></div>
+                                 <div class="flex items-center space-x-1"><div class="w-4 h-4 bg-gray-300 rounded-sm"></div> <span class="text-xs" data-translate-key="na">N/A</span></div>
+                             </div>
+                            <div class="flex items-center space-x-2">
+                                <button id="bulk-upload-btn" class="btn-primary px-4 py-2 rounded-md text-sm font-medium" data-translate-key="bulk_upload">Bulk Upload</button>
+                                <button id="add-student-btn" class="btn-primary px-4 py-2 rounded-md text-sm font-medium" data-translate-key="add_student">Add Student</button>
+                            </div>
+                        </div>
+                        <div id="roster-filters-container" class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 border-t border-color pt-4">
+                            <div>
+                                <label for="roster-sy-filter" class="block text-xs font-medium text-secondary" data-translate-key="school_year">School Year</label>
+                                <select id="roster-sy-filter" class="w-full p-2 text-sm border border-color rounded-md bg-secondary focus:ring-1 ring-primary mt-1"></select>
+                            </div>
+                            <div>
+                                <label for="roster-campus-filter" class="block text-xs font-medium text-secondary" data-translate-key="campus">Campus</label>
+                                <select id="roster-campus-filter" class="w-full p-2 text-sm border border-color rounded-md bg-secondary focus:ring-1 ring-primary mt-1"></select>
+                            </div>
+                            <div>
+                                <label for="roster-dept-filter" class="block text-xs font-medium text-secondary" data-translate-key="department">Department</label>
+                                <select id="roster-dept-filter" class="w-full p-2 text-sm border border-color rounded-md bg-secondary focus:ring-1 ring-primary mt-1"></select>
+                            </div>
+                            <div>
+                                <label for="roster-class-filter" class="block text-xs font-medium text-secondary" data-translate-key="class_section">Class & Section</label>
+                                <select id="roster-class-filter" class="w-full p-2 text-sm border border-color rounded-md bg-secondary focus:ring-1 ring-primary mt-1"></select>
+                            </div>
+                        </div>
+                        <div id="roster-student-count-container" class="mt-4 text-sm font-semibold text-primary"></div>
+                        <div id="bulk-actions-container" class="hidden mt-4 flex flex-wrap items-center gap-4 p-2 bg-tertiary rounded-md">
+                            <p class="text-sm font-medium"><span id="selected-student-count">0</span> <span data-translate-key="students_selected">students selected</span></p>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <button id="mark-paid-btn" class="bg-green-500 text-white px-3 py-1.5 rounded-md text-sm hover:bg-green-600" data-translate-key="mark_paid">Mark Paid</button>
+                                <button id="mark-unpaid-btn" class="bg-orange-500 text-white px-3 py-1.5 rounded-md text-sm hover:bg-orange-600" data-translate-key="mark_unpaid">Mark Unpaid</button>
+                                <button id="move-students-btn" class="bg-yellow-500 text-white px-3 py-1.5 rounded-md text-sm hover:bg-yellow-600" data-translate-key="move">Move</button>
+                                <button id="delete-students-btn" class="bg-red-500 text-white px-3 py-1.5 rounded-md text-sm hover:bg-red-600" data-translate-key="delete">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Roster Table -->
+                    <div class="overflow-x-auto bg-secondary rounded-lg shadow">
+                        <table class="w-full text-sm text-left">
+                            <thead class="bg-tertiary text-xs uppercase">
+                                <tr>
+                                    <th scope="col" class="p-4"><input type="checkbox" id="select-all-students-checkbox"></th>
+                                    <th scope="col" class="px-6 py-3 cursor-pointer" data-sort="name" data-translate-key="student_name">Student Name</th>
+                                    <th scope="col" class="px-6 py-3 cursor-pointer" data-sort="schoolYear" data-translate-key="school_year">School Year</th>
+                                    <th scope="col" class="px-6 py-3 cursor-pointer" data-sort="campus" data-translate-key="campus">Campus</th>
+                                    <th scope="col" class="px-6 py-3 cursor-pointer" data-sort="department" data-translate-key="department">Department</th>
+                                    <th scope="col" class="px-6 py-3 cursor-pointer" data-sort="class" data-translate-key="class_section">Class & Section</th>
+                                    <th scope="col" class="px-6 py-3" data-translate-key="payment_status">Payment Status</th>
+                                    <th scope="col" class="px-6 py-3" data-translate-key="actions">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="students-table-body">
+                                <!-- Student rows will be injected here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Manage Classes Page -->
+                <div id="manage-page" class="page hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- Management Cards will be injected here -->
+                </div>
+
+            </div>
+
+            <!-- Footer -->
+            <footer class="h-10 flex items-center justify-center text-sm bg-secondary border-t border-color text-secondary">
+                <p>&copy; <span id="current-year"></span> Neerada School. All Rights Reserved.</p>
+            </footer>
+        </main>
+    </div>
+
+    <!-- Modals will go here -->
+    
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="fixed inset-0 z-50 items-center justify-center hidden">
+        <div class="modal-backdrop fixed inset-0"></div>
+        <div class="bg-secondary rounded-lg shadow-xl w-full max-w-2xl m-4 relative max-h-[90vh] flex flex-col">
+            <div class="flex items-center justify-between p-4 border-b border-color">
+                <h3 class="text-lg font-semibold" data-translate-key="settings">Settings</h3>
+                <button id="close-settings-modal" class="p-2 rounded-full hover:bg-tertiary">&times;</button>
+            </div>
+            <div class="p-6 overflow-y-auto custom-scroll">
+                <!-- Tabs -->
+                <div class="mb-4 border-b border-color">
+                    <nav class="flex space-x-4" aria-label="Tabs">
+                        <button class="settings-tab active-tab" data-tab="general" data-translate-key="general">General</button>
+                        <button class="settings-tab" data-tab="tuition" data-translate-key="tuition">Tuition</button>
+                        <button class="settings-tab" data-tab="data" data-translate-key="data_management">Data Management</button>
+                        <button class="settings-tab" data-tab="admin" data-translate-key="admin">Admin</button>
+                    </nav>
+                </div>
+
+                <!-- General Tab Content -->
+                <div id="general-tab-content" class="settings-tab-content space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-secondary mb-2" data-translate-key="school_logo">School Logo</label>
+                        <div class="flex items-center gap-4">
+                            <img id="school-logo-preview" src="https://placehold.co/64x64/3b82f6/FFFFFF?text=NS" class="h-16 w-16 rounded-full object-cover bg-tertiary">
+                            <input type="file" id="logo-upload-input" accept="image/*" class="hidden">
+                            <button onclick="document.getElementById('logo-upload-input').click()" class="btn-primary px-4 py-2 rounded-md text-sm" data-translate-key="upload_logo">Upload Logo</button>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="theme-select" class="block text-sm font-medium text-secondary mb-2" data-translate-key="app_theme">App Theme</label>
+                        <select id="theme-select" class="w-full p-2 border border-color rounded-md bg-secondary focus:ring-1 ring-primary">
+                            <option value="light" data-translate-key="default_light">Default Light</option>
+                            <option value="dark" data-translate-key="dark_mode">Dark Mode</option>
+                            <option value="pastel" data-translate-key="pastel">Pastel</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="font-select" class="block text-sm font-medium text-secondary mb-2" data-translate-key="font_style">Font Style</label>
+                        <select id="font-select" class="w-full p-2 border border-color rounded-md bg-secondary focus:ring-1 ring-primary">
+                            <option value="normal" data-translate-key="normal">Normal</option>
+                            <option value="doodle" data-translate-key="doodle">Doodle</option>
+                            <option value="handwritten" data-translate-key="handwritten">Handwritten</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Tuition Tab Content -->
+                <div id="tuition-tab-content" class="settings-tab-content hidden space-y-4">
+                     <div>
+                         <label for="tuition-sy-select" class="block text-sm font-medium text-secondary mb-1" data-translate-key="school_year">School Year</label>
+                         <select id="tuition-sy-select" class="w-full p-2 border border-color rounded-md bg-secondary focus:ring-1 ring-primary mb-4"></select>
+                    </div>
+                    <h4 class="text-md font-semibold text-primary" data-translate-key="set_monthly_tuition">Set Monthly Tuition Fees (in KIP)</h4>
+                    <div id="tuition-settings-container"></div>
+                    <button id="save-tuition-btn" class="btn-primary px-4 py-2 rounded-md text-sm" data-translate-key="save_tuition_fees">Save Tuition Fees</button>
+                </div>
+                
+                <!-- Data Management Tab Content -->
+                <div id="data-tab-content" class="settings-tab-content hidden space-y-4">
+                    <div>
+                        <h4 class="font-semibold" data-translate-key="export_data">Export Data</h4>
+                        <p class="text-sm text-secondary mb-2" data-translate-key="export_data_desc">Backup all your application data to a JSON file.</p>
+                        <button id="export-data-btn" class="btn-primary px-4 py-2 rounded-md text-sm" data-translate-key="export_all_data">Export All Data</button>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold" data-translate-key="import_data">Import Data</h4>
+                        <p class="text-sm text-secondary mb-2" data-translate-key="import_data_desc">Import data from a backup file. This will overwrite existing data.</p>
+                        <input type="file" id="import-data-input" accept=".json" class="hidden">
+                        <button onclick="document.getElementById('import-data-input').click()" class="bg-yellow-500 text-white px-4 py-2 rounded-md text-sm hover:bg-yellow-600" data-translate-key="import_data_btn">Import Data</button>
+                    </div>
+                    <div class="border-t border-color pt-4 mt-2">
+                        <h4 class="font-semibold text-red-600">Danger Zone</h4>
+                        <p class="text-sm text-secondary mb-2">Log out of the application. You will be returned to the login screen.</p>
+                        <button id="logout-btn" class="bg-red-600 text-white px-4 py-2 rounded-md text-sm hover:bg-red-700">Logout</button>
+                    </div>
+                </div>
+                
+                <!-- Admin Tab Content -->
+                <div id="admin-tab-content" class="settings-tab-content hidden">
+                    <div id="admin-login-view">
+                        <label for="admin-password" class="block text-sm font-medium text-secondary mb-2" data-translate-key="enter_admin_password">Enter Admin Password</label>
+                        <input type="password" id="admin-password" class="w-full p-2 border border-color rounded-md bg-secondary mb-2">
+                        <button id="admin-login-btn" class="btn-primary px-4 py-2 rounded-md text-sm" data-translate-key="login">Login</button>
+                    </div>
+                    <div id="admin-panel-view" class="hidden">
+                        <h4 class="font-semibold" data-translate-key="admin_panel">Admin Panel</h4>
+                        <p class="text-sm text-secondary mb-2" data-translate-key="admin_panel_desc">This feature is for future updates and code management.</p>
+                        <textarea class="w-full h-40 p-2 border border-color rounded-md bg-tertiary font-mono text-xs" readonly>Code update functionality would be implemented here.</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add/Edit Student Modal -->
+    <div id="student-modal" class="fixed inset-0 z-50 items-center justify-center hidden">
+        <div class="modal-backdrop fixed inset-0"></div>
+        <form id="student-form" class="bg-secondary rounded-lg shadow-xl w-full max-w-lg m-4 relative max-h-[90vh] flex flex-col">
+            <div class="flex items-center justify-between p-4 border-b border-color">
+                <h3 id="student-modal-title" class="text-lg font-semibold">Add Student</h3>
+                <button type="button" id="close-student-modal" class="p-2 rounded-full hover:bg-tertiary">&times;</button>
+            </div>
+            <div class="p-6 overflow-y-auto custom-scroll grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input type="hidden" id="student-id">
+                <div>
+                    <label for="student-name" class="block text-sm font-medium text-secondary mb-1" data-translate-key="full_name">Full Name</label>
+                    <input type="text" id="student-name" class="w-full p-2 border border-color rounded-md bg-secondary" required>
+                </div>
+                <div>
+                    <label for="student-sy" class="block text-sm font-medium text-secondary mb-1" data-translate-key="school_year">School Year</label>
+                    <select id="student-sy" class="w-full p-2 border border-color rounded-md bg-secondary" required></select>
+                </div>
+                 <div>
+                    <label for="student-campus" class="block text-sm font-medium text-secondary mb-1" data-translate-key="campus">Campus</label>
+                    <select id="student-campus" class="w-full p-2 border border-color rounded-md bg-secondary" required></select>
+                </div>
+                 <div>
+                    <label for="student-department" class="block text-sm font-medium text-secondary mb-1" data-translate-key="department">Department</label>
+                    <select id="student-department" class="w-full p-2 border border-color rounded-md bg-secondary" required></select>
+                </div>
+                <div class="md:col-span-2">
+                    <label for="student-class" class="block text-sm font-medium text-secondary mb-1" data-translate-key="class_section">Class & Section</label>
+                    <select id="student-class" class="w-full p-2 border border-color rounded-md bg-secondary" required></select>
+                </div>
+            </div>
+            <div class="flex items-center justify-end p-4 border-t border-color mt-auto">
+                <button type="submit" class="btn-primary px-6 py-2 rounded-md" data-translate-key="save_student">Save Student</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Student Payment Details Modal -->
+    <div id="payment-modal" class="fixed inset-0 z-50 items-center justify-center hidden">
+        <div class="modal-backdrop fixed inset-0"></div>
+        <div class="bg-secondary rounded-lg shadow-xl w-full max-w-4xl m-4 relative max-h-[90vh] flex flex-col">
+            <div class="flex items-start justify-between p-4 border-b border-color">
+                <div>
+                    <h3 id="payment-modal-student-name" class="text-xl font-semibold">Student Payment Details</h3>
+                    <p id="payment-modal-student-info" class="text-sm text-secondary"></p>
+                </div>
+                <button id="close-payment-modal" class="p-2 rounded-full hover:bg-tertiary">&times;</button>
+            </div>
+            <div class="p-6 overflow-y-auto custom-scroll">
+                <h4 class="font-semibold mb-2" data-translate-key="monthly_payments">Monthly Payments</h4>
+                <div id="monthly-payments-container" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+                    <!-- Payment month cards injected here -->
+                </div>
+
+                <div id="payment-summary-container" class="my-6"></div>
+                
+                <h4 class="font-semibold mb-2" data-translate-key="summer_class_july">Summer Class (July)</h4>
+                <div id="summer-payment-container">
+                    <!-- Summer payment card injected here -->
+                </div>
+
+                <div class="mt-6 pt-4 border-t border-color">
+                    <h4 class="font-semibold mb-2" data-translate-key="discount_information">Discount Information</h4>
+                    <p class="text-sm text-secondary mb-4" data-translate-key="discount_information_desc">Enter the discount amount in KIP.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="advanced-discount" class="block text-sm font-medium" data-translate-key="advanced_payment_discount">Advanced Payment Discount (KIP)</label>
+                            <input type="text" id="advanced-discount" placeholder="e.g., 500,000" class="w-full p-2 border border-color rounded-md bg-secondary mt-1 discount-input">
+                        </div>
+                        <div>
+                            <label for="staff-discount" class="block text-sm font-medium" data-translate-key="staff_discount">Staff Discount (KIP)</label>
+                            <input type="text" id="staff-discount" placeholder="e.g., 200,000" class="w-full p-2 border border-color rounded-md bg-secondary mt-1 discount-input">
+                        </div>
+                    </div>
+                    <div class="mt-4 flex justify-end">
+                        <button type="button" id="calculate-btn" class="btn-primary px-6 py-2 rounded-md" data-translate-key="compute">Compute</button>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center justify-end p-4 border-t border-color mt-auto">
+                <button id="save-payment-details" class="btn-primary px-6 py-2 rounded-md" data-translate-key="save_changes">Save Changes</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bulk Upload Modal -->
+    <div id="bulk-upload-modal" class="fixed inset-0 z-50 items-center justify-center hidden">
+        <div class="modal-backdrop fixed inset-0"></div>
+        <div class="bg-secondary rounded-lg shadow-xl w-full max-w-lg m-4 relative">
+            <div class="flex items-center justify-between p-4 border-b border-color">
+                <h3 class="text-lg font-semibold" data-translate-key="bulk_upload_students">Bulk Upload Students</h3>
+                <button id="close-bulk-upload-modal" class="p-2 rounded-full hover:bg-tertiary">&times;</button>
+            </div>
+            <div class="p-6">
+                <p class="text-sm text-secondary mb-4" data-translate-key="bulk_upload_desc">Upload a CSV file with student data. The file must have the following columns in order: <code class="text-xs bg-tertiary p-1 rounded">name,schoolYear,campus,department,className</code>.</p>
+                <a href="#" id="download-csv-template" class="text-sm text-blue-500 hover:underline mb-4 block" data-translate-key="download_csv_template">Download CSV Template</a>
+                <input type="file" id="csv-file-input" accept=".csv" class="w-full p-2 border border-dashed border-color rounded-md">
+                <div class="mt-6 flex justify-end">
+                    <button id="process-csv-btn" class="btn-primary px-6 py-2 rounded-md" data-translate-key="upload_and_process">Upload and Process</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Move Students Modal -->
+    <div id="move-students-modal" class="fixed inset-0 z-50 items-center justify-center hidden">
+        <div class="modal-backdrop fixed inset-0"></div>
+        <div class="bg-secondary rounded-lg shadow-xl w-full max-w-lg m-4 relative">
+            <div class="flex items-center justify-between p-4 border-b border-color">
+                <h3 class="text-lg font-semibold" data-translate-key="move_students">Move Students</h3>
+                <button id="close-move-students-modal" class="p-2 rounded-full hover:bg-tertiary">&times;</button>
+            </div>
+            <div class="p-6 grid grid-cols-1 gap-4">
+                 <div>
+                    <label for="move-student-sy" class="block text-sm font-medium text-secondary mb-1" data-translate-key="new_school_year">New School Year</label>
+                    <select id="move-student-sy" class="w-full p-2 border border-color rounded-md bg-secondary"></select>
+                </div>
+                 <div>
+                    <label for="move-student-campus" class="block text-sm font-medium text-secondary mb-1" data-translate-key="new_campus">New Campus</label>
+                    <select id="move-student-campus" class="w-full p-2 border border-color rounded-md bg-secondary"></select>
+                </div>
+                 <div>
+                    <label for="move-student-department" class="block text-sm font-medium text-secondary mb-1" data-translate-key="new_department">New Department</label>
+                    <select id="move-student-department" class="w-full p-2 border border-color rounded-md bg-secondary"></select>
+                </div>
+                <div>
+                    <label for="move-student-class" class="block text-sm font-medium text-secondary mb-1" data-translate-key="new_class_section">New Class & Section</label>
+                    <select id="move-student-class" class="w-full p-2 border border-color rounded-md bg-secondary"></select>
+                </div>
+            </div>
+             <div class="flex items-center justify-end p-4 border-t border-color mt-auto">
+                <button id="confirm-move-btn" class="btn-primary px-6 py-2 rounded-md" data-translate-key="confirm_move">Confirm Move</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Custom Confirm Modal -->
+    <div id="confirm-modal" class="fixed inset-0 z-50 items-center justify-center hidden">
+        <div class="modal-backdrop fixed inset-0"></div>
+        <div class="bg-secondary rounded-lg shadow-xl w-full max-w-sm m-4 relative">
+            <div class="p-6 text-center">
+                <svg class="mx-auto mb-4 text-gray-400 w-12 h-12" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 11V6m0 8h.01M19 10a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                <h3 id="confirm-modal-text" class="mb-5 text-lg font-normal text-secondary">Are you sure?</h3>
+                <button id="confirm-modal-yes" class="text-white bg-red-600 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center mr-2" data-translate-key="yes_im_sure">
+                    Yes, I'm sure
+                </button>
+                <button id="confirm-modal-no" class="text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10" data-translate-key="no_cancel">
+                    No, cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Message Modal -->
+    <div id="message-modal" class="fixed inset-0 z-50 items-center justify-center hidden">
+        <div class="modal-backdrop fixed inset-0"></div>
+        <div class="bg-secondary rounded-lg shadow-xl w-full max-w-sm m-4 relative">
+            <div class="p-6 text-center">
+                <div id="message-modal-icon-container" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
+                     <svg id="message-modal-icon" class="h-6 w-6 text-green-600" stroke="currentColor" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                </div>
+                <h3 id="message-modal-text" class="mb-5 text-lg font-normal text-secondary">Message</h3>
+                <button id="message-modal-ok" class="btn-primary text-white font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center" data-translate-key="ok">
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mark Payment Modal -->
+    <div id="mark-payment-modal" class="fixed inset-0 z-50 items-center justify-center hidden">
+        <div class="modal-backdrop fixed inset-0"></div>
+        <div class="bg-secondary rounded-lg shadow-xl w-full max-w-sm m-4 relative">
+            <div class="flex items-center justify-between p-4 border-b border-color">
+                <h3 class="text-lg font-semibold" data-translate-key="mark_payment_status">Mark Payment Status</h3>
+                <button id="close-mark-payment-modal" class="p-2 rounded-full hover:bg-tertiary">&times;</button>
+            </div>
+            <div class="p-6 space-y-4">
+                <input type="hidden" id="payment-action-hidden">
+                <div>
+                    <label for="payment-month-select" class="block text-sm font-medium text-secondary mb-1" data-translate-key="select_month">Select Month</label>
+                    <select id="payment-month-select" class="w-full p-2 border border-color rounded-md bg-secondary"></select>
+                </div>
+            </div>
+            <div class="flex items-center justify-end p-4 border-t border-color mt-auto">
+                <button id="confirm-mark-payment-btn" class="btn-primary px-6 py-2 rounded-md" data-translate-key="confirm">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script type="module">
+        // --- SPLASH & LOGIN SCRIPT ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const splashScreen = document.getElementById('splash-screen');
+            const loginScreen = document.getElementById('login-screen');
+            const appContainer = document.getElementById('app-container');
+            const progressBar = document.getElementById('progress-bar');
+            const progressText = document.getElementById('progress-text');
+            const splashYear = document.getElementById('splash-year');
+            const loginForm = document.getElementById('login-form');
+            const passwordInput = document.getElementById('password');
+            const showPasswordCheckbox = document.getElementById('show-password');
+            const loginError = document.getElementById('login-error');
+            const loginSettingsBtn = document.getElementById('login-settings-btn');
+            const loginLogoUpload = document.getElementById('login-logo-upload');
+            const splashLogo = document.getElementById('splash-logo');
+            const loginLogo = document.getElementById('login-logo');
+
+            // Check for logged-in state
+            if (sessionStorage.getItem('isLoggedIn') === 'true') {
+                // User is already logged in, bypass splash and login
+                splashScreen.classList.add('hidden');
+                loginScreen.classList.add('hidden');
+                appContainer.classList.remove('hidden');
+                appContainer.style.display = 'flex';
+                initMainApp();
+                return; // Stop further execution of this listener
+            }
+            
+            // Immediately load logo from storage for splash screen
+            const savedStateRaw = localStorage.getItem('neeradaTuitionTracker');
+            if (savedStateRaw) {
+                const savedState = JSON.parse(savedStateRaw);
+                if (savedState.settings && savedState.settings.logo) {
+                    splashLogo.src = savedState.settings.logo;
+                    loginLogo.src = savedState.settings.logo;
+                }
+            }
+
+
+            splashYear.textContent = new Date().getFullYear();
+
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 1;
+                progressBar.style.width = progress + '%';
+                progressText.textContent = `Loading... ${progress}%`;
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    progressText.textContent = 'Done!';
+                    setTimeout(() => {
+                        splashScreen.style.opacity = '0';
+                        loginScreen.classList.remove('hidden');
+                        setTimeout(() => loginScreen.style.opacity = '1', 50); // fade in
+                        setTimeout(() => splashScreen.classList.add('hidden'), 500); // remove from DOM flow
+                    }, 500);
+                }
+            }, 25);
+            
+            showPasswordCheckbox.addEventListener('change', () => {
+                passwordInput.type = showPasswordCheckbox.checked ? 'text' : 'password';
+            });
+
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const username = document.getElementById('username').value;
+                const password = passwordInput.value;
+                loginError.classList.add('hidden');
+
+                if (username === 'Admin' && password === 'neerada123') {
+                    sessionStorage.setItem('isLoggedIn', 'true');
+                    loginScreen.style.opacity = '0';
+                    setTimeout(() => {
+                        loginScreen.classList.add('hidden');
+                        appContainer.classList.remove('hidden');
+                        appContainer.style.display = 'flex';
+                         // Initialize the main app after successful login
+                        initMainApp();
+                    }, 500);
+                } else {
+                    loginError.classList.remove('hidden');
+                }
+            });
+
+            loginSettingsBtn.addEventListener('click', () => {
+                loginLogoUpload.click();
+            });
+
+            loginLogoUpload.addEventListener('change', (e) => {
+                 const file = e.target.files[0];
+                 if(file) {
+                     const reader = new FileReader();
+                     reader.onload = (event) => {
+                         const newLogoSrc = event.target.result;
+                         // Update UI immediately
+                         splashLogo.src = newLogoSrc;
+                         loginLogo.src = newLogoSrc;
+
+                         // Save to localStorage
+                         const savedStateRaw = localStorage.getItem('neeradaTuitionTracker');
+                         let currentState = savedStateRaw ? JSON.parse(savedStateRaw) : {};
+                         if (!currentState.settings) currentState.settings = {};
+                         currentState.settings.logo = newLogoSrc;
+                         localStorage.setItem('neeradaTuitionTracker', JSON.stringify(currentState));
+                     };
+                     reader.readAsDataURL(file);
+                 }
+            });
+        });
+
+        // --- MAIN APP SCRIPT (WRAPPED IN A FUNCTION) ---
+        function initMainApp() {
+            // Firebase is not used in this example to keep it a single, self-contained file.
+            // We will use localStorage to simulate data persistence.
+
+            // --- TRANSLATIONS ---
+            const translations = {
+                en: {
+                    school_name: "Neerada School",
+                    dashboard: "Dashboard",
+                    students_roster: "Students Roster",
+                    manage_classes: "Manage Classes",
+                    search_student_placeholder: "Search student name...",
+                    legend: "Legend:",
+                    paid: "Paid",
+                    unpaid: "Unpaid",
+                    summer: "Summer",
+                    na: "N/A",
+                    bulk_upload: "Bulk Upload",
+                    add_student: "Add Student",
+                    students_selected: "students selected",
+                    move: "Move",
+                    delete: "Delete",
+                    student_name: "Student Name",
+                    school_year: "School Year",
+                    campus: "Campus",
+                    department: "Department",
+                    class_section: "Class & Section",
+                    payment_status: "Payment Status",
+                    actions: "Actions",
+                    details: "Details",
+                    edit: "Edit",
+                    total_paid: "Total Paid",
+                    total_unpaid: "Total Unpaid",
+                    summer_class_paid: "Summer Class Paid",
+                    total_students_sy: "Total Students (SY)",
+                    student_enrollment: "Student Enrollment",
+                    filter_by_campus: "Filter by Campus",
+                    filter_by_department: "Filter by Department",
+                    month: "Month",
+                    all_months: "All Months",
+                    july_summer: "July (Summer)",
+                    sep: "Sep", oct: "Oct", nov: "Nov", dec: "Dec", jan: "Jan", feb: "Feb", mar: "Mar", apr: "Apr", may: "May", jun: "Jun", jul: "Jul",
+                    all_campuses: "All Campuses",
+                    all_departments: "All Departments",
+                    all_classes: "All Classes & Sections",
+                    students_enrolled: "Students Enrolled",
+                    no_students_found: "No students found.",
+                    settings: "Settings",
+                    general: "General",
+                    tuition: "Tuition",
+                    data_management: "Data Management",
+                    admin: "Admin",
+                    school_logo: "School Logo",
+                    upload_logo: "Upload Logo",
+                    app_theme: "App Theme",
+                    default_light: "Default Light",
+                    dark_mode: "Dark Mode",
+                    pastel: "Pastel",
+                    font_style: "Font Style",
+                    normal: "Normal",
+                    doodle: "Doodle",
+                    handwritten: "Handwritten",
+                    set_monthly_tuition: "Set Monthly Tuition Fees (in KIP)",
+                    set_summer_tuition: "Set Summer Class Fees (in KIP)",
+                    save_tuition_fees: "Save Tuition Fees",
+                    export_data: "Export Data",
+                    export_data_desc: "Backup all your application data to a JSON file.",
+                    export_all_data: "Export All Data",
+                    import_data: "Import Data",
+                    import_data_desc: "Import data from a backup file. This will overwrite existing data.",
+                    import_data_btn: "Import Data",
+                    enter_admin_password: "Enter Admin Password",
+                    login: "Login",
+                    admin_panel: "Admin Panel",
+                    admin_panel_desc: "This feature is for future updates and code management.",
+                    add_student_title: "Add Student",
+                    edit_student_title: "Edit Student",
+                    full_name: "Full Name",
+                    save_student: "Save Student",
+                    student_payment_details: "Student Payment Details",
+                    monthly_payments: "Monthly Payments",
+                    summer_class_july: "Summer Class (July)",
+                    not_enrolled: "Not Enrolled",
+                    enrolled: "Enrolled",
+                    enrolled_unpaid: "Enrolled - Unpaid",
+                    enroll: "Enroll",
+                    unenroll: "Unenroll",
+                    mark_unpaid: "Mark Unpaid",
+                    mark_paid: "Mark Paid",
+                    discount_information: "Discount Information",
+                    discount_information_desc: "Enter the discount amount in KIP.",
+                    advanced_payment_discount: "Advanced Payment Discount (KIP)",
+                    staff_discount: "Staff Discount (KIP)",
+                    save_changes: "Save Changes",
+                    compute: "Compute",
+                    bulk_upload_students: "Bulk Upload Students",
+                    bulk_upload_desc: "Upload a CSV file with student data. The file must have the following columns in order: <code class='text-xs bg-tertiary p-1 rounded'>name,schoolYear,campus,department,className</code>. **Important: Save your CSV file with UTF-8 encoding to support Lao characters.**",
+                    download_csv_template: "Download CSV Template",
+                    upload_and_process: "Upload and Process",
+                    move_students: "Move Students",
+                    new_school_year: "New School Year",
+                    new_campus: "New Campus",
+                    new_department: "New Department",
+                    new_class_section: "New Class & Section",
+                    confirm_move: "Confirm Move",
+                    are_you_sure: "Are you sure?",
+                    yes_im_sure: "Yes, I'm sure",
+                    no_cancel: "No, cancel",
+                    ok: "OK",
+                    tuition_fees_saved: "Tuition fees saved!",
+                    incorrect_password: "Incorrect password",
+                    error_parsing_file: "Error parsing file. Please make sure it is a valid backup file.",
+                    please_select_file: "Please select a file to upload.",
+                    gross_amount_paid: "Gross Amount Paid",
+                    discounts: "Discounts",
+                    remaining_balance: "Remaining Balance",
+                    gross_total_due: "Gross Total Due",
+                    net_total_due: "Net Total Due",
+                    net_amount_paid: "Net Amount Paid",
+                    mark_payment_status: "Mark Payment Status",
+                    select_month: "Select Month",
+                    confirm: "Confirm",
+                    payment_status_updated: "Payment status updated for selected students.",
+                },
+                lo: {
+                    school_name: "ໂຮງຮຽນ ນີຣະດາ",
+                    dashboard: "ແດຊບອດ",
+                    students_roster: "ລາຍຊື່ນັກຮຽນ",
+                    manage_classes: "ຈັດການຫ້ອງຮຽນ",
+                    search_student_placeholder: "ຄົ້ນຫາຊື່ນັກຮຽນ...",
+                    legend: "ຄຳອະທິບາຍ:",
+                    paid: "ຈ່າຍແລ້ວ",
+                    unpaid: "ຄ້າງຊໍາລະ",
+                    summer: "ຊຳເມີ",
+                    na: "ບໍ່ມີ",
+                    bulk_upload: "ອັບໂຫລດຫຼາຍລາຍການ",
+                    add_student: "ເພີ່ມນັກຮຽນ",
+                    students_selected: "ຄົນໄດ້ຖືກເລືອກ",
+                    move: "ຍ້າຍ",
+                    delete: "ລຶບ",
+                    student_name: "ຊື່ນັກຮຽນ",
+                    school_year: "ສົກຮຽນ",
+                    campus: "ວິທະຍາເຂດ",
+                    department: "ພາກວິຊາ",
+                    class_section: "ຫ້ອງ ແລະ ໜ່ວຍ",
+                    payment_status: "ສະຖານະຊໍາລະເງິນ",
+                    actions: "ການດຳເນີນການ",
+                    details: "ລາຍລະອຽດ",
+                    edit: "ແກ້ໄຂ",
+                    total_paid: "ຍອດທີ່ຊໍາລະແລ້ວ",
+                    total_unpaid: "ຍອດຄ້າງຊໍາລະ",
+                    summer_class_paid: "ຄ່າຮຽນຊຳເມີ",
+                    total_students_sy: "ນັກຮຽນທັງໝົດ (SY)",
+                    student_enrollment: "ການລົງທະບຽນນັກຮຽນ",
+                    filter_by_campus: "ກັ່ນຕອງຕາມວິທະຍາເຂດ",
+                    filter_by_department: "ກັ່ນຕອງຕາມພາກວິຊາ",
+                    month: "ເດືອນ",
+                    all_months: "ທຸກເດືອນ",
+                    july_summer: "ກໍລະກົດ (ຊຳເມີ)",
+                    sep: "ກັນຍາ", oct: "ຕຸລາ", nov: "ພະຈິກ", dec: "ທັນວາ", jan: "ມັງກອນ", feb: "ກຸມພາ", mar: "ມີນາ", apr: "ເມສາ", may: "ພຶດສະພາ", jun: "ມິຖຸນາ", jul: "ກໍລະກົດ",
+                    all_campuses: "ທຸກວິທະຍາເຂດ",
+                    all_departments: "ທຸກພາກວິຊາ",
+                    all_classes: "ທຸກຫ້ອງ ແລະ ໜ່ວຍ",
+                    students_enrolled: "ຄົນໄດ້ລົງທະບຽນ",
+                    no_students_found: "ບໍ່ພົບຂໍ້ມູນນັກຮຽນ.",
+                    settings: "ການຕັ້ງຄ່າ",
+                    general: "ທົ່ວໄປ",
+                    tuition: "ຄ່າຮຽນ",
+                    data_management: "ການຈັດການຂໍ້ມູນ",
+                    admin: "ຜູ້​ดูแล",
+                    school_logo: "ໂລໂກ້ໂຮງຮຽນ",
+                    upload_logo: "ອັບໂຫລດໂລໂກ້",
+                    app_theme: "ຮູບแบบແອັບ",
+                    default_light: "ຄ່າເລີ່ມຕົ້ນ (ແຈ້ງ)",
+                    dark_mode: "ໂໝດມືດ",
+                    pastel: "ສີ pastel",
+                    font_style: "ຮູບແບບຕົວອັກສອນ",
+                    normal: "ທຳມະດາ",
+                    doodle: "ແບບຂີດຂຽນ",
+                    handwritten: "ແບບລາຍມື",
+                    set_monthly_tuition: "ຕັ້ງຄ່າຮຽນປະຈຳເດືອນ (ເປັນກີບ)",
+                    set_summer_tuition: "ຕັ້ງຄ່າຮຽນຊຳເມີ (ເປັນກີບ)",
+                    save_tuition_fees: "ບັນທຶກຄ່າຮຽນ",
+                    export_data: "ສົ່ງອອກຂໍ້ມູນ",
+                    export_data_desc: "ສຳຮອງຂໍ້ມູນທັງໝົດໃນແອັບເປັນໄຟລ໌ JSON.",
+                    export_all_data: "ສົ່ງອອກຂໍ້ມູນທັງໝົດ",
+                    import_data: "ນຳເຂົ້າຂໍ້ມູນ",
+                    import_data_desc: "ນຳເຂົ້າຂໍ້ມູນຈາກໄຟລ໌ສຳຮອງ. ການກະທຳນີ້ຈະຂຽນທັບຂໍ້ມູນທີ່ມີຢູ່.",
+                    import_data_btn: "ນຳເຂົ້າຂໍ້ມູນ",
+                    enter_admin_password: "ປ້ອນລະຫັດຜ່ານຜູ້ດູແລ",
+                    login: "ເຂົ້າສູ່ລະບົບ",
+                    admin_panel: "ແຜງຄວບຄຸມຜູ້ດູແລ",
+                    admin_panel_desc: "ຄຸນສົມບັດນີ້ສຳລັບການອັບເດດ ແລະ ຈັດການໂຄດໃນອະນາຄົດ.",
+                    add_student_title: "ເພີ່ມນັກຮຽນ",
+                    edit_student_title: "ແກ້ໄຂຂໍ້ມູນນັກຮຽນ",
+                    full_name: "ຊື່​ເຕັມ",
+                    save_student: "ບັນທຶກນັກຮຽນ",
+                    student_payment_details: "ລາຍລະອຽດການຊໍາລະເງິນຂອງນັກຮຽນ",
+                    monthly_payments: "ການຊໍາລະລາຍເດືອນ",
+                    summer_class_july: "ຫ້ອງຮຽນຊຳເມີ (ເດືອນກໍລະກົດ)",
+                    not_enrolled: "ບໍ່ໄດ້ລົງທະບຽນ",
+                    enrolled: "ລົງທະບຽນແລ້ວ",
+                    enrolled_unpaid: "ລົງທະບຽນ - ຄ້າງຊໍາລະ",
+                    enroll: "ລົງທະບຽນ",
+                    unenroll: "ຍົກເລີກການລົງທະບຽນ",
+                    mark_unpaid: "ໝາຍວ່າຄ້າງຊໍາລະ",
+                    mark_paid: "ໝາຍວ່າຊໍາລະແລ້ວ",
+                    discount_information: "ຂໍ້ມູນສ່ວນຫຼຸດ",
+                    discount_information_desc: "Enter the discount amount in KIP.",
+                    advanced_payment_discount: "ສ່ວນຫຼຸດຈ່າຍລ່ວງໜ້າ (ກີບ)",
+                    staff_discount: "ສ່ວນຫຼຸດພະນັກງານ (ກີບ)",
+                    save_changes: "ບັນທຶກການປ່ຽນແປງ",
+                    compute: "ຄິດໄລ່",
+                    bulk_upload_students: "ອັບໂຫລດນັກຮຽນຈຳນວນຫຼາຍ",
+                    bulk_upload_desc: "ອັບໂຫລດໄຟລ໌ CSV ທີ່ມີຂໍ້ມູນນັກຮຽນ. ໄຟລ໌ຕ້ອງມີຖັນຕໍ່ໄປນີ້ຕາມລຳດັບ: <code class='text-xs bg-tertiary p-1 rounded'>name,schoolYear,campus,department,className</code>. **ສຳຄັນ: ກະລຸນາບັນທຶກໄຟລ໌ CSV ຂອງທ່ານເປັນ UTF-8 ເພື່ອຮອງຮັບຕົວອັກສອນລາວ.**",
+                    download_csv_template: "ດາວໂຫລດແມ່ແບບ CSV",
+                    upload_and_process: "ອັບໂຫລດ ແລະ ປະມວນຜົນ",
+                    move_students: "ຍ້າຍນັກຮຽນ",
+                    new_school_year: "ສົກຮຽນໃໝ່",
+                    new_campus: "ວິທະຍາເຂດໃໝ່",
+                    new_department: "ພາກວິຊາໃໝ່",
+                    new_class_section: "ຫ້ອງ ແລະ ໜ່ວຍໃໝ່",
+                    confirm_move: "ຢືນຢັນການຍ້າຍ",
+                    are_you_sure: "ທ່ານແນ່ໃຈບໍ່?",
+                    yes_im_sure: "ແມ່ນແລ້ວ, ຂ້ອຍແນ່ໃຈ",
+                    no_cancel: "ບໍ່, ຍົກເລີກ",
+                    ok: "ຕົກລົງ",
+                    tuition_fees_saved: "ບັນທຶກຄ່າຮຽນສຳເລັດແລ້ວ!",
+                    incorrect_password: "ລະຫັດຜ່ານບໍ່ຖືກຕ້ອງ",
+                    error_parsing_file: "ຜິດພາດໃນການອ່ານໄຟລ໌. ກະລຸນາກວດສອບວ່າເປັນໄຟລ໌ສຳຮອງທີ່ຖືກຕ້ອງ.",
+                    please_select_file: "ກະລຸນາເລືອກໄຟລ໌ເພື່ອອັບໂຫລດ.",
+                    gross_amount_paid: "ຈຳນວນເງິນທີ່ຈ່າຍທັງໝົດ",
+                    discounts: "ສ່ວນຫຼຸດ",
+                    remaining_balance: "ຍອດເຫຼືອທີ່ຕ້ອງຊຳລະ",
+                    gross_total_due: "ຍອດລວມກ່ອນສ່ວນຫຼຸດ",
+                    net_total_due: "ຍອດສຸດທິທີ່ຕ້ອງຈ່າຍ",
+                    net_amount_paid: "ຍອດສຸດທິທີ່ຈ່າຍແລ້ວ",
+                    mark_payment_status: "ໝາຍສະຖານະການຈ່າຍເງິນ",
+                    select_month: "ເລືອກເດືອນ",
+                    confirm: "ຢືນຢັນ",
+                    payment_status_updated: "ອັບເດດສະຖານະການຈ່າຍເງິນສຳລັບນັກຮຽນທີ່ເລືອກແລ້ວ.",
+                }
+            };
+
+            // --- APPLICATION STATE ---
+            let state = {
+                students: [],
+                settings: {
+                    schoolYears: ['2024-2025', '2025-2026', '2026-2027'],
+                    campuses: ['Sibounheuang', 'Chommany'],
+                    departments: ['Kindergarten', 'Primary', 'Lower Secondary', 'Higher Secondary'],
+                    classes: {
+                        'Kindergarten': ['K1-A', 'K1-B', 'K2-A', 'K2-B', 'K3-A'],
+                        'Primary': ['P1-A', 'P2-A', 'P3-A', 'P4-A', 'P5-A'],
+                        'Lower Secondary': ['M1-A', 'M2-A', 'M3-A'],
+                        'Higher Secondary': ['M4-A', 'M5-A', 'M6-A', 'M7-A']
+                    },
+                    tuition: {
+                       '2024-2025': {
+                            'Kindergarten': 1500000,
+                            'Primary': 2000000,
+                            'Lower Secondary': 2500000,
+                            'Higher Secondary': 3000000,
+                        },
+                       '2025-2026': {
+                            'Kindergarten': 1500000,
+                            'Primary': 2000000,
+                            'Lower Secondary': 2500000,
+                            'Higher Secondary': 3000000,
+                        },
+                         '2026-2027': {
+                            'Kindergarten': 1500000,
+                            'Primary': 2000000,
+                            'Lower Secondary': 2500000,
+                            'Higher Secondary': 3000000,
+                        }
+                    },
+                    theme: 'light',
+                    font: 'normal',
+                    logo: 'https://placehold.co/40x40/3b82f6/FFFFFF?text=NS'
+                },
+                ui: {
+                    currentPage: 'dashboard',
+                    studentSort: { key: 'name', order: 'asc' },
+                    selectedStudents: new Set(),
+                    language: 'en',
+                    rosterFilters: {
+                        schoolYear: '2025-2026',
+                        campus: 'all',
+                        department: 'all',
+                        className: 'all',
+                    },
+                }
+            };
+
+            // --- DOM ELEMENTS ---
+            const DOMElements = {
+                pageTitle: document.getElementById('page-title'),
+                pages: document.querySelectorAll('.page'),
+                sidebarItems: document.querySelectorAll('.sidebar-item'),
+                currentYearSpan: document.getElementById('current-year'),
+                // Add more as needed
+            };
+
+            // --- UTILITY FUNCTIONS ---
+            const utils = {
+                saveState: () => {
+                    localStorage.setItem('neeradaTuitionTracker', JSON.stringify(state));
+                    historyManager.saveSnapshot();
+                },
+                loadState: () => {
+                    const savedState = localStorage.getItem('neeradaTuitionTracker');
+                    if (savedState) {
+                        const parsedState = JSON.parse(savedState);
+                        // Deep merge to prevent new settings from being overwritten by old saved state
+                        state = {
+                            ...state,
+                            ...parsedState,
+                            settings: { ...state.settings, ...parsedState.settings },
+                            ui: { ...state.ui, ...parsedState.ui },
+                        };
+                        
+                        // Ensure sets are properly reconstructed
+                        state.ui.selectedStudents = new Set(Array.from(state.ui.selectedStudents));
+
+                        // Migration for discounts structure
+                        state.students.forEach(student => {
+                            if (!student.discounts || student.discounts.advanced === undefined) {
+                                 student.discounts = { advanced: 0, staff: 0 };
+                            }
+                        });
+
+                    } else {
+                        // Add default students if no state is saved
+                        state.students = [
+                            { id: 's1', name: 'Thavixay Phommavongsa', schoolYear: '2025-2026', campus: 'Sibounheuang', department: 'Primary', className: 'P3-A', payments: {}, discounts: { advanced: 0, staff: 0 } },
+                            { id: 's2', name: 'Alisa Vongdara', schoolYear: '2025-2026', campus: 'Chommany', department: 'Lower Secondary', className: 'M2-A', payments: {}, discounts: { advanced: 0, staff: 0 } }
+                        ];
+                        utils.saveState();
+                    }
+                },
+                formatCurrency: (amount) => {
+                    return new Intl.NumberFormat('en-US').format(amount) + ' KIP';
+                },
+                generateId: () => `s${crypto.randomUUID()}`,
+                showModal: (id) => document.getElementById(id).style.display = 'flex',
+                hideModal: (id) => document.getElementById(id).style.display = 'none',
+                showMessage: (messageKey, type = 'success') => {
+                    const modal = document.getElementById('message-modal');
+                    const textEl = document.getElementById('message-modal-text');
+                    const iconContainer = document.getElementById('message-modal-icon-container');
+                    const icon = document.getElementById('message-modal-icon');
+
+                    textEl.textContent = translations[state.ui.language][messageKey] || messageKey;
+                    
+                    iconContainer.className = 'mx-auto flex items-center justify-center h-12 w-12 rounded-full mb-4';
+                    icon.className = 'h-6 w-6';
+
+                    if (type === 'success') {
+                        iconContainer.classList.add('bg-green-100');
+                        icon.classList.add('text-green-600');
+                        icon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>`;
+                    } else { // error
+                        iconContainer.classList.add('bg-red-100');
+                        icon.classList.add('text-red-600');
+                        icon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>`;
+                    }
+
+                    utils.showModal('message-modal');
+                    return new Promise(resolve => {
+                        document.getElementById('message-modal-ok').onclick = () => {
+                            utils.hideModal('message-modal');
+                            resolve();
+                        };
+                    });
+                },
+                confirm: (message) => {
+                    return new Promise((resolve) => {
+                        const modal = document.getElementById('confirm-modal');
+                        document.getElementById('confirm-modal-text').textContent = message;
+                        modal.style.display = 'flex';
+
+                        document.getElementById('confirm-modal-yes').onclick = () => {
+                            modal.style.display = 'none';
+                            resolve(true);
+                        };
+                        document.getElementById('confirm-modal-no').onclick = () => {
+                            modal.style.display = 'none';
+                            resolve(false);
+                        };
+                    });
+                },
+                getMonths: () => ['Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                getSummerMonth: () => 'Jul'
+            };
+
+            const translateUI = () => {
+                const lang = state.ui.language;
+                document.querySelectorAll('[data-translate-key]').forEach(el => {
+                    const key = el.dataset.translateKey;
+                    const translation = translations[lang][key];
+                    if (translation) {
+                        if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                            if (el.type === 'submit' || el.type === 'button') {
+                                el.value = translation;
+                            } else {
+                                el.placeholder = translation;
+                            }
+                        } else {
+                            // For cases like `<span>N</span> students selected`
+                            if (el.childNodes.length > 1 && el.childNodes[0].nodeType === Node.ELEMENT_NODE) {
+                                 // This targets the text node after the span
+                                const textNode = Array.from(el.childNodes).find(node => node.nodeType === Node.TEXT_NODE);
+                                if(textNode) textNode.textContent = ` ${translation}`;
+                            } else {
+                                el.innerHTML = translation;
+                            }
+                        }
+                    }
+                });
+
+                // Re-render dynamic parts that need translation
+                render.dashboard();
+                render.page();
+
+                // Update active language flag
+                document.querySelectorAll('#lang-selector img').forEach(img => {
+                    img.classList.remove('active-lang');
+                    if (img.dataset.lang === lang) {
+                        img.classList.add('active-lang');
+                    }
+                });
+            };
+
+            // --- RENDER FUNCTIONS ---
+            const render = {
+                all: () => {
+                    render.page();
+                    render.dashboard();
+                    render.students();
+                    render.manage();
+                    render.settings();
+                    render.applyAppearance();
+                },
+                page: () => {
+                    DOMElements.pages.forEach(p => p.classList.add('hidden'));
+                    document.getElementById(`${state.ui.currentPage}-page`).classList.remove('hidden');
+
+                    DOMElements.sidebarItems.forEach(i => i.classList.remove('active'));
+                    document.querySelector(`.sidebar-item[data-page="${state.ui.currentPage}"]`).classList.add('active');
+                    
+                    const pageKeyMap = {
+                        dashboard: 'dashboard',
+                        students: 'students_roster',
+                        manage: 'manage_classes'
+                    };
+                    const pageTitleKey = pageKeyMap[state.ui.currentPage];
+                    DOMElements.pageTitle.textContent = translations[state.ui.language][pageTitleKey] || state.ui.currentPage;
+                },
+                applyAppearance: () => {
+                    const body = document.body;
+                    body.className = ''; // Clear classes
+                    body.classList.add(`theme-${state.settings.theme}`);
+                    body.classList.add(`font-${state.settings.font}`);
+                    
+                    document.getElementById('school-logo-sidebar').src = state.settings.logo;
+                    document.getElementById('school-logo-preview').src = state.settings.logo;
+                },
+                dashboard: () => {
+                    const syFilter = document.getElementById('dashboard-sy-filter');
+                    const monthFilter = document.getElementById('dashboard-month-filter');
+                    
+                    const currentSY = syFilter.value;
+                    const currentMonth = monthFilter.value;
+
+                    syFilter.innerHTML = state.settings.schoolYears.map(sy => `<option value="${sy}">${sy}</option>`).join('');
+                    
+                    const monthOptions = utils.getMonths().map(m => `<option value="${m}">${translations[state.ui.language][m.toLowerCase()] || m}</option>`).join('');
+                    monthFilter.innerHTML = `<option value="all">${translations[state.ui.language].all_months}</option>` + 
+                                            monthOptions +
+                                            `<option value="Jul">${translations[state.ui.language].july_summer}</option>`;
+
+                    syFilter.value = currentSY || '2025-2026';
+                    monthFilter.value = currentMonth || 'Oct';
+
+                    const selectedSY = syFilter.value;
+                    const selectedMonth = monthFilter.value;
+
+                    // --- START FILTERING ---
+                    const studentsInSY = state.students.filter(s => s.schoolYear === selectedSY);
+                    
+                    const campusFilter = document.getElementById('dashboard-campus-filter');
+                    const deptFilter = document.getElementById('dashboard-dept-filter');
+                    const classFilter = document.getElementById('dashboard-class-filter');
+                    
+                    const currentCampus = campusFilter.value;
+                    const currentDept = deptFilter.value;
+                    const oldClassValue = classFilter.value;
+
+                    campusFilter.innerHTML = `<option value="all">${translations[state.ui.language].all_campuses}</option>` + state.settings.campuses.map(c => `<option value="${c}">${c}</option>`).join('');
+                    deptFilter.innerHTML = `<option value="all">${translations[state.ui.language].all_departments}</option>` + state.settings.departments.map(d => `<option value="${d}">${d}</option>`).join('');
+                    
+                    campusFilter.value = currentCampus || 'all';
+                    deptFilter.value = currentDept || 'all';
+
+                    const selectedDept = deptFilter.value;
+                    if (selectedDept === 'all') {
+                        classFilter.innerHTML = `<option value="all">${translations[state.ui.language].all_classes}</option>`;
+                        classFilter.disabled = true;
+                    } else {
+                        const classesForDept = state.settings.classes[selectedDept] || [];
+                        classFilter.innerHTML = `<option value="all">${translations[state.ui.language].all_classes}</option>` + classesForDept.map(c => `<option value="${c}">${c}</option>`).join('');
+                        classFilter.disabled = false;
+                    }
+
+                    const newOptions = Array.from(classFilter.options).map(o => o.value);
+                    if (newOptions.includes(oldClassValue)) {
+                        classFilter.value = oldClassValue;
+                    } else {
+                        classFilter.value = 'all';
+                    }
+                    
+                    let filteredStudents = studentsInSY;
+                    if(campusFilter.value !== 'all') filteredStudents = filteredStudents.filter(s => s.campus === campusFilter.value);
+                    if(deptFilter.value !== 'all') filteredStudents = filteredStudents.filter(s => s.department === deptFilter.value);
+                    if(!classFilter.disabled && classFilter.value !== 'all') filteredStudents = filteredStudents.filter(s => s.className === classFilter.value);
+                    
+                    document.getElementById('enrollment-summary').textContent = `${filteredStudents.length} ${translations[state.ui.language].students_enrolled || 'Students Enrolled'}`;
+                    
+                    let totalPaidNet = 0;
+                    let totalUnpaidNet = 0;
+                    let summerPaidNet = 0;
+
+                    filteredStudents.forEach(student => {
+                        const tuition = (state.settings.tuition[student.schoolYear] && state.settings.tuition[student.schoolYear][student.department]) || 0;
+                        if (tuition === 0) return;
+
+                        const summerTuition = tuition;
+
+                        const totalDiscounts = (student.discounts?.advanced || 0) + (student.discounts?.staff || 0);
+                        const isEnrolledSummer = 'Jul' in student.payments;
+                        const numRegularPeriods = 10;
+                        const grossRegularDue = numRegularPeriods * tuition;
+                        const grossSummerDue = isEnrolledSummer ? summerTuition : 0;
+                        const grossAnnualDue = grossRegularDue + grossSummerDue;
+
+                        const discountRatio = grossAnnualDue > 0 ? Math.max(0, grossAnnualDue - totalDiscounts) / grossAnnualDue : 1;
+                        const netMonthlyTuition = tuition * discountRatio;
+                        const netSummerTuition = summerTuition * discountRatio;
+                        
+                        if (isEnrolledSummer && student.payments['Jul']?.status === 'paid') {
+                            summerPaidNet += summerTuition;
+                        }
+
+                        if (selectedMonth === 'all') {
+                            utils.getMonths().forEach(month => {
+                                if (student.payments[month]?.status === 'paid') {
+                                    totalPaidNet += netMonthlyTuition;
+                                } else {
+                                    totalUnpaidNet += netMonthlyTuition;
+                                }
+                            });
+                            if (isEnrolledSummer) {
+                                if (student.payments['Jul']?.status === 'paid') {
+                                    totalPaidNet += netSummerTuition;
+                                } else {
+                                    totalUnpaidNet += netSummerTuition;
+                                }
+                            }
+                        } else if (selectedMonth === 'Jul') {
+                            if (isEnrolledSummer) {
+                                if (student.payments['Jul']?.status === 'paid') {
+                                    totalPaidNet += netSummerTuition;
+                                } else {
+                                    totalUnpaidNet += netSummerTuition;
+                                }
+                            }
+                        } else { 
+                            if (utils.getMonths().includes(selectedMonth)) {
+                                if (student.payments[selectedMonth]?.status === 'paid') {
+                                    totalPaidNet += netMonthlyTuition;
+                                } else {
+                                    totalUnpaidNet += netMonthlyTuition;
+                                }
+                            }
+                        }
+                    });
+
+
+                    const statsContainer = document.getElementById('dashboard-stats');
+                    statsContainer.innerHTML = `
+                        <div class="bg-secondary p-4 rounded-lg shadow">
+                            <div class="flex items-center text-secondary">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                                <p class="text-sm">${translations[state.ui.language].total_paid}</p>
+                            </div>
+                            <p class="text-2xl font-bold mt-1 pl-7">${utils.formatCurrency(totalPaidNet)}</p>
+                        </div>
+                        <div class="bg-secondary p-4 rounded-lg shadow">
+                             <div class="flex items-center text-secondary">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
+                                <p class="text-sm">${translations[state.ui.language].total_unpaid}</p>
+                            </div>
+                            <p class="text-2xl font-bold mt-1 pl-7">${utils.formatCurrency(Math.max(0, totalUnpaidNet))}</p>
+                        </div>
+                        <div class="bg-secondary p-4 rounded-lg shadow">
+                             <div class="flex items-center text-secondary">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                                 <p class="text-sm">${translations[state.ui.language].summer_class_paid}</p>
+                            </div>
+                            <p class="text-2xl font-bold mt-1 pl-7">${utils.formatCurrency(summerPaidNet)}</p>
+                        </div>
+                        <div class="bg-secondary p-4 rounded-lg shadow">
+                             <div class="flex items-center text-secondary">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283-.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                                 <p class="text-sm">${translations[state.ui.language].total_students_sy}</p>
+                            </div>
+                            <p class="text-2xl font-bold mt-1 pl-7">${studentsInSY.length}</p>
+                        </div>
+                    `;
+                },
+                students: () => {
+                    render.rosterFilters();
+                    const tableBody = document.getElementById('students-table-body');
+                    const countContainer = document.getElementById('roster-student-count-container');
+                    const searchTerm = document.getElementById('student-search-bar').value.toLowerCase();
+
+                    let filteredStudents = state.students;
+
+                    if (state.ui.rosterFilters.schoolYear !== 'all') {
+                        filteredStudents = filteredStudents.filter(s => s.schoolYear === state.ui.rosterFilters.schoolYear);
+                    }
+                    if (state.ui.rosterFilters.campus !== 'all') {
+                        filteredStudents = filteredStudents.filter(s => s.campus === state.ui.rosterFilters.campus);
+                    }
+                    if (state.ui.rosterFilters.department !== 'all') {
+                        filteredStudents = filteredStudents.filter(s => s.department === state.ui.rosterFilters.department);
+                    }
+                    if (state.ui.rosterFilters.className !== 'all') {
+                        filteredStudents = filteredStudents.filter(s => s.className === state.ui.rosterFilters.className);
+                    }
+
+                    if (searchTerm) {
+                        filteredStudents = filteredStudents.filter(s => s.name && s.name.toLowerCase().includes(searchTerm));
+                    }
+                    
+                    countContainer.textContent = `${filteredStudents.length} ${translations[state.ui.language].students_enrolled || 'Students Enrolled'}`;
+
+                    filteredStudents.sort((a,b) => {
+                        const key = state.ui.studentSort.key;
+                        let valA, valB;
+                        if(key === 'name') { valA = a.name.toLowerCase(); valB = b.name.toLowerCase(); }
+                        else if(key === 'class') { valA = (a.className || '').toLowerCase(); valB = (b.className || '').toLowerCase(); }
+                        else { valA = a[key]; valB = b[key]; }
+                        
+                        if (valA < valB) return state.ui.studentSort.order === 'asc' ? -1 : 1;
+                        if (valA > valB) return state.ui.studentSort.order === 'asc' ? 1 : -1;
+                        return 0;
+                    });
+                    
+                    if (filteredStudents.length === 0) {
+                        tableBody.innerHTML = `<tr><td colspan="8" class="text-center p-6 text-secondary">${translations[state.ui.language].no_students_found}</td></tr>`;
+                        document.getElementById('select-all-students-checkbox').checked = false;
+                        render.bulkActions();
+                        return;
+                    }
+
+                    tableBody.innerHTML = filteredStudents.map(student => {
+                        const months = utils.getMonths();
+                        const summerMonth = utils.getSummerMonth();
+                        const paymentBars = months.map(month => {
+                            const status = student.payments[month]?.status === 'paid' ? 'bg-green-500' : 'bg-red-500';
+                            return `<div class="${status} w-3 h-5 rounded-sm" title="${month}"></div>`;
+                        }).join('');
+                        const summerBar = `<div class="${student.payments[summerMonth]?.status === 'paid' ? 'bg-yellow-400' : 'bg-gray-300'} w-3 h-5 rounded-sm" title="${summerMonth}"></div>`;
+                        
+                        return `
+                            <tr class="border-b border-color hover:bg-tertiary">
+                                <td class="p-4"><input type="checkbox" class="student-checkbox" data-id="${student.id}" ${state.ui.selectedStudents.has(student.id) ? 'checked' : ''}></td>
+                                <td class="px-6 py-4 font-medium">${student.name}</td>
+                                <td class="px-6 py-4">${student.schoolYear}</td>
+                                <td class="px-6 py-4">${student.campus}</td>
+                                <td class="px-6 py-4">${student.department}</td>
+                                <td class="px-6 py-4">${student.className}</td>
+                                <td class="px-6 py-4"><div class="flex items-center gap-0.5">${paymentBars}${summerBar}</div></td>
+                                <td class="px-6 py-4 flex items-center gap-2">
+                                    <button class="p-1 text-blue-500 hover:text-blue-700 view-payment-btn" data-id="${student.id}">${translations[state.ui.language].details}</button>
+                                    <button class="p-1 text-yellow-500 hover:text-yellow-700 edit-student-btn" data-id="${student.id}">${translations[state.ui.language].edit}</button>
+                                    <button class="p-1 text-red-500 hover:text-red-700 delete-student-btn" data-id="${student.id}">${translations[state.ui.language].delete}</button>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                    
+                    const selectAllCheckbox = document.getElementById('select-all-students-checkbox');
+                    const allFilteredAreSelected = filteredStudents.length > 0 && filteredStudents.every(s => state.ui.selectedStudents.has(s.id));
+                    selectAllCheckbox.checked = allFilteredAreSelected;
+
+                    render.bulkActions();
+                },
+                rosterFilters: () => {
+                    const syFilter = document.getElementById('roster-sy-filter');
+                    const campusFilter = document.getElementById('roster-campus-filter');
+                    const deptFilter = document.getElementById('roster-dept-filter');
+                    const classFilter = document.getElementById('roster-class-filter');
+
+                    syFilter.innerHTML = `<option value="all">All School Years</option>` + state.settings.schoolYears.map(sy => `<option value="${sy}">${sy}</option>`).join('');
+                    campusFilter.innerHTML = `<option value="all">${translations[state.ui.language].all_campuses}</option>` + state.settings.campuses.map(c => `<option value="${c}">${c}</option>`).join('');
+                    deptFilter.innerHTML = `<option value="all">${translations[state.ui.language].all_departments}</option>` + state.settings.departments.map(d => `<option value="${d}">${d}</option>`).join('');
+
+                    syFilter.value = state.ui.rosterFilters.schoolYear;
+                    campusFilter.value = state.ui.rosterFilters.campus;
+                    deptFilter.value = state.ui.rosterFilters.department;
+
+                    const selectedDept = deptFilter.value;
+                     if (selectedDept === 'all') {
+                        classFilter.innerHTML = `<option value="all">${translations[state.ui.language].all_classes}</option>`;
+                        classFilter.disabled = true;
+                    } else {
+                        const classesForDept = state.settings.classes[selectedDept] || [];
+                        classFilter.innerHTML = `<option value="all">${translations[state.ui.language].all_classes}</option>` + classesForDept.map(c => `<option value="${c}">${c}</option>`).join('');
+                        classFilter.disabled = false;
+                    }
+                    classFilter.value = state.ui.rosterFilters.className;
+                },
+                bulkActions: () => {
+                    const container = document.getElementById('bulk-actions-container');
+                    const countSpan = document.getElementById('selected-student-count');
+                    if (state.ui.selectedStudents.size > 0) {
+                        container.classList.remove('hidden');
+                        countSpan.textContent = state.ui.selectedStudents.size;
+                    } else {
+                        container.classList.add('hidden');
+                    }
+                },
+                manage: () => {
+                    const container = document.getElementById('manage-page');
+                    const manageItems = {
+                        'School Years': 'schoolYears',
+                        'Campuses': 'campuses',
+                        'Departments': 'departments'
+                    };
+                    let html = Object.entries(manageItems).map(([title, key]) => `
+                        <div class="bg-secondary p-4 rounded-lg shadow">
+                            <h3 class="font-semibold mb-2">${translations[state.ui.language][key] || title}</h3>
+                            <ul class="space-y-2 mb-2 manage-list" data-key="${key}">
+                                ${state.settings[key].map(item => `
+                                    <li class="flex items-center justify-between p-2 bg-tertiary rounded">
+                                        <span>${item}</span>
+                                        <button class="text-red-500 hover:text-red-700 delete-manage-item" data-item="${item}" data-key="${key}">&times;</button>
+                                    </li>`).join('')}
+                            </ul>
+                            <div class="flex gap-2">
+                                <input type="text" placeholder="Add new..." class="w-full p-2 border border-color rounded-md bg-secondary add-manage-input">
+                                <button class="btn-primary px-3 rounded-md add-manage-btn" data-key="${key}">Add</button>
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                     html += `
+                        <div class="bg-secondary p-4 rounded-lg shadow md:col-span-2 lg:col-span-4">
+                            <h3 class="font-semibold mb-2" data-translate-key="class_section">Classes & Sections</h3>
+                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                ${state.settings.departments.map(dept => `
+                                    <div>
+                                        <h4 class="font-medium text-sm text-secondary mb-1">${dept}</h4>
+                                        <ul class="space-y-2 mb-2 manage-list" data-key="classes" data-dept="${dept}">
+                                            ${(state.settings.classes[dept] || []).map(item => `
+                                                <li class="flex items-center justify-between p-2 bg-tertiary rounded">
+                                                    <span>${item}</span>
+                                                    <button class="text-red-500 hover:text-red-700 delete-manage-item" data-item="${item}" data-key="classes" data-dept="${dept}">&times;</button>
+                                                </li>`).join('')}
+                                        </ul>
+                                        <div class="flex gap-2">
+                                            <input type="text" placeholder="Add new class..." class="w-full p-2 border border-color rounded-md bg-secondary add-manage-input">
+                                            <button class="btn-primary px-3 rounded-md add-manage-btn" data-key="classes" data-dept="${dept}">Add</button>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+
+                    container.innerHTML = html;
+                },
+                settings: () => {
+                    document.getElementById('theme-select').value = state.settings.theme;
+                    document.getElementById('font-select').value = state.settings.font;
+
+                    const tuitionSYSelect = document.getElementById('tuition-sy-select');
+                    const currentSY = tuitionSYSelect.value;
+                    tuitionSYSelect.innerHTML = state.settings.schoolYears.map(sy => `<option value="${sy}">${sy}</option>`).join('');
+                    tuitionSYSelect.value = currentSY || state.settings.schoolYears[0];
+                    
+                    const selectedSY = tuitionSYSelect.value;
+                    const tuitionForYear = state.settings.tuition[selectedSY] || {};
+
+                    const tuitionContainer = document.getElementById('tuition-settings-container');
+                    let tuitionHTML = state.settings.departments.map(dept => {
+                        const tuitionValue = tuitionForYear[dept] || 0;
+                        return `
+                        <div class="grid grid-cols-3 items-center gap-2">
+                                <label class="text-sm font-medium text-secondary">${dept}</label>
+                                <input type="text" data-dept="${dept}" data-type="regular" value="${tuitionValue.toLocaleString('en-US')}" class="w-full p-2 border border-color rounded-md bg-secondary col-span-2 tuition-input">
+                        </div>
+                    `}).join('');
+
+                    tuitionContainer.innerHTML = tuitionHTML;
+
+                    document.querySelectorAll('.tuition-input').forEach(input => {
+                        input.addEventListener('input', handlers.handleTuitionInputFormatting);
+                    });
+                },
+                paymentModalSummary: (student, tempDiscounts) => {
+                    const tuition = (state.settings.tuition[student.schoolYear] && state.settings.tuition[student.schoolYear][student.department]) || 0;
+                    
+                    const advancedDiscount = tempDiscounts ? (parseFloat(tempDiscounts.advanced.replace(/,/g, '')) || 0) : (student.discounts.advanced || 0);
+                    const staffDiscount = tempDiscounts ? (parseFloat(tempDiscounts.staff.replace(/,/g, '')) || 0) : (student.discounts.staff || 0);
+                    const totalDiscounts = advancedDiscount + staffDiscount;
+
+                    const totalYearlyTuition = tuition * 10;
+                    const hasJoinedSummer = 'Jul' in student.payments;
+                    const summerTuition = hasJoinedSummer ? tuition : 0;
+                    const grossTotalDue = totalYearlyTuition + summerTuition;
+                    
+                    const paidMonthsCount = utils.getMonths().filter(m => student.payments[m]?.status === 'paid').length;
+                    const isSummerPaid = student.payments['Jul']?.status === 'paid';
+                    const summerTuitionPaid = isSummerPaid ? tuition : 0;
+                    const grossAmountPaid = (paidMonthsCount * tuition) + summerTuitionPaid;
+
+                    const netTotalDue = grossTotalDue - totalDiscounts;
+                    const netAmountPaid = Math.max(0, grossAmountPaid - totalDiscounts);
+                    const remainingBalance = Math.max(0, netTotalDue - netAmountPaid);
+
+                    const summaryContainer = document.getElementById('payment-summary-container');
+                     summaryContainer.innerHTML = `
+                         <div class="border border-color rounded-lg p-4">
+                             <h4 class="font-semibold text-lg mb-2">Payment Summary</h4>
+                             <div class="space-y-2 text-sm">
+                                 <div class="flex justify-between items-center">
+                                     <span class="text-secondary" data-translate-key="gross_total_due">${translations[state.ui.language].gross_total_due || 'Gross Total Due'}</span>
+                                     <span>${utils.formatCurrency(grossTotalDue)}</span>
+                                 </div>
+                                  <div class="flex justify-between items-center">
+                                     <span class="text-secondary" data-translate-key="gross_amount_paid">${translations[state.ui.language].gross_amount_paid}</span>
+                                     <span>${utils.formatCurrency(grossAmountPaid)}</span>
+                                 </div>
+                                 <div class="flex justify-between items-center">
+                                     <span class="text-secondary" data-translate-key="discounts">${translations[state.ui.language].discounts || 'Discounts'}</span>
+                                     <span>- ${utils.formatCurrency(totalDiscounts)}</span>
+                                 </div>
+                                 <div class="flex justify-between items-center mt-2 pt-2 border-t border-dashed border-color">
+                                     <span class="font-semibold" data-translate-key="net_total_due">${translations[state.ui.language].net_total_due || 'Net Total Due'}</span>
+                                     <span class="font-semibold">${utils.formatCurrency(netTotalDue)}</span>
+                                 </div>
+                                  <div class="flex justify-between items-center">
+                                     <span class="font-semibold" data-translate-key="net_amount_paid">${translations[state.ui.language].net_amount_paid || 'Net Amount Paid'}</span>
+                                     <span class="font-semibold">${utils.formatCurrency(netAmountPaid)}</span>
+                                 </div>
+                                 <div class="flex justify-between items-center border-t-2 border-primary pt-4 mt-4">
+                                     <span class="text-lg font-bold" data-translate-key="remaining_balance">${translations[state.ui.language].remaining_balance}</span>
+                                     <span class="text-2xl font-bold text-red-600">${utils.formatCurrency(remainingBalance)}</span>
+                                 </div>
+                             </div>
+                         </div>
+                    `;
+
+                    const summerContainer = document.getElementById('summer-payment-container');
+                    let summerStatusText, summerButtons;
+
+                    if (hasJoinedSummer) {
+                        summerStatusText = isSummerPaid ? translations[state.ui.language].paid : translations[state.ui.language].enrolled_unpaid;
+                        summerButtons = `
+                            <button class="text-sm ${isSummerPaid ? 'bg-gray-500' : 'bg-green-500'} text-white px-3 py-1 rounded toggle-summer-payment-btn">${isSummerPaid ? translations[state.ui.language].mark_unpaid : translations[state.ui.language].mark_paid}</button>
+                            <button class="text-sm bg-red-500 text-white px-3 py-1 rounded unenroll-summer-btn">${translations[state.ui.language].unenroll}</button>
+                        `;
+                    } else {
+                        summerStatusText = translations[state.ui.language].not_enrolled;
+                        summerButtons = `<button class="text-sm bg-blue-500 text-white px-3 py-1 rounded enroll-summer-btn">${translations[state.ui.language].enroll}</button>`;
+                    }
+
+                    summerContainer.innerHTML = `
+                        <div class="border border-color rounded-lg p-3">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <p class="font-semibold">${translations[state.ui.language].summer_class_july}</p>
+                                    <p class="text-xs text-secondary">${utils.formatCurrency(tuition)}</p>
+                                    <p class="text-sm ${isSummerPaid ? 'text-yellow-700' : 'text-gray-500'}">${summerStatusText}</p>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    ${summerButtons}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                },
+            };
+
+            // --- EVENT HANDLERS ---
+            const handlers = {
+                navigate: (e) => {
+                    if (e.target.closest('.sidebar-item')) {
+                        e.preventDefault();
+                        state.ui.currentPage = e.target.closest('.sidebar-item').dataset.page;
+                        render.page();
+                    }
+                },
+                handleStudentSort: (e) => {
+                    if(e.target.matches('[data-sort]')) {
+                        const key = e.target.dataset.sort;
+                        if(state.ui.studentSort.key === key) {
+                            state.ui.studentSort.order = state.ui.studentSort.order === 'asc' ? 'desc' : 'asc';
+                        } else {
+                            state.ui.studentSort.key = key;
+                            state.ui.studentSort.order = 'asc';
+                        }
+                        render.students();
+                    }
+                },
+                openAddStudentModal: () => {
+                    document.getElementById('student-form').reset();
+                    document.getElementById('student-id').value = '';
+                    document.getElementById('student-modal-title').textContent = translations[state.ui.language].add_student_title;
+                    
+                    document.getElementById('student-sy').innerHTML = state.settings.schoolYears.map(o => `<option value="${o}">${o}</option>`).join('');
+                    document.getElementById('student-campus').innerHTML = state.settings.campuses.map(o => `<option value="${o}">${o}</option>`).join('');
+                    document.getElementById('student-department').innerHTML = state.settings.departments.map(o => `<option value="${o}">${o}</option>`).join('');
+                    
+                    const updateClasses = () => {
+                        const dept = document.getElementById('student-department').value;
+                        document.getElementById('student-class').innerHTML = (state.settings.classes[dept] || []).map(o => `<option value="${o}">${o}</option>`).join('');
+                    };
+                    document.getElementById('student-department').onchange = updateClasses;
+                    updateClasses();
+                    
+                    utils.showModal('student-modal');
+                },
+                handleStudentFormSubmit: (e) => {
+                    e.preventDefault();
+                    const id = document.getElementById('student-id').value;
+                    const studentData = {
+                        name: document.getElementById('student-name').value,
+                        schoolYear: document.getElementById('student-sy').value,
+                        campus: document.getElementById('student-campus').value,
+                        department: document.getElementById('student-department').value,
+                        className: document.getElementById('student-class').value,
+                    };
+
+                    if (id) {
+                        const index = state.students.findIndex(s => s.id === id);
+                        if (index !== -1) {
+                            state.students[index] = { ...state.students[index], ...studentData };
+                        }
+                    } else {
+                        state.students.push({ id: utils.generateId(), ...studentData, payments: {}, discounts: { advanced: 0, staff: 0 } });
+                    }
+
+                    utils.saveState();
+                    render.students();
+                    render.dashboard();
+                    utils.hideModal('student-modal');
+                },
+                handleStudentTableClicks: async (e) => {
+                    const target = e.target;
+
+                    if (target.classList.contains('edit-student-btn')) {
+                        const studentId = target.dataset.id;
+                        const student = state.students.find(s => s.id === studentId);
+                        if (student) {
+                            document.getElementById('student-form').reset();
+                            document.getElementById('student-id').value = student.id;
+                            document.getElementById('student-modal-title').textContent = translations[state.ui.language].edit_student_title;
+                            document.getElementById('student-name').value = student.name;
+                            
+                            const sySelect = document.getElementById('student-sy');
+                            sySelect.innerHTML = state.settings.schoolYears.map(o => `<option value="${o}">${o}</option>`).join('');
+                            sySelect.value = student.schoolYear;
+
+                            const campusSelect = document.getElementById('student-campus');
+                            campusSelect.innerHTML = state.settings.campuses.map(o => `<option value="${o}">${o}</option>`).join('');
+                            campusSelect.value = student.campus;
+
+                            const deptSelect = document.getElementById('student-department');
+                            deptSelect.innerHTML = state.settings.departments.map(o => `<option value="${o}">${o}</option>`).join('');
+                            deptSelect.value = student.department;
+
+                            const classSelect = document.getElementById('student-class');
+                            const updateClasses = () => {
+                                const dept = deptSelect.value;
+                                classSelect.innerHTML = (state.settings.classes[dept] || []).map(o => `<option value="${o}">${o}</option>`).join('');
+                            };
+                            deptSelect.onchange = updateClasses;
+                            updateClasses();
+                            classSelect.value = student.className;
+                            
+                            utils.showModal('student-modal');
+                        }
+                    } else if (target.classList.contains('delete-student-btn')) {
+                        const studentId = target.dataset.id;
+                        const confirmed = await utils.confirm('Are you sure you want to delete this student?');
+                        if (confirmed) {
+                            state.students = state.students.filter(s => s.id !== studentId);
+                            utils.saveState();
+                            render.students();
+                            render.dashboard();
+                        }
+                    } else if(target.classList.contains('view-payment-btn')) {
+                        const studentId = target.dataset.id;
+                        const student = state.students.find(s => s.id === studentId);
+                        if (student) {
+                            handlers.openPaymentModal(student);
+                        }
+                    } else if (target.classList.contains('student-checkbox')) {
+                        const studentId = target.dataset.id;
+                        if(target.checked) {
+                            state.ui.selectedStudents.add(studentId);
+                        } else {
+                            state.ui.selectedStudents.delete(studentId);
+                        }
+                        render.students();
+                    }
+                },
+                openPaymentModal: (student) => {
+                    document.getElementById('payment-modal').dataset.studentId = student.id;
+                    document.getElementById('payment-modal-student-name').textContent = student.name;
+                    document.getElementById('payment-modal-student-info').textContent = `${student.department} | ${student.className} | SY ${student.schoolYear}`;
+                    
+                    const tuition = (state.settings.tuition[student.schoolYear] && state.settings.tuition[student.schoolYear][student.department]) || 0;
+                    
+                    const container = document.getElementById('monthly-payments-container');
+                    container.innerHTML = utils.getMonths().map(month => {
+                        const isPaid = student.payments[month]?.status === 'paid';
+                        const monthName = translations[state.ui.language][month.toLowerCase()] || month;
+                        return `
+                        <div class="border border-color rounded-lg p-3 text-center cursor-pointer payment-month-card ${isPaid ? 'bg-green-100' : 'bg-red-100'}" data-month="${month}">
+                            <p class="font-semibold">${monthName}</p>
+                            <p class="text-xs text-secondary">${utils.formatCurrency(tuition)}</p>
+                            <p class="text-sm font-bold ${isPaid ? 'text-green-700' : 'text-red-700'}">${isPaid ? translations[state.ui.language].paid : translations[state.ui.language].unpaid}</p>
+                        </div>
+                        `
+                    }).join('');
+
+                    render.paymentModalSummary(student);
+
+                    document.getElementById('advanced-discount').value = (student.discounts?.advanced || 0).toLocaleString('en-US');
+                    document.getElementById('staff-discount').value = (student.discounts?.staff || 0).toLocaleString('en-US');
+
+                    ['advanced-discount', 'staff-discount'].forEach(id => {
+                        const input = document.getElementById(id);
+                        const new_input = input.cloneNode(true); 
+                        input.parentNode.replaceChild(new_input, input);
+                        new_input.addEventListener('input', handlers.handleTuitionInputFormatting);
+                    });
+
+                    const calcBtn = document.getElementById('calculate-btn');
+                    const new_calcBtn = calcBtn.cloneNode(true); 
+                    calcBtn.parentNode.replaceChild(new_calcBtn, calcBtn);
+                    new_calcBtn.addEventListener('click', handlers.computePaymentDetails);
+                    
+                    utils.showModal('payment-modal');
+                },
+                computePaymentDetails: () => {
+                    const studentId = document.getElementById('payment-modal').dataset.studentId;
+                    const student = state.students.find(s => s.id === studentId);
+                    if (!student) return;
+                    
+                    const tempDiscounts = {
+                        advanced: document.getElementById('advanced-discount').value.replace(/,/g, ''),
+                        staff: document.getElementById('staff-discount').value.replace(/,/g, ''),
+                    };
+                    
+                    render.paymentModalSummary(student, tempDiscounts);
+                },
+                handlePaymentCardClick: (e) => {
+                    const studentId = document.getElementById('payment-modal').dataset.studentId;
+                    const student = state.students.find(s => s.id === studentId);
+                    if(!student) return;
+
+                    if (e.target.closest('.payment-month-card')) {
+                        const month = e.target.closest('.payment-month-card').dataset.month;
+                        if (!student.payments[month]) student.payments[month] = { status: 'unpaid', discount: 0 };
+                        student.payments[month].status = student.payments[month].status === 'paid' ? 'unpaid' : 'paid';
+                        handlers.openPaymentModal(student); 
+                    }
+                    else if (e.target.closest('.enroll-summer-btn')) {
+                        student.payments['Jul'] = { status: 'unpaid', discount: 0 }; 
+                        handlers.openPaymentModal(student);
+                    }
+                    else if (e.target.closest('.unenroll-summer-btn')) {
+                        delete student.payments['Jul']; 
+                        handlers.openPaymentModal(student);
+                    }
+                    else if (e.target.closest('.toggle-summer-payment-btn')) {
+                        student.payments['Jul'].status = student.payments['Jul'].status === 'paid' ? 'unpaid' : 'paid';
+                        handlers.openPaymentModal(student);
+                    }
+                },
+                savePaymentDetails: () => {
+                    const studentId = document.getElementById('payment-modal').dataset.studentId;
+                    const student = state.students.find(s => s.id === studentId);
+                    if (student) {
+                        if (!student.discounts) student.discounts = {};
+                        const advancedDiscount = document.getElementById('advanced-discount').value.replace(/,/g, '');
+                        const staffDiscount = document.getElementById('staff-discount').value.replace(/,/g, '');
+
+                        student.discounts.advanced = parseFloat(advancedDiscount) || 0;
+                        student.discounts.staff = parseFloat(staffDiscount) || 0;
+                        
+                        utils.saveState();
+                        render.students();
+                        render.dashboard();
+                        utils.hideModal('payment-modal');
+                    }
+                },
+                handleSelectAllStudents: (e) => {
+                    const isChecked = e.target.checked;
+                    const searchTerm = document.getElementById('student-search-bar').value.toLowerCase();
+                    let filteredStudents = state.students.filter(s => {
+                        if (state.ui.rosterFilters.schoolYear !== 'all' && s.schoolYear !== state.ui.rosterFilters.schoolYear) return false;
+                        if (state.ui.rosterFilters.campus !== 'all' && s.campus !== state.ui.rosterFilters.campus) return false;
+                        if (state.ui.rosterFilters.department !== 'all' && s.department !== state.ui.rosterFilters.department) return false;
+                        if (state.ui.rosterFilters.className !== 'all' && s.className !== state.ui.rosterFilters.className) return false;
+                        if (searchTerm && (!s.name || !s.name.toLowerCase().includes(searchTerm))) return false;
+                        return true;
+                    });
+
+                    filteredStudents.forEach(student => {
+                        if (isChecked) {
+                            state.ui.selectedStudents.add(student.id);
+                        } else {
+                            state.ui.selectedStudents.delete(student.id);
+                        }
+                    });
+
+                    render.students();
+                },
+                handleBulkDelete: async () => {
+                    const count = state.ui.selectedStudents.size;
+                    if (count > 0) {
+                        const confirmed = await utils.confirm(`Are you sure you want to delete ${count} selected students?`);
+                        if (confirmed) {
+                            state.students = state.students.filter(s => !state.ui.selectedStudents.has(s.id));
+                            state.ui.selectedStudents.clear();
+                            document.getElementById('select-all-students-checkbox').checked = false;
+                            utils.saveState();
+                            render.students();
+                            render.dashboard();
+                        }
+                    }
+                },
+                handleBulkMove: () => {
+                    if (state.ui.selectedStudents.size === 0) return;
+                    
+                    document.getElementById('move-student-sy').innerHTML = state.settings.schoolYears.map(o => `<option value="${o}">${o}</option>`).join('');
+                    document.getElementById('move-student-campus').innerHTML = state.settings.campuses.map(o => `<option value="${o}">${o}</option>`).join('');
+                    document.getElementById('move-student-department').innerHTML = state.settings.departments.map(o => `<option value="${o}">${o}</option>`).join('');
+                    
+                    const updateClasses = () => {
+                        const dept = document.getElementById('move-student-department').value;
+                        document.getElementById('move-student-class').innerHTML = (state.settings.classes[dept] || []).map(o => `<option value="${o}">${o}</option>`).join('');
+                    };
+                    document.getElementById('move-student-department').onchange = updateClasses;
+                    updateClasses();
+
+                    utils.showModal('move-students-modal');
+                },
+                confirmBulkMove: () => {
+                     const newSY = document.getElementById('move-student-sy').value;
+                     const newCampus = document.getElementById('move-student-campus').value;
+                     const newDept = document.getElementById('move-student-department').value;
+                     const newClass = document.getElementById('move-student-class').value;
+
+                    state.students.forEach(student => {
+                        if (state.ui.selectedStudents.has(student.id)) {
+                            student.schoolYear = newSY;
+                            student.campus = newCampus;
+                            student.department = newDept;
+                            student.className = newClass;
+                        }
+                    });
+                    
+                    state.ui.selectedStudents.clear();
+                    document.getElementById('select-all-students-checkbox').checked = false;
+                    utils.saveState();
+                    render.students();
+                    utils.hideModal('move-students-modal');
+                },
+                openMarkPaymentModal: (action) => {
+                    if (state.ui.selectedStudents.size === 0) return;
+                    
+                    document.getElementById('payment-action-hidden').value = action;
+                    
+                    const monthSelect = document.getElementById('payment-month-select');
+                    const months = utils.getMonths(); // Sep to Jun
+                    monthSelect.innerHTML = months.map(month => {
+                        const monthName = translations[state.ui.language][month.toLowerCase()] || month;
+                        return `<option value="${month}">${monthName}</option>`;
+                    }).join('');
+                    
+                    utils.showModal('mark-payment-modal');
+                },
+                confirmMarkPayment: async () => {
+                    const action = document.getElementById('payment-action-hidden').value;
+                    const selectedMonth = document.getElementById('payment-month-select').value;
+                    const selectedIds = Array.from(state.ui.selectedStudents);
+
+                    if (!action || !selectedMonth || selectedIds.length === 0) return;
+
+                    selectedIds.forEach(studentId => {
+                        const student = state.students.find(s => s.id === studentId);
+                        if (student) {
+                            if (!student.payments) {
+                                student.payments = {};
+                            }
+                            student.payments[selectedMonth] = { ...student.payments[selectedMonth], status: action };
+                        }
+                    });
+
+                    utils.saveState();
+                    state.ui.selectedStudents.clear();
+                    document.getElementById('select-all-students-checkbox').checked = false;
+
+                    utils.hideModal('mark-payment-modal');
+                    render.students();
+                    render.dashboard();
+                    await utils.showMessage('payment_status_updated', 'success');
+                },
+                handleManageClicks: async (e) => {
+                    const target = e.target;
+                    if (target.classList.contains('add-manage-btn')) {
+                        const key = target.dataset.key;
+                        const dept = target.dataset.dept; 
+                        const input = target.previousElementSibling;
+                        const value = input.value.trim();
+                        if (value) {
+                            if (key === 'classes') {
+                                if (!state.settings.classes[dept]) state.settings.classes[dept] = [];
+                                state.settings.classes[dept].push(value);
+                            } else {
+                                if(!state.settings[key].includes(value)) {
+                                    state.settings[key].push(value);
+                                    if (key === 'schoolYears') {
+                                        const firstSY = state.settings.schoolYears[0];
+                                        state.settings.tuition[value] = { ...(state.settings.tuition[firstSY] || {}) };
+                                    }
+                                }
+                            }
+                            utils.saveState();
+                            render.manage();
+                            input.value = '';
+                        }
+                    } else if(target.classList.contains('delete-manage-item')) {
+                        const key = target.dataset.key;
+                        const item = target.dataset.item;
+                        const dept = target.dataset.dept;
+                        
+                        const confirmed = await utils.confirm(`Are you sure you want to delete "${item}"? This cannot be undone.`);
+                    if (confirmed) {
+                         if (key === 'classes') {
+                            state.settings.classes[dept] = state.settings.classes[dept].filter(i => i !== item);
+                            } else {
+                                state.settings[key] = state.settings[key].filter(i => i !== item);
+                                if (key === 'departments') {
+                                    for (const sy in state.settings.tuition) {
+                                        delete state.settings.tuition[sy][item];
+                                    }
+                                    delete state.settings.classes[item];
+                                }
+                                if (key === 'schoolYears') {
+                                    delete state.settings.tuition[item];
+                                }
+                            }
+                            utils.saveState();
+                            render.manage();
+                        }
+                    }
+                },
+                openSettingsModal: () => {
+                    document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active-tab'));
+                    document.querySelector('.settings-tab[data-tab="general"]').classList.add('active-tab');
+                    document.querySelectorAll('.settings-tab-content').forEach(c => c.classList.add('hidden'));
+                    document.getElementById('general-tab-content').classList.remove('hidden');
+                    document.getElementById('admin-login-view').classList.remove('hidden');
+                    document.getElementById('admin-panel-view').classList.add('hidden');
+                    document.getElementById('admin-password').value = '';
+                    render.settings();
+                    utils.showModal('settings-modal');
+                },
+                handleSettingsTabs: (e) => {
+                    if (e.target.classList.contains('settings-tab')) {
+                        const tabName = e.target.dataset.tab;
+                        document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active-tab'));
+                        e.target.classList.add('active-tab');
+                        document.querySelectorAll('.settings-tab-content').forEach(c => c.classList.add('hidden'));
+                        document.getElementById(`${tabName}-tab-content`).classList.remove('hidden');
+                    }
+                },
+                handleSettingsChanges: () => {
+                    state.settings.theme = document.getElementById('theme-select').value;
+                    state.settings.font = document.getElementById('font-select').value;
+                    utils.saveState();
+                    render.applyAppearance();
+                },
+                handleTuitionInputFormatting: (e) => {
+                    let value = e.target.value.replace(/[^0-9]/g, '');
+                    if (value) {
+                        const numberValue = parseInt(value, 10);
+                        e.target.value = numberValue.toLocaleString('en-US');
+                    } else {
+                        e.target.value = '';
+                    }
+                },
+                handleLogoUpload: (e) => {
+                    const file = e.target.files[0];
+                    if(file) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            state.settings.logo = event.target.result;
+                            utils.saveState();
+                            render.applyAppearance();
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                },
+                saveTuition: () => {
+                     const selectedSY = document.getElementById('tuition-sy-select').value;
+                     if (!state.settings.tuition[selectedSY]) {
+                         state.settings.tuition[selectedSY] = {};
+                     }
+
+                     document.querySelectorAll('#tuition-settings-container .tuition-input').forEach(input => {
+                           const dept = input.dataset.dept;
+                           const value = input.value.replace(/,/g, ''); 
+                           const numValue = parseFloat(value) || 0;
+                           state.settings.tuition[selectedSY][dept] = numValue;
+                     });
+                     utils.saveState();
+                     utils.showMessage('tuition_fees_saved');
+                     render.dashboard();
+                },
+                adminLogin: () => {
+                    if(document.getElementById('admin-password').value === 'neerada123') {
+                        document.getElementById('admin-login-view').classList.add('hidden');
+                        document.getElementById('admin-panel-view').classList.remove('hidden');
+                    } else {
+                        utils.showMessage('incorrect_password', 'error');
+                    }
+                },
+                exportData: () => {
+                    const dataStr = JSON.stringify(state, null, 2);
+                    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+                    const exportFileDefaultName = 'neerada_backup.json';
+                    
+                    let linkElement = document.createElement('a');
+                    linkElement.setAttribute('href', dataUri);
+                    linkElement.setAttribute('download', exportFileDefaultName);
+                    linkElement.click();
+                },
+                importData: (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = async (event) => {
+                            const confirmed = await utils.confirm('Are you sure you want to import this file? This will overwrite all current data.');
+                            if (confirmed) {
+                                try {
+                                    const importedState = JSON.parse(event.target.result);
+                                    state = importedState;
+                                    utils.saveState();
+                                    location.reload();
+                                } catch (error) {
+                                    utils.showMessage('error_parsing_file', 'error');
+                                }
+                            }
+                        };
+                        reader.readAsText(file);
+                    }
+                },
+                openBulkUploadModal: () => {
+                    utils.showModal('bulk-upload-modal');
+                },
+                downloadCsvTemplate: (e) => {
+                    e.preventDefault();
+                    const headers = 'name,schoolYear,campus,department,className';
+                    const exampleRow1 = 'Somsak Chanvong,2024-2025,Sibounheuang,Primary,P1-A';
+                    const exampleRow2 = 'Chansouda Keomany,2024-2025,Chommany,Kindergarten,K2-B';
+                    const exampleRowLao = 'ທະວີໄຊ ພົມມະວົງສາ,2025-2026,Sibounheuang,Primary,ປ.3-A';
+                    const csvContent = `data:text/csv;charset=utf-8,${'\uFEFF'}${headers}\n${exampleRow1}\n${exampleRow2}\n${exampleRowLao}`;
+                    const encodedUri = encodeURI(csvContent);
+                    const link = document.createElement("a");
+                    link.setAttribute("href", encodedUri);
+                    link.setAttribute("download", "student_template.csv");
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                },
+                processCsv: (e) => {
+                    const fileInput = document.getElementById('csv-file-input');
+                    const file = fileInput.files[0];
+                    if (!file) {
+                        utils.showMessage('please_select_file', 'error');
+                        return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = async (event) => {
+                        const csv = event.target.result;
+                        const lines = csv.split('\n').slice(1);
+                        const newStudents = [];
+                        lines.forEach(line => {
+                            const [name, schoolYear, campus, department, className] = line.split(',').map(s => s.trim());
+                            if (name) {
+                                newStudents.push({
+                                    id: utils.generateId(),
+                                    name, schoolYear, campus, department, className,
+                                    payments: {}, 
+                                    discounts: { advanced: 0, staff: 0 }
+                                });
+                            }
+                        });
+                        
+                        const confirmed = await utils.confirm(`Found ${newStudents.length} students. Do you want to add them to the roster?`);
+                        if (confirmed) {
+                            state.students.push(...newStudents);
+                            utils.saveState();
+                            render.students();
+                            render.dashboard();
+                            utils.hideModal('bulk-upload-modal');
+                        }
+                    };
+                    reader.readAsText(file);
+                },
+                handleRosterFilterChange: (e) => {
+                    const { id, value } = e.target;
+                    if (id === 'roster-sy-filter') state.ui.rosterFilters.schoolYear = value;
+                    if (id === 'roster-campus-filter') state.ui.rosterFilters.campus = value;
+                    if (id === 'roster-dept-filter') {
+                        state.ui.rosterFilters.department = value;
+                        state.ui.rosterFilters.className = 'all';
+                    }
+                    if (id === 'roster-class-filter') state.ui.rosterFilters.className = value;
+                    render.students();
+                }
+            };
+
+            // --- HISTORY MANAGEMENT ---
+            let history = [];
+            let historyIndex = -1;
+            let isInitializing = true;
+            const historyManager = {
+                undoBtn: document.getElementById('undo-btn'),
+                redoBtn: document.getElementById('redo-btn'),
+                
+                updateButtons: () => {
+                    historyManager.undoBtn.disabled = historyIndex <= 0;
+                    historyManager.redoBtn.disabled = historyIndex >= history.length - 1;
+                },
+
+                saveSnapshot: () => {
+                    if (isInitializing) return;
+
+                    if (historyIndex < history.length - 1) {
+                        history = history.slice(0, historyIndex + 1);
+                    }
+                    
+                    const newState = JSON.parse(JSON.stringify(state));
+                    if (history.length > 0 && JSON.stringify(history[history.length - 1]) === JSON.stringify(newState)) {
+                        return;
+                    }
+
+                    history.push(newState);
+                    historyIndex = history.length - 1;
+                    historyManager.updateButtons();
+                },
+
+                undo: () => {
+                    if (historyIndex > 0) {
+                        historyIndex--;
+                        state = JSON.parse(JSON.stringify(history[historyIndex]));
+                        state.ui.selectedStudents = new Set(Array.from(state.ui.selectedStudents));
+                        render.all();
+                        translateUI();
+                        historyManager.updateButtons();
+                    }
+                },
+
+                redo: () => {
+                    if (historyIndex < history.length - 1) {
+                        historyIndex++;
+                        state = JSON.parse(JSON.stringify(history[historyIndex]));
+                        state.ui.selectedStudents = new Set(Array.from(state.ui.selectedStudents));
+                        render.all();
+                        translateUI();
+                        historyManager.updateButtons();
+                    }
+                }
+            };
+
+
+            // --- INITIALIZATION ---
+            function init() {
+                utils.loadState();
+                DOMElements.currentYearSpan.textContent = new Date().getFullYear();
+
+                // Setup event listeners
+                document.querySelector('aside').addEventListener('click', handlers.navigate);
+                document.getElementById('settings-btn').addEventListener('click', handlers.openSettingsModal);
+                document.getElementById('close-settings-modal').addEventListener('click', () => utils.hideModal('settings-modal'));
+                
+                document.getElementById('add-student-btn').addEventListener('click', handlers.openAddStudentModal);
+                document.getElementById('close-student-modal').addEventListener('click', () => utils.hideModal('student-modal'));
+                document.getElementById('student-form').addEventListener('submit', handlers.handleStudentFormSubmit);
+
+                document.getElementById('students-table-body').addEventListener('click', handlers.handleStudentTableClicks);
+                document.querySelector('#students-page thead').addEventListener('click', handlers.handleStudentSort);
+                document.getElementById('student-search-bar').addEventListener('input', render.students);
+                
+                document.getElementById('close-payment-modal').addEventListener('click', () => utils.hideModal('payment-modal'));
+                document.getElementById('payment-modal').addEventListener('click', handlers.handlePaymentCardClick);
+                document.getElementById('save-payment-details').addEventListener('click', handlers.savePaymentDetails);
+
+                document.getElementById('dashboard-sy-filter').addEventListener('change', render.dashboard);
+                document.getElementById('dashboard-month-filter').addEventListener('change', render.dashboard);
+                document.getElementById('dashboard-campus-filter').addEventListener('change', render.dashboard);
+                document.getElementById('dashboard-dept-filter').addEventListener('change', render.dashboard);
+                document.getElementById('dashboard-class-filter').addEventListener('change', render.dashboard);
+                
+                document.getElementById('select-all-students-checkbox').addEventListener('change', handlers.handleSelectAllStudents);
+                document.getElementById('delete-students-btn').addEventListener('click', handlers.handleBulkDelete);
+                document.getElementById('move-students-btn').addEventListener('click', handlers.handleBulkMove);
+                document.getElementById('close-move-students-modal').addEventListener('click', () => utils.hideModal('move-students-modal'));
+                document.getElementById('confirm-move-btn').addEventListener('click', handlers.confirmBulkMove);
+
+                // New Bulk Payment Listeners
+                document.getElementById('mark-paid-btn').addEventListener('click', () => handlers.openMarkPaymentModal('paid'));
+                document.getElementById('mark-unpaid-btn').addEventListener('click', () => handlers.openMarkPaymentModal('unpaid'));
+                document.getElementById('confirm-mark-payment-btn').addEventListener('click', handlers.confirmMarkPayment);
+                document.getElementById('close-mark-payment-modal').addEventListener('click', () => utils.hideModal('mark-payment-modal'));
+
+                document.getElementById('manage-page').addEventListener('click', handlers.handleManageClicks);
+                
+                // Settings listeners
+                document.querySelector('.settings-tab').parentElement.addEventListener('click', handlers.handleSettingsTabs);
+                document.getElementById('theme-select').addEventListener('change', handlers.handleSettingsChanges);
+                document.getElementById('font-select').addEventListener('change', handlers.handleSettingsChanges);
+                document.getElementById('tuition-sy-select').addEventListener('change', render.settings);
+                document.getElementById('logo-upload-input').addEventListener('change', handlers.handleLogoUpload);
+                document.getElementById('save-tuition-btn').addEventListener('click', handlers.saveTuition);
+                document.getElementById('admin-login-btn').addEventListener('click', handlers.adminLogin);
+                document.getElementById('export-data-btn').addEventListener('click', handlers.exportData);
+                document.getElementById('import-data-input').addEventListener('change', handlers.importData);
+                document.getElementById('logout-btn').addEventListener('click', () => {
+                    utils.saveState(); // Ensure last state is saved before logging out
+                    sessionStorage.removeItem('isLoggedIn');
+                    location.reload();
+                });
+                
+                // Bulk Upload Listeners
+                document.getElementById('bulk-upload-btn').addEventListener('click', handlers.openBulkUploadModal);
+                document.getElementById('close-bulk-upload-modal').addEventListener('click', () => utils.hideModal('bulk-upload-modal'));
+                document.getElementById('download-csv-template').addEventListener('click', handlers.downloadCsvTemplate);
+                document.getElementById('process-csv-btn').addEventListener('click', handlers.processCsv);
+                
+                // Roster Filter Listeners
+                document.getElementById('roster-filters-container').addEventListener('change', handlers.handleRosterFilterChange);
+
+                // Translation Listener
+                document.getElementById('lang-selector').addEventListener('click', (e) => {
+                    if (e.target.matches('img[data-lang]')) {
+                        const lang = e.target.dataset.lang;
+                        state.ui.language = lang;
+                        utils.saveState();
+                        translateUI();
+                    }
+                });
+
+                document.getElementById('message-modal-ok').addEventListener('click', () => utils.hideModal('message-modal'));
+                
+                // History Listeners
+                document.getElementById('undo-btn').addEventListener('click', historyManager.undo);
+                document.getElementById('redo-btn').addEventListener('click', historyManager.redo);
+
+
+                render.all();
+                translateUI();
+                
+                // Allow history tracking after initialization
+                isInitializing = false;
+                historyManager.saveSnapshot();
+            }
+
+            // --- START THE APP ---
+            init();
+        }
+    </script>
+</body>
+</html>
