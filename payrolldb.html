@@ -1,0 +1,1929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neerada Payroll System v3.6 (Unlimited Storage)</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        /* Theme Variables - Default (Blue) */
+        :root {
+            --primary-900: #1e3a8a;
+            --primary-800: #1e40af;
+            --primary-700: #1d4ed8;
+            --primary-600: #2563eb;
+            --primary-100: #dbeafe;
+            --primary-50: #eff6ff;
+        }
+
+        /* Theme Overrides */
+        body.theme-emerald { --primary-900: #064e3b; --primary-800: #065f46; --primary-700: #047857; --primary-600: #059669; --primary-100: #d1fae5; --primary-50: #ecfdf5; }
+        body.theme-rose { --primary-900: #881337; --primary-800: #9f1239; --primary-700: #be123c; --primary-600: #e11d48; --primary-100: #ffe4e6; --primary-50: #fff1f2; }
+        body.theme-slate { --primary-900: #0f172a; --primary-800: #1e293b; --primary-700: #334155; --primary-600: #475569; --primary-100: #f1f5f9; --primary-50: #f8fafc; }
+        body.theme-violet { --primary-900: #4c1d95; --primary-800: #5b21b6; --primary-700: #6d28d9; --primary-600: #7c3aed; --primary-100: #ede9fe; --primary-50: #f5f3ff; }
+
+        /* Apply Variables */
+        .bg-blue-900 { background-color: var(--primary-900) !important; }
+        .bg-blue-800 { background-color: var(--primary-800) !important; }
+        .text-blue-900 { color: var(--primary-900) !important; }
+        .text-blue-800 { color: var(--primary-800) !important; }
+        .text-blue-700 { color: var(--primary-700) !important; }
+        .text-blue-600 { color: var(--primary-600) !important; }
+        .bg-blue-600 { background-color: var(--primary-600) !important; }
+        .hover\:bg-blue-700:hover { background-color: var(--primary-700) !important; }
+        .hover\:bg-blue-800:hover { background-color: var(--primary-800) !important; }
+        .bg-blue-50 { background-color: var(--primary-50) !important; }
+        .bg-blue-100 { background-color: var(--primary-100) !important; }
+        .text-blue-100 { color: var(--primary-100) !important; }
+        .border-blue-100 { border-color: var(--primary-100) !important; }
+        .border-blue-200 { border-color: #bfdbfe !important; } /* Hardcoded fallback close to 200 */
+
+        /* Auto-calc Highlights in Editor */
+        .field-highlight-1 input {
+            background-color: #f0fdf4 !important; /* Green-50 */
+            border-color: #22c55e !important;
+            font-weight: 800 !important;
+            color: #15803d !important;
+        }
+        .field-highlight-2 input {
+            background-color: #fff7ed !important; /* Orange-50 */
+            border-color: #f97316 !important;
+            font-weight: 800 !important;
+            color: #c2410c !important;
+        }
+
+        @media print {
+            /* Default to Portrait, overridden by JS for Landscape */
+            @page { size: auto; margin: 0mm; } 
+            
+            html, body { height: 100%; width: 100%; margin: 0; padding: 0; background: white; }
+            body * { visibility: hidden; }
+            #preview-pane, #preview-pane * { visibility: visible; }
+            #preview-pane { 
+                position: fixed; left: 0; top: 0; 
+                width: 100%; 
+                margin: 0; padding: 10mm; 
+                background: white; z-index: 9999;
+                border: none !important; box-shadow: none !important;
+                display: flex; flex-direction: column;
+                transform-origin: top left; /* Critical for scaling */
+            }
+            #preview-pane { font-family: sans-serif; color: #000; }
+            #prev-name { font-size: 16pt !important; font-weight: 800 !important; color: #1e3a8a !important; line-height: 1.1; }
+            #prev-pos, #prev-dept, #prev-id { font-size: 12pt !important; font-weight: 700 !important; color: #1e3a8a !important; }
+            #preview-pane .text-xs { font-size: 10pt !important; }
+            #preview-pane .text-sm { font-size: 11pt !important; }
+            #preview-pane .text-\[10px\] { font-size: 9pt !important; color: #6b7280 !important; }
+            #preview-pane h3, #preview-pane h4 { 
+                font-size: 12pt !important; font-weight: bold !important; 
+                margin-top: 8px !important; margin-bottom: 4px !important;
+                border-bottom-width: 2px !important;
+            }
+            #preview-pane .gap-6 { gap: 8px !important; }
+            #preview-pane .gap-8 { gap: 15px !important; }
+            #preview-pane .p-3 { padding: 6px !important; }
+            #preview-pane .py-1 { padding-top: 1px !important; padding-bottom: 1px !important; }
+            #preview-pane .mt-6, #preview-pane .mt-8 { margin-top: 10px !important; }
+            #preview-pane .mb-6 { margin-bottom: 8px !important; }
+            #print-footer { margin-top: auto !important; padding-top: 10px; border-top: 1px solid #ccc; font-size: 8pt !important; }
+            #preview-pane .grid { display: grid !important; width: 100% !important; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            .no-print { display: none !important; }
+            
+            /* Print Specific Highlights */
+            .print-highlight-1 { background-color: #f0fdf4 !important; border: 1px solid #bbf7d0 !important; color: #166534 !important; font-weight: bold !important; padding: 4px !important; margin-bottom: 4px !important; border-radius: 4px !important; }
+            .print-highlight-2 { background-color: #fff7ed !important; border: 1px solid #fed7aa !important; color: #9a3412 !important; font-weight: bold !important; padding: 4px !important; margin-bottom: 4px !important; border-radius: 4px !important; }
+            .print-highlight-special { background-color: #e0e7ff !important; border: 1px solid #c7d2fe !important; color: #4338ca !important; font-weight: bold !important; font-size: 11pt !important; padding: 4px !important; border-radius: 4px !important; margin-bottom: 4px !important;}
+            .print-highlight-total { background-color: #fef9c3 !important; border-top: 2px solid #ca8a04 !important; color: #854d0e !important; font-weight: 900 !important; padding: 6px !important; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans text-gray-900 h-screen flex flex-col overflow-hidden">
+
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="fixed inset-0 bg-blue-900 text-white flex items-center justify-center z-50 transition-opacity duration-500">
+        <div class="text-center animate-pulse">
+            <h1 class="text-2xl font-bold">Neerada Payroll</h1>
+            <p class="text-sm opacity-75 mt-2">Loading Unlimited Storage...</p>
+        </div>
+    </div>
+
+    <!-- App Content -->
+    <div id="app-content" class="flex flex-col h-full hidden">
+        
+        <!-- Header / Nav -->
+        <header class="bg-blue-900 text-white p-3 md:p-4 shadow-md flex justify-between items-center z-20 shrink-0">
+            <div class="flex items-center gap-4">
+                <button id="mobile-back-btn" onclick="window.goBack()" class="lg:hidden p-1.5 bg-blue-800 rounded-full hover:bg-blue-700 hidden">
+                    <i data-lucide="chevron-left" class="w-5 h-5 text-white"></i>
+                </button>
+                <div class="bg-white/10 p-2 rounded-full hidden md:block">
+                    <i data-lucide="dollar-sign" class="w-5 h-5 text-yellow-400"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight">Neerada Payroll</h1>
+                    <p class="text-[10px] text-blue-300 hidden md:block">System v3.6 (Unlimited Data)</p>
+                </div>
+                
+                <div class="hidden md:flex bg-blue-800 rounded-lg p-1 ml-6">
+                    <button id="tab-dashboard" onclick="window.switchView('dashboard')" class="px-4 py-1.5 text-sm font-medium rounded-md bg-blue-800 text-white transition-colors">Dashboard</button>
+                    <button id="tab-payroll" onclick="window.switchView('payroll')" class="px-4 py-1.5 text-sm font-medium rounded-md text-blue-100 hover:bg-blue-800 transition-colors">Staff Manager</button>
+                    <button id="tab-config" onclick="window.switchView('config')" class="px-4 py-1.5 text-sm font-medium rounded-md text-blue-100 hover:bg-blue-800 transition-colors">Payslip Data</button>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-2">
+                <button onclick="window.openSettings()" class="p-2 rounded-full hover:bg-blue-800 transition-colors" title="Settings">
+                    <i data-lucide="settings" class="w-5 h-5 text-blue-100"></i>
+                </button>
+                <div class="md:hidden flex gap-2">
+                      <button onclick="window.switchView('dashboard')" class="text-xs bg-blue-800 px-2 py-1 rounded border border-blue-700">Dash</button>
+                      <button onclick="window.switchView('payroll')" class="text-xs bg-blue-800 px-2 py-1 rounded border border-blue-700">Staff</button>
+                      <button onclick="window.switchView('config')" class="text-xs bg-blue-800 px-2 py-1 rounded border border-blue-700">Data</button>
+                </div>
+                <div class="flex items-center gap-2 px-3 py-1.5 bg-blue-800 rounded-lg text-xs font-medium border border-blue-700 hidden md:flex">
+                    <i data-lucide="calendar" class="w-3 h-3"></i>
+                    <span id="date-display">...</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- DASHBOARD VIEW -->
+        <div id="view-dashboard" class="flex-1 overflow-y-auto p-4 lg:p-8">
+            <div class="max-w-6xl mx-auto space-y-8">
+                <div class="flex flex-col md:flex-row justify-between items-end gap-4">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">Financial Overview</h2>
+                        <p class="text-gray-500 text-sm">Track salary payments and history</p>
+                    </div>
+                    <div class="flex gap-2 items-center">
+                        <div class="flex bg-white rounded-md shadow-sm border border-gray-200">
+                            <select id="filter-year" onchange="window.updateDashboardStats()" class="bg-transparent text-sm font-medium text-gray-700 p-2 outline-none border-r border-gray-200"></select>
+                            <select id="filter-month" onchange="window.updateDashboardStats()" class="bg-transparent text-sm font-medium text-gray-700 p-2 outline-none">
+                                <option value="All">All Months</option>
+                                <option value="January">January</option>
+                                <option value="February">February</option>
+                                <option value="March">March</option>
+                                <option value="April">April</option>
+                                <option value="May">May</option>
+                                <option value="June">June</option>
+                                <option value="July">July</option>
+                                <option value="August">August</option>
+                                <option value="September">September</option>
+                                <option value="October">October</option>
+                                <option value="November">November</option>
+                                <option value="December">December</option>
+                            </select>
+                        </div>
+                        <button onclick="window.openSaveHistoryModal()" class="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700 transition text-sm font-medium">
+                            <i data-lucide="save" class="w-4 h-4"></i> Save Monthly Run
+                        </button>
+                        <button onclick="window.downloadCSVReport()" class="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded shadow hover:bg-indigo-700 transition text-sm font-medium ml-2" title="Download CSV Report">
+                            <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Export CSV
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                        <p class="text-xs font-bold text-gray-400 uppercase">Total Paid (LAK)</p>
+                        <p id="stat-total-paid-lak" class="text-2xl font-mono font-bold text-blue-900 mt-2">₭ 0</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                        <p class="text-xs font-bold text-gray-400 uppercase">Total Paid (USD)</p>
+                        <p id="stat-total-paid-usd" class="text-2xl font-mono font-bold text-green-700 mt-2">$0.00</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                        <p class="text-xs font-bold text-gray-400 uppercase">Staff Count</p>
+                        <p id="stat-employees" class="text-3xl font-bold text-gray-800 mt-2">0</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                        <p class="text-xs font-bold text-gray-400 uppercase">Latest Record</p>
+                        <div class="flex flex-col mt-2">
+                            <span id="stat-last-month" class="text-sm font-bold text-gray-800">No Data</span>
+                            <span id="stat-last-amount" class="text-xs text-gray-500">---</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NEW SECTION: Department Breakdown -->
+                <div id="dept-breakdown" class="mt-8">
+                    <!-- Populated by JS -->
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mt-8">
+                    <div class="p-4 border-b border-gray-100 bg-gray-50">
+                        <h3 class="font-bold text-gray-700">Payment History Logs</h3>
+                    </div>
+                    <table class="w-full text-left">
+                        <thead class="bg-gray-50 text-gray-500 text-xs uppercase font-medium">
+                            <tr>
+                                <th class="px-4 py-3">Period</th>
+                                <th class="px-4 py-3">Staff</th>
+                                <th class="px-4 py-3 text-right">Total LAK</th>
+                                <th class="px-4 py-3 text-right">Total USD</th>
+                                <th class="px-4 py-3 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-list" class="divide-y divide-gray-100"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONFIGURATION VIEW -->
+        <div id="view-config" class="flex-1 overflow-y-auto p-4 lg:p-8 hidden bg-gray-50">
+            <div class="max-w-4xl mx-auto">
+                <div class="bg-white rounded-xl shadow border border-gray-200 overflow-hidden">
+                    <div class="p-6 border-b border-gray-200 flex justify-between items-start">
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-800">Payslip Data Configuration</h2>
+                            <p class="text-sm text-gray-500">Manage earnings and deductions fields.</p>
+                        </div>
+                        <button onclick="window.addNewDept()" class="bg-blue-600 text-white px-3 py-1.5 rounded text-sm flex items-center gap-2 hover:bg-blue-700">
+                            <i data-lucide="plus-circle" class="w-4 h-4"></i> New Dept
+                        </button>
+                    </div>
+                    <div class="p-6">
+                        <div class="mb-6 bg-blue-50 p-4 rounded-lg border border-blue-100">
+                            <label class="block text-xs font-bold text-blue-800 uppercase mb-2">Select Department</label>
+                            <div class="flex gap-2">
+                                <select id="config-dept-select" onchange="window.loadDeptConfig()" class="flex-1 p-2 border rounded bg-white text-sm"></select>
+                                <button onclick="window.renameDept()" class="px-3 py-2 bg-white border border-gray-300 rounded hover:bg-gray-50 text-gray-600" title="Rename"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                                <button onclick="window.deleteDept()" class="px-3 py-2 bg-white border border-red-200 text-red-500 rounded hover:bg-red-50" title="Delete"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            </div>
+                        </div>
+                        <div id="config-editor-area" class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="bg-green-50 p-4 rounded border border-green-100">
+                                <h3 class="font-bold text-green-800 mb-4 flex justify-between items-center">
+                                    Earnings Fields
+                                    <button onclick="window.addField('earnings')" class="text-xs bg-green-200 px-2 py-1 rounded hover:bg-green-300">+ Add Field</button>
+                                </h3>
+                                <div id="config-earnings-list" class="space-y-2"></div>
+                            </div>
+                            <div class="bg-red-50 p-4 rounded border border-red-100">
+                                <h3 class="font-bold text-red-800 mb-4 flex justify-between items-center">
+                                    Deductions Fields
+                                    <button onclick="window.addField('deductions')" class="text-xs bg-red-200 px-2 py-1 rounded hover:bg-red-300">+ Add Field</button>
+                                </h3>
+                                <div id="config-deductions-list" class="space-y-2"></div>
+                            </div>
+                        </div>
+                        <div class="mt-6 flex justify-end">
+                            <button onclick="window.saveDeptConfig()" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 flex items-center gap-2 font-medium shadow-sm">
+                                <i data-lucide="save" class="w-4 h-4"></i> Save Changes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAYROLL MANAGER VIEW -->
+        <div id="view-payroll" class="flex-1 overflow-hidden relative hidden">
+            <div class="flex h-full">
+                <!-- LEVEL 1 SIDEBAR -->
+                <aside class="hidden xl:flex w-64 bg-gray-50 border-r border-gray-200 flex-col z-10 h-full overflow-y-auto">
+                    <div class="p-4 border-b border-gray-200 bg-gray-100 sticky top-0">
+                         <h2 class="font-bold text-gray-700 text-xs uppercase tracking-wider">Departments</h2>
+                    </div>
+                    <div id="dept-tree" class="p-2 space-y-1"></div>
+                </aside>
+
+                 <!-- LEVEL 2 SIDEBAR -->
+                <aside id="sidebar" class="w-full lg:w-72 bg-white border-r border-gray-200 flex flex-col z-10 h-full">
+                    <div class="p-4 border-b border-gray-100 bg-white flex flex-col gap-3 shrink-0">
+                        <div class="flex justify-between items-center">
+                            <h2 class="font-semibold text-gray-700 flex items-center gap-2">
+                                <i data-lucide="users" class="w-4 h-4"></i> Staff List
+                            </h2>
+                            <div class="flex gap-1">
+                                <button onclick="window.triggerImport()" title="Import CSV" class="p-1 hover:bg-gray-100 rounded text-gray-600 transition-colors">
+                                    <i data-lucide="upload" class="w-5 h-5"></i>
+                                </button>
+                                <button onclick="window.openStaffModal(null)" title="Add Staff" class="p-1 hover:bg-blue-100 rounded text-blue-600 transition-colors">
+                                    <i data-lucide="plus" class="w-5 h-5"></i>
+                                </button>
+                            </div>
+                            <input type="file" id="csv-input" accept=".csv" class="hidden" onchange="window.handleCSV(this)">
+                        </div>
+                        <div class="xl:hidden">
+                            <select id="mobile-filter" onchange="window.handleMobileFilter(this.value)" class="w-full text-xs border border-gray-300 rounded p-1.5 bg-gray-50">
+                                <option value="All|All">All Staff</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="filter-status" class="px-4 py-2 bg-blue-50 text-xs text-blue-800 border-b border-blue-100 hidden flex justify-between items-center">
+                        <span id="filter-label" class="font-medium truncate">All Staff</span>
+                        <button onclick="window.clearFilter()" class="text-blue-500 hover:text-blue-700"><i data-lucide="x" class="w-3 h-3"></i></button>
+                    </div>
+                    <div id="employee-list" class="flex-1 overflow-y-auto p-2"></div>
+                </aside>
+
+                <!-- Main Content -->
+                <main id="payroll-workspace" class="flex-1 overflow-y-auto bg-gray-100 p-4 lg:p-6 hidden lg:block">
+                    <!-- Empty State -->
+                    <div id="empty-state" class="flex flex-col items-center justify-center h-full text-gray-400 space-y-4">
+                        <div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
+                            <i data-lucide="briefcase" class="w-8 h-8 text-gray-400"></i>
+                        </div>
+                        <p>Select an employee to view details.</p>
+                    </div>
+
+                    <!-- Editor Area -->
+                    <div id="editor-area" class="w-full max-w-6xl mx-auto flex flex-col xl:flex-row gap-6 hidden">
+                        <!-- Controls -->
+                        <div class="w-full xl:w-1/3 space-y-4 no-print flex flex-col h-full">
+                            <!-- Period Selector -->
+                            <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-4 flex items-center justify-between">
+                                <div class="text-xs font-bold text-blue-800 uppercase tracking-wide">Payroll Period</div>
+                                <div class="flex gap-2">
+                                    <select id="editor-month" onchange="window.loadPeriodData()" class="text-xs border-gray-300 rounded p-1 bg-white outline-none"></select>
+                                    <select id="editor-year" onchange="window.loadPeriodData()" class="text-xs border-gray-300 rounded p-1 bg-white outline-none"></select>
+                                </div>
+                            </div>
+
+                            <!-- ACTIONS PANEL -->
+                            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-4">
+                                <div class="grid grid-cols-1 gap-2">
+                                    <!-- NEW: View Employee History -->
+                                    <button onclick="window.viewEmployeeHistory()" class="flex items-center justify-center gap-2 w-full py-2 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded hover:bg-indigo-100 text-sm font-medium mb-1">
+                                        <i data-lucide="bar-chart-2" class="w-4 h-4"></i> View History Dashboard
+                                    </button>
+
+                                    <button onclick="window.editCurrentStaff()" class="flex items-center justify-center gap-2 w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-medium">
+                                        <i data-lucide="user-cog" class="w-4 h-4"></i> Edit Staff Details
+                                    </button>
+                                    
+                                    <!-- BUTTON: Load Previous Month -->
+                                    <button onclick="window.loadPreviousMonthData()" class="flex items-center justify-center gap-2 w-full py-2 bg-orange-50 text-orange-700 border border-orange-200 rounded hover:bg-orange-100 text-sm font-medium">
+                                        <i data-lucide="copy" class="w-4 h-4"></i> Copy from Previous Month
+                                    </button>
+
+                                    <button onclick="window.saveEmployeePayrollData()" class="flex items-center justify-center gap-2 w-full py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-medium">
+                                        <i data-lucide="save" class="w-4 h-4"></i> Save for Selected Month
+                                    </button>
+                                    
+                                    <button onclick="window.resetCurrentPayroll()" class="flex items-center justify-center gap-2 w-full py-2 bg-red-50 text-red-600 border border-red-200 rounded hover:bg-red-100 text-sm">
+                                        <i data-lucide="rotate-ccw" class="w-4 h-4"></i> Reset Data
+                                    </button>
+                                    
+                                    <div class="grid grid-cols-3 gap-2 mt-1">
+                                        <button onclick="window.openPrintSettings()" title="Print" class="flex items-center justify-center py-2 bg-gray-800 text-white rounded hover:bg-gray-900 text-sm"><i data-lucide="printer" class="w-4 h-4"></i></button>
+                                        <button onclick="window.sendEmail()" title="Email" class="flex items-center justify-center py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"><i data-lucide="mail" class="w-4 h-4"></i></button>
+                                        <button onclick="window.sendWhatsApp()" title="WhatsApp" class="flex items-center justify-center py-2 bg-green-500 text-white rounded hover:bg-green-600 text-sm"><i data-lucide="message-circle" class="w-4 h-4"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Payslip Input Fields -->
+                            <div id="editor-content" class="flex-1 overflow-y-auto"></div>
+                        </div>
+
+                        <!-- Live Preview -->
+                        <div id="preview-pane" class="w-full xl:w-2/3 bg-white p-6 md:p-8 rounded shadow-lg border border-gray-200 text-xs md:text-sm">
+                            <div class="border-b-2 border-blue-900 pb-4 mb-4 flex justify-between items-start">
+                                <div class="flex items-center gap-4">
+                                    <img id="prev-school-logo" class="h-16 w-auto hidden object-contain">
+                                    <div>
+                                        <h1 class="text-xl md:text-2xl font-bold text-blue-900 uppercase tracking-widest">Neerada School</h1>
+                                        <p class="text-gray-500 text-xs mt-1">Excellence in Education</p>
+                                        <div class="flex items-center gap-2 text-gray-400 text-[10px] mt-1">
+                                            <i data-lucide="building" class="w-3 h-3"></i>
+                                            <span id="prev-campus">Campus</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col items-end">
+                                    <img id="prev-profile-pic" class="h-20 w-20 object-cover rounded-full border mb-2 hidden bg-gray-100">
+                                    <div class="text-right">
+                                        <h2 class="text-lg font-semibold text-gray-800">PAYSLIP</h2>
+                                        <p class="text-xs text-gray-600">Date: <span id="prev-date" class="font-bold"></span></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3 mb-6 bg-blue-50 p-3 rounded-lg">
+                                <div><p class="text-[10px] text-gray-500 uppercase">Employee Name</p><p id="prev-name" class="font-bold text-gray-800">---</p></div>
+                                <div><p class="text-[10px] text-gray-500 uppercase">Position</p><p id="prev-pos" class="font-bold text-gray-800">---</p></div>
+                                <div><p class="text-[10px] text-gray-500 uppercase">Department</p><p id="prev-dept" class="font-bold text-gray-800">---</p></div>
+                                <div><p class="text-[10px] text-gray-500 uppercase">Employee ID</p><p id="prev-id" class="text-gray-800 font-mono">---</p></div>
+                                <div class="border-t border-blue-200 pt-2 mt-1">
+                                    <p class="text-[10px] text-gray-500 uppercase">Email Address</p><p id="prev-email" class="text-gray-800">---</p>
+                                </div>
+                                <div class="border-t border-blue-200 pt-2 mt-1">
+                                    <p class="text-[10px] text-gray-500 uppercase">WhatsApp</p><p id="prev-whatsapp" class="text-gray-800">---</p>
+                                </div>
+                            </div>
+                            <div id="preview-content"></div>
+                            <div id="print-footer" class="mt-8 text-center text-[10px] text-gray-400">
+                                <p>Computer-generated. No signature required.</p>
+                                <p>© <span id="copyright-year"></span> Neerada School Payroll System</p>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Settings -->
+    <div id="settings-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-[100] p-4">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-sm">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-gray-800">Settings</h2>
+                <button onclick="window.closeSettings()" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            
+            <div class="space-y-6">
+                <!-- Theme -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">App Theme</label>
+                    <select id="theme-select" onchange="window.setTheme(this.value)" class="w-full border rounded p-2 text-sm bg-white">
+                        <option value="default">Default Blue</option>
+                        <option value="emerald">Emerald Green</option>
+                        <option value="rose">Rose Red</option>
+                        <option value="slate">Slate Dark</option>
+                        <option value="violet">Violet</option>
+                    </select>
+                </div>
+
+                <!-- School Logo -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">School Logo</label>
+                    <div class="flex items-center gap-4">
+                        <div class="relative w-full">
+                            <input type="file" accept="image/*" onchange="window.handleLogoUpload(this)" class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                        </div>
+                    </div>
+                    <p class="text-[10px] text-gray-400 mt-1">Upload a small PNG or JPG logo. Will appear on all payslips.</p>
+                </div>
+
+                <!-- Data Management -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Data Management</label>
+                    <div class="grid grid-cols-1 gap-2">
+                        <button onclick="window.exportData()" class="flex items-center justify-center gap-2 w-full py-2 bg-blue-50 text-blue-700 border border-blue-200 rounded hover:bg-blue-100 text-sm">
+                            <i data-lucide="download" class="w-4 h-4"></i> Export Data (Backup to Disk)
+                        </button>
+                        <div class="relative">
+                            <button onclick="document.getElementById('import-file').click()" class="flex items-center justify-center gap-2 w-full py-2 bg-gray-50 text-gray-700 border border-gray-200 rounded hover:bg-gray-100 text-sm">
+                                <i data-lucide="upload" class="w-4 h-4"></i> Import Data (Restore)
+                            </button>
+                            <input type="file" id="import-file" accept=".json" class="hidden" onchange="window.importData(this)">
+                        </div>
+                        <!-- NEW: Delete All Photos -->
+                        <button onclick="window.deleteAllPhotos()" class="flex items-center justify-center gap-2 w-full py-2 bg-red-50 text-red-700 border border-red-200 rounded hover:bg-red-100 text-sm mt-2">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i> Delete All Employee Photos
+                        </button>
+                    </div>
+                    <p class="text-[10px] text-gray-400 mt-2">Exports full JSON data. Keep it safe as a backup.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Print Settings (NEW) -->
+    <div id="print-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-[150] p-4">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-sm">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Print Settings</h2>
+            
+            <div class="space-y-6">
+                <!-- Orientation -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Orientation</label>
+                    <div class="flex gap-4">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="print-orient" value="portrait" checked class="text-blue-600">
+                            <span class="text-sm">Portrait</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="print-orient" value="landscape" class="text-blue-600">
+                            <span class="text-sm">Landscape</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Scaling -->
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="block text-xs font-bold text-gray-500 uppercase">Fill Page Scale</label>
+                        <span id="scale-val" class="text-xs font-mono font-bold text-blue-600">100%</span>
+                    </div>
+                    <input type="range" id="print-scale" min="50" max="150" value="100" class="w-full accent-blue-600" oninput="document.getElementById('scale-val').innerText = this.value + '%'">
+                    <p class="text-[10px] text-gray-400 mt-1">Adjust to fit the content to one full A4 sheet.</p>
+                </div>
+
+                <div class="pt-2 flex gap-3">
+                    <button onclick="window.closePrintSettings()" class="flex-1 py-2 text-gray-600 hover:bg-gray-100 rounded">Cancel</button>
+                    <button onclick="window.executePrint()" class="flex-1 py-2 bg-gray-800 text-white rounded hover:bg-gray-900 font-medium flex items-center justify-center gap-2">
+                        <i data-lucide="printer" class="w-4 h-4"></i> Print Now
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Add/Edit -->
+    <div id="add-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-[100] p-4">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="modal-title" class="text-xl font-bold text-gray-800">Add New Staff</h2>
+                <div class="flex gap-2">
+                    <button onclick="window.downloadTemplate()" class="text-xs text-blue-600 underline">CSV Template</button>
+                    <button onclick="window.closeModal()" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+                </div>
+            </div>
+            <form id="add-form" onsubmit="window.saveEmployee(event)" class="space-y-4">
+                <input type="hidden" name="id" id="form-id">
+                
+                <!-- Profile Picture Upload (UPDATED) -->
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="relative w-16 h-16">
+                        <div class="w-16 h-16 rounded-full bg-gray-100 border flex items-center justify-center overflow-hidden">
+                            <img id="form-preview-pic" class="w-full h-full object-cover hidden">
+                            <i data-lucide="user" id="form-default-icon" class="w-8 h-8 text-gray-400"></i>
+                        </div>
+                        <!-- Remove Photo Button -->
+                        <button type="button" id="btn-remove-photo" onclick="window.removeProfilePic()" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1 shadow-md hover:bg-red-600 hidden" title="Remove Photo">
+                            <i data-lucide="x" class="w-3 h-3"></i>
+                        </button>
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Profile Photo</label>
+                        <input type="file" id="form-profile-pic" accept="image/*" onchange="window.handleProfileUpload(this)" class="w-full text-xs text-gray-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Full Name</label>
+                    <input required name="name" id="form-name" type="text" class="w-full border rounded p-2 text-sm" placeholder="e.g. Somchai Vong">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Campus</label>
+                        <select name="campus" id="form-campus" class="w-full border rounded p-2 text-sm bg-white">
+                            <option>Sibounheuang</option><option>Chommany</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Department</label>
+                        <select name="department" id="form-department" class="w-full border rounded p-2 text-sm bg-white"></select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Position</label>
+                    <input required name="position" id="form-position" type="text" class="w-full border rounded p-2 text-sm" placeholder="e.g. Teacher">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Email</label>
+                    <input required name="email" id="form-email" type="email" class="w-full border rounded p-2 text-sm" placeholder="email@school.com">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">WhatsApp Number</label>
+                    <input name="whatsapp" id="form-whatsapp" type="text" class="w-full border rounded p-2 text-sm" placeholder="e.g. 8562055555555">
+                </div>
+                <div class="pt-4 flex gap-3">
+                    <button type="button" onclick="window.closeModal()" class="flex-1 py-2 text-gray-600 hover:bg-gray-100 rounded">Cancel</button>
+                    <button type="submit" class="flex-1 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-medium">Save Staff</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Save History -->
+    <div id="save-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-[100] p-4">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-sm">
+            <h2 class="text-xl font-bold text-gray-800 mb-2">Save Payroll Run</h2>
+            <p class="text-sm text-gray-500 mb-4">Calculate total salary for all active employees and save to history.</p>
+            <form id="save-form" onsubmit="window.savePayrollHistory(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Select Year</label>
+                    <input id="save-year" type="number" class="w-full border rounded p-2 text-sm" value="2025">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Select Month</label>
+                    <select id="save-month" class="w-full border rounded p-2 text-sm bg-white">
+                        <option>January</option><option>February</option><option>March</option>
+                        <option>April</option><option>May</option><option>June</option>
+                        <option>July</option><option>August</option><option>September</option>
+                        <option>October</option><option>November</option><option>December</option>
+                    </select>
+                </div>
+                <div class="pt-4 flex gap-3">
+                    <button type="button" onclick="window.closeSaveHistoryModal()" class="flex-1 py-2 text-gray-600 hover:bg-gray-100 rounded">Cancel</button>
+                    <button type="submit" class="flex-1 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-medium">Save & Close</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- NEW MODAL: Employee History Dashboard -->
+    <div id="employee-history-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-[100] p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl h-[90vh] flex flex-col">
+            <div class="p-6 border-b border-gray-100 flex justify-between items-start shrink-0">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                        <i data-lucide="user" class="w-5 h-5 text-blue-600"></i>
+                        <span id="hist-emp-name">Employee Name</span>
+                    </h2>
+                    <p id="hist-emp-dept" class="text-sm text-gray-500">Department</p>
+                </div>
+                <button onclick="document.getElementById('employee-history-modal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto flex-1">
+                <!-- Lifetime Stats -->
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                        <p class="text-xs font-bold text-blue-800 uppercase">Total Earned (LAK)</p>
+                        <p id="hist-total-lak" class="text-2xl font-mono font-bold text-blue-900 mt-1">₭ 0</p>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-lg border border-green-100">
+                        <p class="text-xs font-bold text-green-800 uppercase">Total Earned (USD)</p>
+                        <p id="hist-total-usd" class="text-2xl font-mono font-bold text-green-900 mt-1">$0.00</p>
+                    </div>
+                </div>
+
+                <!-- History Table -->
+                <h3 class="font-bold text-gray-700 mb-3 text-sm">Payment Records</h3>
+                <div class="border rounded-lg overflow-hidden">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-gray-50 text-gray-500 text-xs uppercase font-medium">
+                            <tr>
+                                <th class="px-4 py-3">Period</th>
+                                <th class="px-4 py-3 text-right">LAK Paid</th>
+                                <th class="px-4 py-3 text-right">USD Paid</th>
+                            </tr>
+                        </thead>
+                        <tbody id="employee-history-rows" class="divide-y divide-gray-100">
+                            <!-- Rows go here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        // --- IndexedDB Helper (Vanilla JS) ---
+        const DB_NAME = 'NeeradaPayrollDB';
+        const DB_VERSION = 2; // Incremented for Schema changes (if any in future)
+        const STORE_NAME = 'keyval';
+
+        const idb = {
+            open: () => {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(DB_NAME, DB_VERSION);
+                    request.onupgradeneeded = (event) => {
+                        const db = event.target.result;
+                        if (!db.objectStoreNames.contains(STORE_NAME)) {
+                            db.createObjectStore(STORE_NAME);
+                        }
+                    };
+                    request.onsuccess = (event) => resolve(event.target.result);
+                    request.onerror = (event) => reject(event.target.error);
+                });
+            },
+            get: async (key) => {
+                const db = await idb.open();
+                return new Promise((resolve, reject) => {
+                    const transaction = db.transaction(STORE_NAME, 'readonly');
+                    const store = transaction.objectStore(STORE_NAME);
+                    const request = store.get(key);
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                });
+            },
+            set: async (key, value) => {
+                const db = await idb.open();
+                return new Promise((resolve, reject) => {
+                    const transaction = db.transaction(STORE_NAME, 'readwrite');
+                    const store = transaction.objectStore(STORE_NAME);
+                    const request = store.put(value, key);
+                    request.onsuccess = () => resolve();
+                    request.onerror = () => reject(request.error);
+                });
+            },
+            del: async (key) => {
+                const db = await idb.open();
+                return new Promise((resolve, reject) => {
+                    const transaction = db.transaction(STORE_NAME, 'readwrite');
+                    const store = transaction.objectStore(STORE_NAME);
+                    const request = store.delete(key);
+                    request.onsuccess = () => resolve();
+                    request.onerror = () => reject(request.error);
+                });
+            }
+        };
+
+        // --- State Management (Initialized Empty, Loaded Async) ---
+        let employees = [];
+        let history = [];
+        let departmentConfigs = {};
+        let currentSchoolLogo = null; // Stored in RAM after loading from IDB
+        
+        // ... constants ...
+        let tempProfilePic = null;
+        let isPhotoRemoved = false;
+        
+        const LAO_FIELDS = {
+            research: 'ດຸໝັ່ນຄົ້ນຄວ້າ&ພັດທະນາການສອນການສອນ (ຮູ້ນໍາໃຊ້ເຕັກນິກເພື່ອເຮັດໃຫ້ ນຮ ມັກຮຽນ)',
+            media: 'ນຳໃຊ້ສື່ການສອນ/ແຕ່ງບົດສອນ/ຕິດຕາມພັດທະນາການ ນຮ.ຫ້າວຫັນໃນການປະກອບສ່ວນໃນວຽກອື່ນໆຂອງໂຮງຮຽນ',
+            behaviorBasic: 'ຄຸ້ມຄອງລະບຽບແລະຄວາມປະພຶດ ໃສ່ໃຈນຳ ນັກຮຽນ', 
+            classResp: 'ຄວາມຮັບຜິດຊອບໃນຫ້ອງຮຽນ : ທຸກໆຢ່າງ',
+            policy: 'ນະໂຍບາຍອື່ນໆ',
+            basic: 'ເງີນເດືອນພື້ນຖານ', 
+            cert: 'ໃບປະກາດ: ປຕີ (ສອງແສນຫ້າສິບ),ຊັ້ນສູງ (ສອງແສນ),ຊັ້ນກາງ (ໜຶ່ງແສນຫ້າສິບ)',
+            homeroom: 'ຄູປະຈຳຫ້ອງ/ຄູປະຈຳຫ້ອງສະໝຸດ/ຄູປະຈຳເດີ່ນກິລາ',
+            behaviorStart: 'ຄຸ້ມຄອງລະບຽບແລະຄວາມປະພຶດ ນຮ/ໃສ່ໃຈນຳນັກຮຽນ',
+            start: 'ເລີ້ມຕົ້ນ',
+            accumulated: 'ເງີນສະສົມປີຜ່ານມາ',
+            increase: 'ເພີ້ມປະຈຳປີ 2025-2026',
+            overtimePrimary: 'ຊົ່ວໂມງເກີນ : 30,000 ກີບ ຕໍ່ ຊມ',
+            early: 'ມາໄວ',
+            care: 'ຄຸ້ມຄອງ ນຮ ກ່ອນເຂົ້າ/ເລີກຮຽນ (ມຍບໍ່ມີ ມີແຕ່ປະຖົມ)'
+        };
+        const laoEarningsStruct = [ LAO_FIELDS.research, LAO_FIELDS.media, LAO_FIELDS.behaviorBasic, LAO_FIELDS.classResp, LAO_FIELDS.policy, LAO_FIELDS.basic, LAO_FIELDS.cert, LAO_FIELDS.homeroom, LAO_FIELDS.behaviorStart, LAO_FIELDS.start, LAO_FIELDS.accumulated, LAO_FIELDS.increase ];
+        const defaultDeptConfigs = { 
+            'Kindergarten': { earnings: [...laoEarningsStruct], deductions: ['Tax (5%)', 'Social Security (5.5%)', 'Late Arrival'] }, 
+            'Primary': { 
+                earnings: [
+                    ...laoEarningsStruct, 
+                    'ຊົ່ວໂມງເກີນ : 30,000 ກີບ ຕໍ່ ຊມ',
+                    'ມາໄວ',
+                    'ຄຸ້ມຄອງ ນຮ ກ່ອນເຂົ້າ/ເລີກຮຽນ (ມຍບໍ່ມີ ມີແຕ່ປະຖົມ)'
+                ], 
+                deductions: ['Tax', 'Social Security'] 
+            }, 
+            'Secondary': { earnings: [...laoEarningsStruct], deductions: ['Tax'] }, 
+            'Leadership (Head/VP)': { earnings: [...laoEarningsStruct], deductions: ['Tax'] }, 
+            'Administration': { earnings: [...laoEarningsStruct], deductions: ['Tax'] }, 
+            'English': { earnings: [], deductions: [] } 
+        };
+        
+        let selectedEmployee = null;
+        let currentPayrollState = {}; 
+        let isMobileListVisible = true;
+        let currentView = 'dashboard';
+        let currentFilter = { campus: 'All', department: 'All' };
+        let editorMonth = "";
+        let editorYear = new Date().getFullYear();
+        const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+        const CAMPUSES = ['Sibounheuang', 'Chommany'];
+
+        // ... Data Integrity and Init functions ...
+        async function ensureDataIntegrity() {
+            const seenIds = new Set();
+            let hasChanges = false;
+            employees = employees.filter(e => e.name && e.name.trim() !== "");
+            employees = employees.map((emp, index) => {
+                let safeEmp = { ...emp };
+                if (!safeEmp.id || seenIds.has(String(safeEmp.id))) { safeEmp.id = 'EMP_' + Date.now().toString(36) + '_' + index + '_' + Math.floor(Math.random()*1000); hasChanges = true; }
+                seenIds.add(String(safeEmp.id));
+                if (!safeEmp.payrollHistory) { safeEmp.payrollHistory = {}; hasChanges = true; }
+                if (!safeEmp.savedPayroll) { safeEmp.savedPayroll = {}; hasChanges = true; }
+                return safeEmp;
+            });
+            if (hasChanges) await idb.set('neerada_employees', employees);
+        }
+
+        async function initApp() {
+            try {
+                // 1. Initialize DB & Load Data
+                const dbEmployees = await idb.get('neerada_employees');
+                const dbHistory = await idb.get('neerada_history');
+                const dbConfig = await idb.get('neerada_dept_configs');
+                const dbTheme = await idb.get('neerada_theme');
+                const dbLogo = await idb.get('neerada_school_logo');
+
+                // 2. Migration Check (Migrate LS -> IDB if IDB empty but LS has data)
+                // Employees
+                if (!dbEmployees && localStorage.getItem('neerada_employees')) {
+                    console.log("Migrating Employees to IndexedDB...");
+                    employees = JSON.parse(localStorage.getItem('neerada_employees'));
+                    await idb.set('neerada_employees', employees);
+                } else {
+                    employees = dbEmployees || [];
+                }
+
+                // History
+                if (!dbHistory && localStorage.getItem('neerada_history')) {
+                    console.log("Migrating History to IndexedDB...");
+                    history = JSON.parse(localStorage.getItem('neerada_history'));
+                    await idb.set('neerada_history', history);
+                } else {
+                    history = dbHistory || [];
+                }
+
+                // Config
+                if (!dbConfig && localStorage.getItem('neerada_dept_configs')) {
+                    departmentConfigs = JSON.parse(localStorage.getItem('neerada_dept_configs'));
+                    await idb.set('neerada_dept_configs', departmentConfigs);
+                } else {
+                    departmentConfigs = dbConfig || defaultDeptConfigs;
+                }
+
+                // Theme
+                const theme = dbTheme || localStorage.getItem('neerada_theme') || 'default';
+                await idb.set('neerada_theme', theme);
+
+                // Logo
+                if (!dbLogo && localStorage.getItem('neerada_school_logo')) {
+                    currentSchoolLogo = localStorage.getItem('neerada_school_logo');
+                    await idb.set('neerada_school_logo', currentSchoolLogo);
+                } else {
+                    currentSchoolLogo = dbLogo;
+                }
+
+                // 3. UI Setup
+                document.getElementById('loading-screen').style.display = 'none';
+                document.getElementById('app-content').classList.remove('hidden');
+                
+                document.body.className = `bg-gray-100 font-sans text-gray-900 h-screen flex flex-col overflow-hidden theme-${theme}`;
+                document.getElementById('theme-select').value = theme;
+                
+                await ensureDataIntegrity();
+                
+                // Initialize Dates
+                const yearSelect = document.getElementById('filter-year');
+                const edYearSelect = document.getElementById('editor-year');
+                const edMonthSelect = document.getElementById('editor-month');
+                const currentYear = new Date().getFullYear();
+                const yrs = `<option value="${currentYear}">${currentYear}</option><option value="${currentYear - 1}">${currentYear - 1}</option>`;
+                yearSelect.innerHTML = yrs;
+                edYearSelect.innerHTML = yrs;
+                edMonthSelect.innerHTML = MONTHS.map(m => `<option value="${m}">${m}</option>`).join('');
+                const currentM = MONTHS[new Date().getMonth()];
+                document.getElementById('filter-month').value = currentM;
+                edMonthSelect.value = currentM;
+                editorMonth = currentM;
+
+                renderDeptSidebar();
+                renderEmployeeList();
+                renderHistoryList();
+                updateDashboardStats();
+                updateDateWidget();
+                
+                document.getElementById('copyright-year').innerText = new Date().getFullYear();
+                if(window.lucide) lucide.createIcons();
+            } catch (error) {
+                console.error("Init Error:", error);
+                alert("Critical Error loading database. Please refresh.");
+                document.getElementById('loading-screen').style.display = 'none';
+            }
+        }
+
+        // ... Helper Functions ...
+        function getSmartPaymentDate(monthName, year) { const mIndex = MONTHS.indexOf(monthName); let date = new Date(year, mIndex + 1, 0); const day = date.getDay(); if (day === 0) date.setDate(date.getDate() - 2); else if (day === 6) date.setDate(date.getDate() - 1); return date.toLocaleDateString(); }
+        
+        function generateEmployeeId(dept, name, campus) {
+            if (!dept || !name) return "---";
+            const campusCode = campus === 'Sibounheuang' ? 'SBH' : (campus === 'Chommany' ? 'CHM' : 'UNK');
+            const deptParts = dept.trim().split(/\s+/);
+            let code = deptParts[0].charAt(0).toUpperCase();
+            if (deptParts.length > 1) {
+                const secondWord = deptParts[1].replace(/[^a-zA-Z0-9]/g, '');
+                if (secondWord.length > 0) code += secondWord.charAt(0).toUpperCase();
+            }
+            const firstName = name.trim().split(/\s+/)[0];
+            return `${campusCode}-${code}-${firstName}`;
+        }
+
+        function formatMoney(amount) { return '₭ ' + parseFloat(amount||0).toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0}); }
+        function updateDateWidget() { document.getElementById('date-display').innerText = new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric' }); }
+
+        // ... Config, Modal, and Staff Management Functions ...
+        function initConfigView() { const select = document.getElementById('config-dept-select'); const depts = Object.keys(departmentConfigs).filter(d => d !== 'English'); select.innerHTML = depts.map(d => `<option value="${d}">${d}</option>`).join(''); loadDeptConfig(); }
+        window.addNewDept = async () => { const name = prompt("Enter new Department name:"); if(name && !departmentConfigs[name]) { departmentConfigs[name] = { earnings: ['Basic Salary'], deductions: ['Tax'] }; await saveDeptConfig(); initConfigView(); } };
+        window.deleteDept = async () => { const dept = document.getElementById('config-dept-select').value; if(!dept || !confirm(`Delete ${dept}?`)) return; delete departmentConfigs[dept]; await saveDeptConfig(); initConfigView(); renderDeptSidebar(); };
+        window.renameDept = async () => { const oldName = document.getElementById('config-dept-select').value; if(!oldName) return; const newName = prompt("Enter new name:", oldName); if(newName && newName !== oldName && !departmentConfigs[newName]) { departmentConfigs[newName] = departmentConfigs[oldName]; delete departmentConfigs[oldName]; employees.forEach(e => { if(e.department === oldName) e.department = newName; }); await idb.set('neerada_employees', employees); await saveDeptConfig(); initConfigView(); renderDeptSidebar(); renderEmployeeList(); } };
+        window.loadDeptConfig = () => { const dept = document.getElementById('config-dept-select').value; if (departmentConfigs[dept]) renderConfigLists(dept); }
+        function renderConfigLists(dept) { const cfg = departmentConfigs[dept]; const renderList = (type, list) => list.map((item, idx) => `<div class="flex gap-2 items-center"><input type="text" value="${item}" onchange="window.updateConfigField('${dept}', '${type}', ${idx}, this.value)" class="flex-1 text-sm border rounded p-1.5"><button onclick="window.removeConfigField('${dept}', '${type}', ${idx})" class="text-red-400 hover:text-red-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div>`).join(''); document.getElementById('config-earnings-list').innerHTML = renderList('earnings', cfg.earnings); document.getElementById('config-deductions-list').innerHTML = renderList('deductions', cfg.deductions); if(window.lucide) lucide.createIcons(); }
+        window.addField = (type) => { const dept = document.getElementById('config-dept-select').value; if(dept) { departmentConfigs[dept][type].push("New Field"); renderConfigLists(dept); } };
+        window.removeConfigField = (dept, type, idx) => { departmentConfigs[dept][type].splice(idx, 1); renderConfigLists(dept); };
+        window.updateConfigField = (dept, type, idx, val) => { departmentConfigs[dept][type][idx] = val; };
+        window.saveDeptConfig = async () => { await idb.set('neerada_dept_configs', departmentConfigs); alert("Configuration Saved!"); if(selectedEmployee && selectedEmployee.department !== 'English') renderEditor(); renderDeptSidebar(); };
+        function createInitialState(dept) { 
+            if (dept === 'English') { 
+                return { 
+                    basicPay: 0, accumulated: 0, increase: 0, earningsOthersUSD: 0, 
+                    otHours: 0, otRate: 0, itLAK: 0, extraWorkOthersLAK: 0, stipendLAK: 0, 
+                    profTax: 0, absences: 0, visa: 0, deductionsOthersUSD: 0, 
+                    insuranceLAK: 0, deductionsOthersLAK: 0, 
+                    cashOut: 0, // Reset to 0
+                    exchangeRate: 0, // Reset to 0
+                    notes: "" 
+                }; 
+            } 
+            const config = departmentConfigs[dept]; 
+            const state = {}; 
+            if(config) { 
+                config.earnings.forEach(f => state[f] = 0); 
+                config.deductions.forEach(f => state[f] = 0); 
+            } 
+            return state; 
+        }
+        
+        window.editCurrentStaff = () => { if(selectedEmployee) window.openStaffModal(selectedEmployee.id); }
+        
+        window.openStaffModal = (empId) => {
+            const modal = document.getElementById('add-modal'); const title = document.getElementById('modal-title'); const deptSelect = document.getElementById('form-department'); const depts = Object.keys(departmentConfigs); deptSelect.innerHTML = depts.map(d => `<option value="${d}">${d}</option>`).join('');
+            
+            // Reset Form and State
+            document.getElementById('form-id').value = ""; document.getElementById('form-name').value = ""; document.getElementById('form-position').value = ""; document.getElementById('form-email').value = ""; document.getElementById('form-whatsapp').value = ""; document.getElementById('form-profile-pic').value = ""; 
+            tempProfilePic = null;
+            isPhotoRemoved = false;
+            
+            document.getElementById('form-preview-pic').classList.add('hidden'); 
+            document.getElementById('form-default-icon').classList.remove('hidden');
+            document.getElementById('btn-remove-photo').classList.add('hidden'); // Hide remove button by default
+
+            if(depts.length > 0) deptSelect.value = depts[0];
+            
+            if (empId) { 
+                const emp = employees.find(e => String(e.id) === String(empId)); 
+                if (emp) { 
+                    title.innerText = "Edit Staff"; 
+                    document.getElementById('form-id').value = emp.id; 
+                    document.getElementById('form-name').value = emp.name; 
+                    document.getElementById('form-campus').value = emp.campus; 
+                    document.getElementById('form-department').value = emp.department; 
+                    document.getElementById('form-position').value = emp.position; 
+                    document.getElementById('form-email').value = emp.email; 
+                    document.getElementById('form-whatsapp').value = emp.whatsapp || ''; 
+                    
+                    if (emp.profilePic) { 
+                        tempProfilePic = emp.profilePic; 
+                        const prev = document.getElementById('form-preview-pic'); 
+                        prev.src = emp.profilePic; 
+                        prev.classList.remove('hidden'); 
+                        document.getElementById('form-default-icon').classList.add('hidden');
+                        document.getElementById('btn-remove-photo').classList.remove('hidden'); // Show remove button
+                    } 
+                } 
+            } else { 
+                title.innerText = "Add New Staff"; 
+            } 
+            modal.classList.remove('hidden'); modal.classList.add('flex');
+        };
+        
+        window.closeModal = () => { document.getElementById('add-modal').classList.add('hidden'); document.getElementById('add-modal').classList.remove('flex'); };
+        
+        // --- NEW: Remove Profile Photo Logic ---
+        window.removeProfilePic = () => {
+            isPhotoRemoved = true;
+            tempProfilePic = null;
+            
+            // Update UI
+            document.getElementById('form-preview-pic').src = '';
+            document.getElementById('form-preview-pic').classList.add('hidden');
+            document.getElementById('form-default-icon').classList.remove('hidden');
+            document.getElementById('form-profile-pic').value = '';
+            document.getElementById('btn-remove-photo').classList.add('hidden');
+        };
+
+        // --- UPDATED IMAGE RESIZING LOGIC ---
+        window.handleProfileUpload = (input) => { 
+            const file = input.files[0]; 
+            if (!file) return; 
+            
+            if (file.size > 10 * 1024 * 1024) {
+                alert("File is too large. Please select an image under 10MB.");
+                input.value = "";
+                return;
+            }
+
+            const reader = new FileReader(); 
+            reader.onload = function(e) { 
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const MAX_WIDTH = 300; const MAX_HEIGHT = 300;
+                    let width = img.width; let height = img.height;
+                    
+                    if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } } 
+                    else { if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; } }
+                    
+                    canvas.width = width; canvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+                    tempProfilePic = canvas.toDataURL('image/jpeg', 0.7);
+                    
+                    const prev = document.getElementById('form-preview-pic');
+                    prev.src = tempProfilePic;
+                    prev.classList.remove('hidden');
+                    document.getElementById('form-default-icon').classList.add('hidden');
+                    document.getElementById('btn-remove-photo').classList.remove('hidden'); // Show remove button
+                    isPhotoRemoved = false; // Reset removal flag since new photo added
+                };
+                img.src = e.target.result;
+            }; 
+            reader.readAsDataURL(file); 
+        };
+
+        // --- UPDATED: Save Employee with Photo Removal Logic ---
+        window.saveEmployee = async (e) => { 
+            e.preventDefault(); 
+            const formData = new FormData(document.getElementById('add-form')); 
+            const data = Object.fromEntries(formData.entries()); 
+            
+            if (data.id && data.id.trim() !== "") { 
+                const idx = employees.findIndex(e => String(e.id) === String(data.id)); 
+                if (idx >= 0) { 
+                    const oldDept = employees[idx].department; 
+                    
+                    // Logic to handle photo update or removal
+                    if (isPhotoRemoved) {
+                        data.profilePic = ''; // Explicitly clear photo
+                    } else if (tempProfilePic) {
+                        data.profilePic = tempProfilePic; // Update new photo
+                    } else if (employees[idx].profilePic) {
+                        data.profilePic = employees[idx].profilePic; // Keep existing if untouched
+                    }
+
+                    employees[idx] = { ...employees[idx], ...data, lastModified: new Date().toISOString() }; 
+                    
+                    if (oldDept !== data.department) { 
+                        employees[idx].savedPayroll = {}; 
+                        employees[idx].payrollHistory = {}; 
+                        if(selectedEmployee && String(selectedEmployee.id) === String(data.id)) { 
+                            selectedEmployee = employees[idx]; 
+                            currentPayrollState = createInitialState(selectedEmployee.department); 
+                            loadPeriodData(); 
+                        } 
+                    } else if(selectedEmployee && String(selectedEmployee.id) === String(data.id)) { 
+                        selectedEmployee = employees[idx]; 
+                        renderPreview(); 
+                    } 
+                } 
+            } else { 
+                // New Employee
+                if (tempProfilePic) data.profilePic = tempProfilePic;
+                
+                const newId = 'EMP_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 5).toUpperCase(); 
+                const newEmp = { id: newId, ...data, savedPayroll: {}, payrollHistory: {}, lastModified: new Date().toISOString() }; 
+                employees.push(newEmp); 
+            } 
+            
+            try { 
+                await idb.set('neerada_employees', employees); // ASYNC SAVE
+                renderEmployeeList(); 
+                updateDashboardStats(); 
+                renderDeptSidebar(); 
+                window.closeModal(); 
+            } catch (err) { 
+                console.error(err);
+                alert("Error saving data to database.");
+            } 
+        };
+
+        window.deleteEmployee = async (id) => { if(!confirm("Are you sure you want to delete this employee?")) return; const targetIndex = employees.findIndex(e => String(e.id) === String(id)); if (targetIndex === -1) return; employees.splice(targetIndex, 1); await idb.set('neerada_employees', employees); if(selectedEmployee && String(selectedEmployee.id) === String(id)) { clearSelection(); document.getElementById('editor-area').classList.add('hidden'); document.getElementById('empty-state').classList.remove('hidden'); } renderEmployeeList(); updateDashboardStats(); renderDeptSidebar(); };
+
+        // --- NEW: Delete All Photos Function ---
+        window.deleteAllPhotos = async () => {
+            if(!confirm("Are you sure you want to delete ALL employee photos? This cannot be undone and is used to free up storage space.")) return;
+            
+            let count = 0;
+            employees = employees.map(e => {
+                if(e.profilePic) {
+                    count++;
+                    return {...e, profilePic: ''};
+                }
+                return e;
+            });
+            
+            await idb.set('neerada_employees', employees);
+            
+            // Refresh UI if needed
+            if(selectedEmployee) {
+                const updatedEmp = employees.find(e => String(e.id) === String(selectedEmployee.id));
+                if(updatedEmp) {
+                    selectedEmployee = updatedEmp;
+                    renderPreview();
+                }
+            }
+            renderEmployeeList();
+            alert(`Successfully deleted ${count} photos.`);
+        };
+
+        window.switchView = (view) => { currentView = view; ['view-dashboard', 'view-payroll', 'view-config'].forEach(v => document.getElementById(v).classList.add('hidden')); ['tab-dashboard', 'tab-payroll', 'tab-config'].forEach(t => document.getElementById(t).className = "px-4 py-1.5 text-sm font-medium rounded-md text-blue-100 hover:bg-blue-800 transition-colors"); document.getElementById('view-' + view).classList.remove('hidden'); document.getElementById('tab-' + view).className = "px-4 py-1.5 text-sm font-medium rounded-md bg-blue-800 text-white transition-colors"; if (view === 'dashboard') updateDashboardStats(); else if (view === 'payroll') { isMobileListVisible = true; updateViewVisibility(); } else if (view === 'config') initConfigView(); };
+        function updateViewVisibility() { if (currentView !== 'payroll') return; const sidebar = document.getElementById('sidebar'); const main = document.getElementById('payroll-workspace'); const backBtn = document.getElementById('mobile-back-btn'); if (window.innerWidth < 1024) { if (isMobileListVisible) { sidebar.classList.remove('hidden'); main.classList.add('hidden'); backBtn.classList.add('hidden'); } else { sidebar.classList.add('hidden'); main.classList.remove('hidden'); backBtn.classList.remove('hidden'); } } else { sidebar.classList.remove('hidden'); main.classList.remove('hidden'); backBtn.classList.add('hidden'); } }
+        window.goBack = () => { isMobileListVisible = true; updateViewVisibility(); };
+        function renderDeptSidebar() { const container = document.getElementById('dept-tree'); const depts = Object.keys(departmentConfigs); const getCount = (c, d) => employees.filter(e => e.campus === c && e.department === d && e.name).length; const getAllCount = () => employees.filter(e => e.name).length; let html = `<div onclick="window.setFilter('All', 'All')" class="cursor-pointer px-3 py-2 rounded mb-2 text-sm flex justify-between items-center gap-2 ${currentFilter.campus === 'All' ? 'bg-blue-100 text-blue-800 font-bold' : 'text-gray-600 hover:bg-gray-200'}"><div class="flex items-center gap-2"><i data-lucide="users" class="w-4 h-4"></i> All Staff</div><span class="text-xs bg-black/10 px-1.5 py-0.5 rounded-full font-mono">${getAllCount()}</span></div>`; CAMPUSES.forEach(campus => { html += `<div class="mt-4 mb-2 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider flex justify-between items-center cursor-pointer text-blue-800 bg-blue-100 hover:bg-blue-200 transition-colors shadow-sm" onclick="window.setFilter('${campus}', 'All')">${campus}<i data-lucide="chevron-down" class="w-3 h-3 text-blue-500"></i></div>`; depts.forEach(dept => { const isActive = currentFilter.campus === campus && currentFilter.department === dept; const count = getCount(campus, dept); html += `<div onclick="window.setFilter('${campus}', '${dept}')" class="cursor-pointer px-3 py-1.5 rounded ml-2 text-sm transition-colors flex justify-between items-center ${isActive ? 'bg-white shadow-sm text-blue-700 font-medium border-l-2 border-blue-500' : 'text-gray-500 hover:bg-gray-200 border-l-2 border-transparent'}"><span>${dept}</span><span class="text-[10px] ${isActive ? 'bg-blue-50 text-blue-600' : 'bg-gray-100 text-gray-400'} px-1.5 py-0.5 rounded-full font-mono">${count}</span></div>`; }); }); container.innerHTML = html; const mob = document.getElementById('mobile-filter'); let opts = '<option value="All|All">All Staff</option>'; CAMPUSES.forEach(c => { opts += `<optgroup label="${c}">`; depts.forEach(d => opts += `<option value="${c}|${d}">${d}</option>`); opts += `</optgroup>`; }); mob.innerHTML = opts; if(window.lucide) lucide.createIcons(); }
+        window.handleSelect = (id) => { const emp = employees.find(e => String(e.id) === String(id)); if(emp) selectEmployee(emp); }
+        function clearSelection() { selectedEmployee = null; currentPayrollState = {}; }
+        function selectEmployee(emp) { try { clearSelection(); selectedEmployee = emp; if (!selectedEmployee.payrollHistory) selectedEmployee.payrollHistory = {}; renderEmployeeList(); loadPeriodData(); if (window.innerWidth < 1024) { isMobileListVisible = false; updateViewVisibility(); } document.getElementById('empty-state').classList.add('hidden'); document.getElementById('editor-area').classList.remove('hidden'); } catch (e) { console.error("Selection Error:", e); alert("An error occurred while selecting the employee."); } }
+        window.loadPeriodData = () => { if (!selectedEmployee) return; const selectedMonth = document.getElementById('editor-month').value; const selectedYear = document.getElementById('editor-year').value; const periodKey = `${selectedYear}-${selectedMonth}`; if (selectedEmployee.payrollHistory && selectedEmployee.payrollHistory[periodKey]) { currentPayrollState = JSON.parse(JSON.stringify(selectedEmployee.payrollHistory[periodKey])); } else { const screenHasData = isStateHasData(currentPayrollState); if (screenHasData) { } else { const lastData = findLatestPayrollData(selectedEmployee); if (lastData) { currentPayrollState = JSON.parse(JSON.stringify(lastData)); } else { currentPayrollState = createInitialState(selectedEmployee.department); } } } editorMonth = selectedMonth; editorYear = selectedYear; renderEditor(); };
+        window.loadPreviousMonthData = () => { if (!selectedEmployee) return; const currentMonth = document.getElementById('editor-month').value; const currentYear = parseInt(document.getElementById('editor-year').value); const mIndex = MONTHS.indexOf(currentMonth); let prevIndex = mIndex - 1; let prevYear = currentYear; if (prevIndex < 0) { prevIndex = 11; prevYear--; } const prevMonthName = MONTHS[prevIndex]; const prevKey = `${prevYear}-${prevMonthName}`; if (selectedEmployee.payrollHistory && selectedEmployee.payrollHistory[prevKey]) { if(confirm(`Overwrite current data with data from ${prevMonthName} ${prevYear}?`)) { currentPayrollState = JSON.parse(JSON.stringify(selectedEmployee.payrollHistory[prevKey])); renderEditor(); } } else { alert(`No saved payroll data found for the previous month (${prevMonthName} ${prevYear}).`); } };
+        window.resetCurrentPayroll = () => { if(!confirm("Reset current fields to zero?")) return; currentPayrollState = createInitialState(selectedEmployee.department); renderEditor(); };
+        function findLatestPayrollData(emp) { if (emp.savedPayroll && Object.keys(emp.savedPayroll).length > 0) return emp.savedPayroll; if (emp.payrollHistory && Object.keys(emp.payrollHistory).length > 0) { const keys = Object.keys(emp.payrollHistory); return emp.payrollHistory[keys[keys.length-1]]; } return null; }
+        function isStateHasData(state) { if(!state) return false; return Object.values(state).some(val => { return typeof val === 'number' && val > 0 || (typeof val === 'string' && parseFloat(val) > 0); }); }
+
+        function renderEmployeeList() {
+            const container = document.getElementById('employee-list');
+            container.innerHTML = '';
+            let filtered = employees;
+            if (currentFilter.campus !== 'All') filtered = filtered.filter(e => e.campus === currentFilter.campus);
+            if (currentFilter.department !== 'All') filtered = filtered.filter(e => e.department === currentFilter.department);
+            if (filtered.length === 0) { container.innerHTML = `<div class="text-center p-8 text-gray-400 text-sm">No staff found.</div>`; return; }
+            
+            const formatTime = (iso) => {
+                if(!iso) return "";
+                const d = new Date(iso);
+                return d.toLocaleDateString(undefined, {month:'short', day:'numeric'}) + ' ' + d.toLocaleTimeString(undefined, {hour:'2-digit', minute:'2-digit'});
+            };
+
+            filtered.forEach(emp => {
+                const isActive = selectedEmployee && String(selectedEmployee.id) === String(emp.id);
+                const div = document.createElement('div');
+                div.className = `p-3 rounded-lg cursor-pointer transition-all border mb-2 ${isActive ? 'bg-blue-50 border-blue-200 shadow-sm' : 'hover:bg-gray-50 border-transparent bg-white'}`;
+                
+                div.onclick = (e) => {
+                    window.handleSelect(String(emp.id));
+                };
+
+                const lastMod = emp.lastModified ? `<div class="text-[10px] text-orange-600 mt-2 flex items-center gap-1 bg-orange-50 px-2 py-1 rounded w-fit"><i data-lucide="clock" class="w-3 h-3"></i> Modified: ${formatTime(emp.lastModified)}</div>` : '';
+
+                div.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="font-bold text-gray-800 text-sm">${emp.name}</p>
+                            <div class="flex items-center gap-1 text-xs text-gray-500 mt-0.5">
+                                <span class="truncate max-w-[100px]">${emp.position}</span>
+                                <span class="text-gray-300">•</span>
+                                <span class="text-blue-600 font-medium">${emp.department}</span>
+                            </div>
+                            ${lastMod}
+                        </div>
+                        ${isActive ? '<i data-lucide="chevron-right" class="w-4 h-4 text-blue-500"></i>' : ''}
+                    </div>
+                    <div class="flex justify-end gap-2 mt-2 border-t pt-1 ${isActive ? 'block' : 'hidden'}">
+                        <button onclick="event.stopPropagation(); window.deleteEmployee('${String(emp.id)}')" class="text-xs text-red-400 hover:text-red-600 flex items-center gap-1"><i data-lucide="trash-2" class="w-3 h-3"></i> Del</button>
+                    </div>`;
+                container.appendChild(div);
+            });
+            if(window.lucide) lucide.createIcons();
+        }
+
+        window.setFilter = (c, d) => { currentFilter = { campus: c, department: d }; document.getElementById('mobile-filter').value = `${c}|${d}`; renderEmployeeList(); renderDeptSidebar(); };
+        window.handleMobileFilter = (val) => { const [c, d] = val.split('|'); window.setFilter(c, d); };
+        window.clearFilter = () => window.setFilter('All', 'All');
+        window.triggerImport = () => document.getElementById('csv-input').click();
+        window.downloadTemplate = () => {
+            const csvContent = "data:text/csv;charset=utf-8,Full Name,Department,Position,Email,Campus,WhatsApp Number\nSomchai Vong,Kindergarten,Teacher,somchai@school.com,Sibounheuang,8562055555555";
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "neerada_staff_template.csv");
+            document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        };
+        window.handleCSV = (input) => {
+            const file = input.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const text = e.target.result; const rows = text.split('\n'); let count = 0;
+                for(let i=1; i<rows.length; i++) {
+                    const cols = rows[i].split(',');
+                    if(cols.length >= 5 && cols[0].trim() !== "") {
+                        const newId = 'EMP' + Date.now().toString(36).toUpperCase() + i;
+                        const newEmp = { id: newId, name: cols[0].trim(), department: cols[1].trim(), position: cols[2].trim(), email: cols[3].trim(), campus: cols[4].trim().replace('\r', ''), whatsapp: cols[5] ? cols[5].trim() : '', savedPayroll: {}, payrollHistory: {} };
+                        employees.push(newEmp); count++;
+                    }
+                }
+                await idb.set('neerada_employees', employees);
+                renderEmployeeList(); 
+                updateDashboardStats(); 
+                renderDeptSidebar(); 
+                alert(`Imported ${count} employees.`); 
+                input.value = ''; 
+            };
+            reader.readAsText(file);
+        };
+
+        // --- DASHBOARD AND STATS LOGIC ---
+        function updateDashboardStats() {
+            const yearFilter = document.getElementById('filter-year').value;
+            const monthFilter = document.getElementById('filter-month').value;
+            
+            // Filter history for the table (Logs)
+            let filteredHistory = history.filter(h => h.year == yearFilter);
+            if (monthFilter !== 'All') filteredHistory = filteredHistory.filter(h => h.month === monthFilter);
+            renderHistoryList(filteredHistory);
+            
+            // LIVE AGGREGATION for Top Cards & Dept Breakdown
+            let displayLAK = 0;
+            let displayUSD = 0;
+            const deptStats = {}; // Structure: { Campus: { DeptName: { count, lak, usd } } }
+
+            // Init Dept Stats Structure
+            CAMPUSES.forEach(c => deptStats[c] = {});
+
+            employees.forEach(emp => {
+                if (!emp.payrollHistory) return;
+                
+                // Iterate through every saved month for this employee
+                Object.entries(emp.payrollHistory).forEach(([periodKey, state]) => {
+                    const [pYear, pMonth] = periodKey.split('-');
+                    
+                    // Apply Filters
+                    if (yearFilter !== 'All' && pYear !== yearFilter) return;
+                    if (monthFilter !== 'All' && pMonth !== monthFilter) return;
+
+                    // Calculate amounts
+                    const result = calculatePayrollFromState(emp, state);
+                    displayLAK += result.lak;
+                    displayUSD += result.usd;
+
+                    // Aggregate for Dept Breakdown
+                    const c = emp.campus || 'Unassigned';
+                    const d = emp.department || 'Unassigned';
+                    if (!deptStats[c]) deptStats[c] = {};
+                    if (!deptStats[c][d]) deptStats[c][d] = { ids: new Set(), lak: 0, usd: 0 };
+                    
+                    deptStats[c][d].ids.add(emp.id);
+                    deptStats[c][d].lak += result.lak;
+                    deptStats[c][d].usd += result.usd;
+                });
+            });
+
+            document.getElementById('stat-employees').innerText = employees.length;
+            document.getElementById('stat-total-paid-lak').innerText = formatMoney(displayLAK);
+            document.getElementById('stat-total-paid-usd').innerText = '$' + displayUSD.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            
+            if (history.length > 0) {
+                const last = history[history.length - 1];
+                document.getElementById('stat-last-month').innerText = `${last.month} ${last.year}`;
+                document.getElementById('stat-last-amount').innerText = formatMoney(last.totalLAK);
+            } else {
+                document.getElementById('stat-last-month').innerText = "No Data";
+                document.getElementById('stat-last-amount').innerText = "---";
+            }
+
+            // Render Dept Breakdown Table
+            rw6jYohNVBeVZFxAjEUHqSbjor6i8pNm4h(deptStats);
+        }
+
+        function rw6jYohNVBeVZFxAjEUHqSbjor6i8pNm4h(stats) {
+            const container = document.getElementById('dept-breakdown');
+            let html = `
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                    <h3 class="font-bold text-gray-700">Department Breakdown</h3>
+                    <span class="text-xs text-gray-400 uppercase font-bold">Aggregated by selected period</span>
+                </div>
+                <table class="w-full text-left">
+                    <thead class="bg-gray-50 text-gray-500 text-xs uppercase font-medium">
+                        <tr>
+                            <th class="px-4 py-3">Campus</th>
+                            <th class="px-4 py-3">Department</th>
+                            <th class="px-4 py-3 text-center">Active Staff</th>
+                            <th class="px-4 py-3 text-right">Total Pay (LAK)</th>
+                            <th class="px-4 py-3 text-right">Total Pay (USD)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 text-sm">`;
+
+            let hasData = false;
+            CAMPUSES.forEach(campus => {
+                if(stats[campus]) {
+                    Object.keys(stats[campus]).sort().forEach(dept => {
+                        const dData = stats[campus][dept];
+                        if (dData.lak > 0 || dData.usd > 0) {
+                            hasData = true;
+                            html += `
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="px-4 py-3 font-bold text-blue-900">${campus}</td>
+                                <td class="px-4 py-3 text-gray-700">${dept}</td>
+                                <td class="px-4 py-3 text-center text-gray-500">${dData.ids.size}</td>
+                                <td class="px-4 py-3 text-right font-mono font-medium">${formatMoney(dData.lak)}</td>
+                                <td class="px-4 py-3 text-right font-mono text-green-700">$${dData.usd.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                            </tr>`;
+                        }
+                    });
+                }
+            });
+
+            if (!hasData) {
+                html += `<tr><td colspan="5" class="px-4 py-6 text-center text-gray-400">No payment data found for this period.</td></tr>`;
+            }
+
+            html += `</tbody></table></div>`;
+            container.innerHTML = html;
+        }
+
+        // --- NEW: Individual Employee Dashboard Logic ---
+        window.viewEmployeeHistory = () => {
+            if (!selectedEmployee) return;
+            const modal = document.getElementById('employee-history-modal');
+            const tbody = document.getElementById('employee-history-rows');
+            
+            // Header Info
+            document.getElementById('hist-emp-name').innerText = selectedEmployee.name;
+            document.getElementById('hist-emp-dept').innerText = `${selectedEmployee.department} • ${selectedEmployee.campus}`;
+
+            // Aggregate Lifetime Stats
+            let totalLifetimeLAK = 0;
+            let totalLifetimeUSD = 0;
+            let rowsHtml = '';
+
+            // Get history, sort by date desc
+            const hist = selectedEmployee.payrollHistory || {};
+            const sortedKeys = Object.keys(hist).sort((a, b) => b.localeCompare(a)); // Descending year-month
+
+            if (sortedKeys.length === 0) {
+                rowsHtml = `<tr><td colspan="3" class="px-4 py-4 text-center text-gray-400">No payment history recorded yet.</td></tr>`;
+            } else {
+                sortedKeys.forEach(key => {
+                    const [year, month] = key.split('-');
+                    const state = hist[key];
+                    const result = calculatePayrollFromState(selectedEmployee, state);
+                    
+                    totalLifetimeLAK += result.lak;
+                    totalLifetimeUSD += result.usd;
+
+                    rowsHtml += `
+                    <tr>
+                        <td class="px-4 py-3 font-medium text-gray-800">${month} ${year}</td>
+                        <td class="px-4 py-3 text-right font-mono text-blue-700">${formatMoney(result.lak)}</td>
+                        <td class="px-4 py-3 text-right font-mono text-green-700">$${result.usd.toFixed(2)}</td>
+                    </tr>`;
+                });
+            }
+
+            document.getElementById('hist-total-lak').innerText = formatMoney(totalLifetimeLAK);
+            document.getElementById('hist-total-usd').innerText = '$' + totalLifetimeUSD.toLocaleString('en-US', {minimumFractionDigits: 2});
+            tbody.innerHTML = rowsHtml;
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        };
+
+        // --- Calculation Helpers ---
+        function calculatePayrollFromState(emp, state) {
+            if (!state) return { lak: 0, usd: 0 };
+            let netLAK = 0;
+            let cashOutUSD = 0;
+
+            if (emp.department === 'English') {
+                 const d = state;
+                 const otPayment = (parseFloat(d.otHours)||0)*(parseFloat(d.otRate)||0);
+                 const earnSum = (parseFloat(d.basicPay)||0)+(parseFloat(d.accumulated)||0)+(parseFloat(d.increase)||0)+(parseFloat(d.earningsOthersUSD)||0);
+                 const grossUSD = earnSum + otPayment;
+                 const dedUSDSum = (parseFloat(d.profTax)||0)+(parseFloat(d.absences)||0)+(parseFloat(d.visa)||0)+(parseFloat(d.deductionsOthersUSD)||0);
+                 const netUSD = grossUSD - dedUSDSum;
+                 const convertible = netUSD - (parseFloat(d.cashOut)||0);
+                 const convertedLAK = convertible * (parseFloat(d.exchangeRate)||0);
+                 const extraLAK = (parseFloat(d.itLAK)||0)+(parseFloat(d.extraWorkOthersLAK)||0)+(parseFloat(d.stipendLAK)||0);
+                 const dedLAK = (parseFloat(d.insuranceLAK)||0)+(parseFloat(d.deductionsOthersLAK)||0);
+                 
+                 netLAK = convertedLAK + extraLAK - dedLAK;
+                 cashOutUSD = parseFloat(d.cashOut)||0;
+            } else {
+                const config = departmentConfigs[emp.department] || { earnings: [], deductions: [] };
+                let tEarn = 0, tDed = 0;
+                config.earnings.forEach(f => { 
+                    const v = parseFloat(state[f] || 0); 
+                    const isExcluded = (f === LAO_FIELDS.basic || f === LAO_FIELDS.start);
+                    if(v > 0 && !isExcluded) tEarn += v; 
+                });
+                config.deductions.forEach(f => { 
+                    const v = parseFloat(state[f] || 0); 
+                    if(v > 0) tDed += v; 
+                });
+                netLAK = tEarn - tDed;
+            }
+            return { lak: netLAK, usd: cashOutUSD };
+        }
+
+        // --- UPDATED SAVE FUNCTION WITH QUOTA HANDLING ---
+        window.savePayrollHistory = async (e) => {
+            e.preventDefault();
+            const year = document.getElementById('save-year').value;
+            const month = document.getElementById('save-month').value;
+            const dateId = `${year}-${month}`;
+            
+            // NEW LOGIC: Calculate totals SPECIFICALLY for this period by iterating through history
+            let totalLAK = 0;
+            let totalUSD = 0;
+            let count = 0;
+
+            employees.forEach(emp => {
+                // Check if this employee has a saved slip for this specific month
+                if (emp.payrollHistory && emp.payrollHistory[dateId]) {
+                    const state = emp.payrollHistory[dateId];
+                    const result = calculatePayrollFromState(emp, state);
+                    totalLAK += result.lak;
+                    totalUSD += result.usd;
+                    if(result.lak > 0 || result.usd > 0) count++;
+                }
+            });
+
+            const record = { 
+                dateId, year, month, 
+                totalLAK, 
+                totalUSD, 
+                employeeCount: count > 0 ? count : employees.length, // Count only if people have data, else fall back? No, count is safer.
+                timestamp: new Date().toISOString() 
+            };
+            
+            const idx = history.findIndex(h => h.dateId === dateId);
+            if(idx >= 0) history[idx] = record; else history.push(record);
+            
+            try {
+                await idb.set('neerada_history', history);
+                alert("Saved Monthly Run!"); 
+                updateDashboardStats(); 
+                window.closeSaveHistoryModal();
+            } catch (err) {
+                console.error(err);
+                alert("Error saving history. Storage might be full.");
+            }
+        };
+
+        function renderEditor() {
+            const container = document.getElementById('editor-content');
+            if (selectedEmployee.department === 'English') renderEnglishEditor(container);
+            else renderDynamicEditor(container);
+            renderPreview();
+        }
+
+        function renderDynamicEditor(container) {
+            const dept = selectedEmployee.department;
+            const config = departmentConfigs[dept] || { earnings: [], deductions: [] };
+            
+            let earnHtml = config.earnings.map(f => {
+                const isBasic = f === LAO_FIELDS.basic;
+                const isStart = f === LAO_FIELDS.start;
+                const highlightClass = isBasic ? 'field-highlight-1' : (isStart ? 'field-highlight-2' : '');
+                const readonly = (isBasic || isStart) ? 'readonly' : '';
+                
+                return `<div class="${highlightClass}">
+                            <label class="block text-xs font-bold text-gray-500 mb-1 truncate" title="${f}">${f}</label>
+                            <input type="number" ${readonly} data-field-name="${f}" class="w-full text-sm border rounded p-2" value="${currentPayrollState[f] || 0}" oninput="window.updatePayrollField('${f}', this.value)">
+                        </div>`;
+            }).join('');
+
+            let dedHtml = config.deductions.map(f => `<div><label class="block text-xs font-bold text-gray-500 mb-1 truncate" title="${f}">${f}</label><input type="number" class="w-full text-sm border rounded p-2 text-red-700" value="${currentPayrollState[f] || 0}" oninput="window.updatePayrollField('${f}', this.value)"></div>`).join('');
+            
+            container.innerHTML = `<div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 space-y-4"><h3 class="font-bold text-gray-700 border-b pb-2 text-sm">Earnings (LAK)</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-4 max-h-60 overflow-y-auto pr-2">${earnHtml || '<p class="text-xs text-gray-400">No earnings configured.</p>'}</div></div><div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 space-y-4 mt-4"><h3 class="font-bold text-red-700 border-b pb-2 text-sm">Deductions (LAK)</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-4 max-h-40 overflow-y-auto pr-2">${dedHtml || '<p class="text-xs text-gray-400">No deductions configured.</p>'}</div></div>`;
+        }
+
+        function renderEnglishEditor(container) {
+            const d = currentPayrollState;
+            container.innerHTML = `
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 space-y-2 text-xs">
+                    <div class="flex justify-between items-center border-b pb-2"><h3 class="font-bold text-blue-700">Settings</h3><div class="flex gap-2"><div><label class="block text-[9px] font-bold mb-1">Rate</label><input type="number" value="${d.exchangeRate}" oninput="window.updatePayrollField('exchangeRate', this.value)" class="w-16 border rounded text-right p-1"></div><div><label class="block text-[9px] font-bold mb-1">CashOut</label><input type="number" value="${d.cashOut}" oninput="window.updatePayrollField('cashOut', this.value)" class="w-12 border rounded text-right p-1"></div></div></div>
+                    <h3 class="font-bold text-gray-600 mt-2 mb-2">EARNINGS (USD)</h3><div class="grid grid-cols-2 gap-x-4 gap-y-2"><div><label class="block font-bold mb-1">Basic Pay</label><input type="number" class="w-full border rounded p-1" value="${d.basicPay||0}" oninput="window.updatePayrollField('basicPay', this.value)"></div><div><label class="block font-bold mb-1">Accumulated</label><input type="number" class="w-full border rounded p-1" value="${d.accumulated||0}" oninput="window.updatePayrollField('accumulated', this.value)"></div><div><label class="block font-bold mb-1">Increase</label><input type="number" class="w-full border rounded p-1" value="${d.increase||0}" oninput="window.updatePayrollField('increase', this.value)"></div><div><label class="block font-bold mb-1">Others</label><input type="number" class="w-full border rounded p-1" value="${d.earningsOthersUSD||0}" oninput="window.updatePayrollField('earningsOthersUSD', this.value)"></div></div>
+                    <h3 class="font-bold text-gray-600 mt-4 mb-2">OVERTIME (USD)</h3><div class="grid grid-cols-2 gap-x-4 gap-y-2"><div><label class="block font-bold mb-1">Total Hours</label><input type="number" class="w-full border rounded p-1" value="${d.otHours||0}" oninput="window.updatePayrollField('otHours', this.value)"></div><div><label class="block font-bold mb-1">Rate/Hr</label><input type="number" class="w-full border rounded p-1" value="${d.otRate||0}" oninput="window.updatePayrollField('otRate', this.value)"></div></div>
+                    <h3 class="font-bold text-purple-700 mt-4 mb-2">EXTRA WORK (LAK)</h3><div class="grid grid-cols-3 gap-x-4 gap-y-2"><div><label class="block font-bold mb-1">IT</label><input type="number" class="w-full border rounded p-1" value="${d.itLAK||0}" oninput="window.updatePayrollField('itLAK', this.value)"></div><div><label class="block font-bold mb-1">Others</label><input type="number" class="w-full border rounded p-1" value="${d.extraWorkOthersLAK||0}" oninput="window.updatePayrollField('extraWorkOthersLAK', this.value)"></div><div><label class="block font-bold mb-1">Stipend</label><input type="number" class="w-full border rounded p-1" value="${d.stipendLAK||0}" oninput="window.updatePayrollField('stipendLAK', this.value)"></div></div>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mt-4 space-y-2 text-xs"><h3 class="font-bold text-red-700 border-b pb-2 mb-2">DEDUCTIONS</h3><div class="grid grid-cols-2 gap-x-4 gap-y-2"><div><label class="block font-bold mb-1">Prof. Tax</label><input type="number" class="w-full border rounded p-1" value="${d.profTax||0}" oninput="window.updatePayrollField('profTax', this.value)"></div><div><label class="block font-bold mb-1">Absences</label><input type="number" class="w-full border rounded p-1" value="${d.absences||0}" oninput="window.updatePayrollField('absences', this.value)"></div><div><label class="block font-bold mb-1">Visa</label><input type="number" class="w-full border rounded p-1" value="${d.visa||0}" oninput="window.updatePayrollField('visa', this.value)"></div><div><label class="block font-bold mb-1">Others</label><input type="number" class="w-full border rounded p-1" value="${d.deductionsOthersUSD||0}" oninput="window.updatePayrollField('deductionsOthersUSD', this.value)"></div></div><h4 class="font-bold text-red-500 mt-4 mb-2 text-[10px]">LAK DEDUCTIONS</h4><div class="grid grid-cols-2 gap-x-4 gap-y-2"><div><label class="block font-bold mb-1">Insurance</label><input type="number" class="w-full border rounded p-1" value="${d.insuranceLAK||0}" oninput="window.updatePayrollField('insuranceLAK', this.value)"></div><div><label class="block font-bold mb-1">Others</label><input type="number" class="w-full border rounded p-1" value="${d.deductionsOthersLAK||0}" oninput="window.updatePayrollField('deductionsOthersLAK', this.value)"></div></div></div>
+                <div class="mt-4"><label class="block text-xs font-bold text-gray-500 mb-1">Notes</label><textarea class="w-full border rounded p-2 text-xs" rows="2" oninput="window.updatePayrollField('notes', this.value)">${d.notes || ''}</textarea></div>`;
+        }
+        
+        // ... (Remaining rendering functions for preview, history, etc. kept same) ...
+        function calculateLaoFormulas() { const valResearch = parseFloat(currentPayrollState[LAO_FIELDS.research] || 0); const valMedia = parseFloat(currentPayrollState[LAO_FIELDS.media] || 0); const valBehaviorBasic = parseFloat(currentPayrollState[LAO_FIELDS.behaviorBasic] || 0); const valClassResp = parseFloat(currentPayrollState[LAO_FIELDS.classResp] || 0); const valPolicy = parseFloat(currentPayrollState[LAO_FIELDS.policy] || 0); const basicSum = valResearch + valMedia + valBehaviorBasic + valClassResp + valPolicy; currentPayrollState[LAO_FIELDS.basic] = basicSum; const valCert = parseFloat(currentPayrollState[LAO_FIELDS.cert] || 0); const valHomeroom = parseFloat(currentPayrollState[LAO_FIELDS.homeroom] || 0); const valBehaviorStart = parseFloat(currentPayrollState[LAO_FIELDS.behaviorStart] || 0); const startSum = basicSum + valCert + valHomeroom + valBehaviorStart; currentPayrollState[LAO_FIELDS.start] = startSum; }
+        
+        // --- UPDATED: updatePayrollField to include broadcasting ---
+        window.updatePayrollField = async (f, v) => { 
+            currentPayrollState[f] = v; 
+            
+            // Re-calculate Lao formulas if needed
+            const componentFields = [ LAO_FIELDS.research, LAO_FIELDS.media, LAO_FIELDS.behaviorBasic, LAO_FIELDS.classResp, LAO_FIELDS.policy, LAO_FIELDS.cert, LAO_FIELDS.homeroom, LAO_FIELDS.behaviorStart ]; 
+            if(componentFields.includes(f)) { 
+                calculateLaoFormulas(); 
+                const basicInput = document.querySelector(`input[data-field-name="${LAO_FIELDS.basic}"]`); 
+                const startInput = document.querySelector(`input[data-field-name="${LAO_FIELDS.start}"]`); 
+                if(basicInput) basicInput.value = currentPayrollState[LAO_FIELDS.basic]; 
+                if(startInput) startInput.value = currentPayrollState[LAO_FIELDS.start]; 
+            } 
+
+            // English Dept Sync (Existing)
+            if (selectedEmployee.department === 'English' && ['exchangeRate', 'cashOut', 'profTax'].includes(f)) {
+                const periodKey = `${editorYear}-${editorMonth}`;
+                employees.forEach(emp => {
+                    if (emp.department === 'English' && emp.id !== selectedEmployee.id) {
+                        if (!emp.savedPayroll) emp.savedPayroll = {};
+                        emp.savedPayroll[f] = v;
+                        if (emp.payrollHistory && emp.payrollHistory[periodKey]) {
+                            emp.payrollHistory[periodKey][f] = v;
+                        }
+                    }
+                });
+                try {
+                    await idb.set('neerada_employees', employees);
+                } catch(e) { }
+            }
+
+            // NEW: Primary Dept Specific Sync (Requested)
+            const primarySpecificSync = [
+                LAO_FIELDS.homeroom, 
+                LAO_FIELDS.behaviorStart, 
+                LAO_FIELDS.increase,
+                LAO_FIELDS.overtimePrimary,
+                LAO_FIELDS.early,
+                LAO_FIELDS.care
+            ];
+
+            if (selectedEmployee.department === 'Primary' && primarySpecificSync.includes(f)) {
+                 const periodKey = `${editorYear}-${editorMonth}`;
+                 employees.forEach(emp => {
+                    if (emp.department === 'Primary' && emp.id !== selectedEmployee.id) {
+                         // Update Saved Buffer
+                        if (!emp.savedPayroll) emp.savedPayroll = {};
+                        emp.savedPayroll[f] = v;
+
+                        // Update Saved History
+                        if (emp.payrollHistory && emp.payrollHistory[periodKey]) {
+                            const state = emp.payrollHistory[periodKey];
+                            state[f] = v;
+                            
+                            // Recalculate Start Salary if needed (homeroom/behaviorStart affect it)
+                            const basicSum = parseFloat(state[LAO_FIELDS.basic] || 0); // Assuming basic is already correct or didn't change
+                            // Actually, basicSum relies on other fields. If we only change homeroom, basicSum doesn't change.
+                            // But Start Salary DOES change.
+                            
+                            const valCert = parseFloat(state[LAO_FIELDS.cert] || 0);
+                            const valHomeroom = parseFloat(state[LAO_FIELDS.homeroom] || 0);
+                            const valBehaviorStart = parseFloat(state[LAO_FIELDS.behaviorStart] || 0);
+                            
+                            state[LAO_FIELDS.start] = basicSum + valCert + valHomeroom + valBehaviorStart;
+                        }
+                    }
+                 });
+                 // Save
+                 try { await idb.set('neerada_employees', employees); } catch(e) {}
+            }
+
+            renderPreview(); 
+        };
+
+        window.openSettings = () => document.getElementById('settings-modal').classList.remove('hidden'); window.closeSettings = () => document.getElementById('settings-modal').classList.add('hidden'); window.setTheme = async (theme) => { document.body.className = `bg-gray-100 font-sans text-gray-900 h-screen flex flex-col overflow-hidden theme-${theme}`; await idb.set('neerada_theme', theme); };
+        window.handleLogoUpload = (input) => { const file = input.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = async function(e) { const base64 = e.target.result; currentSchoolLogo = base64; await idb.set('neerada_school_logo', base64); renderPreview(); alert("Logo saved successfully!"); }; reader.readAsDataURL(file); };
+        window.exportData = async () => { 
+            const dbTheme = await idb.get('neerada_theme'); 
+            const dbLogo = await idb.get('neerada_school_logo');
+            const data = { 
+                employees, 
+                history, 
+                departmentConfigs, 
+                theme: dbTheme || 'default', 
+                logo: dbLogo || null,
+                version: '3.6' 
+            }; 
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data)); 
+            const link = document.createElement('a'); 
+            link.setAttribute("href", dataStr); 
+            link.setAttribute("download", `neerada_backup_${new Date().toISOString().slice(0,10)}.json`); 
+            document.body.appendChild(link); 
+            link.click(); 
+            document.body.removeChild(link); 
+        };
+        window.importData = (input) => { const file = input.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = async (e) => { try { const data = JSON.parse(e.target.result); if(data.employees) await idb.set('neerada_employees', data.employees); if(data.history) await idb.set('neerada_history', data.history); if(data.departmentConfigs) await idb.set('neerada_dept_configs', data.departmentConfigs); if(data.theme) await idb.set('neerada_theme', data.theme); if(data.logo) await idb.set('neerada_school_logo', data.logo); alert("Data imported successfully! The page will reload."); window.location.reload(); } catch (err) { alert("Error importing data: " + err.message); } }; reader.readAsText(file); };
+        
+        // --- UPDATED SAVE FUNCTION WITH QUOTA HANDLING ---
+        window.saveEmployeePayrollData = async () => { 
+            if(!selectedEmployee) return; 
+            const periodKey = `${editorYear}-${editorMonth}`; 
+            
+            // Clone payroll state to avoid ref issues
+            const payrollData = JSON.parse(JSON.stringify(currentPayrollState));
+            
+            // Get fresh employee object from master list to avoid overwriting recent photo/details
+            const idx = employees.findIndex(e => String(e.id) === String(selectedEmployee.id));
+            
+            if(idx >= 0) {
+                // Ensure sub-objects exist
+                if (!employees[idx].payrollHistory) employees[idx].payrollHistory = {};
+                
+                // Update payroll data
+                employees[idx].payrollHistory[periodKey] = payrollData;
+                employees[idx].savedPayroll = payrollData;
+                employees[idx].lastModified = new Date().toISOString();
+                
+                // Update selectedEmployee reference to point to the updated master object
+                selectedEmployee = employees[idx];
+                
+                try {
+                    await idb.set('neerada_employees', employees);
+                    alert(`Payroll saved for ${selectedEmployee.name}`); 
+                    renderEmployeeList(); 
+                    updateDashboardStats();
+                } catch (err) {
+                    console.error(err);
+                    alert("Error saving data.");
+                }
+            }
+        };
+        
+        // --- PRINT FUNCTIONS (NEW) ---
+        window.openPrintSettings = () => {
+            if(!selectedEmployee) return;
+            document.getElementById('print-modal').classList.remove('hidden');
+            document.getElementById('print-modal').classList.add('flex');
+        };
+        window.closePrintSettings = () => {
+            document.getElementById('print-modal').classList.add('hidden');
+            document.getElementById('print-modal').classList.remove('flex');
+        };
+        window.executePrint = () => {
+            const orientation = document.querySelector('input[name="print-orient"]:checked').value;
+            const scale = parseFloat(document.getElementById('print-scale').value) / 100;
+            
+            // Set dynamic styles for print
+            const styleId = 'print-dynamic-style';
+            let styleEl = document.getElementById(styleId);
+            if (!styleEl) { styleEl = document.createElement('style'); styleEl.id = styleId; document.head.appendChild(styleEl); }
+            
+            // CSS to inject scale and orientation
+            // Note: We use width: calc(100% / scale) to ensure it fills the available print area when scaled up
+            styleEl.innerHTML = `
+                @media print { 
+                    @page { size: A4 ${orientation}; margin: 5mm; } 
+                    #preview-pane { 
+                        transform: scale(${scale}) !important; 
+                        width: calc(100% / ${scale}) !important;
+                    }
+                }
+            `;
+            
+            window.closePrintSettings();
+            setTimeout(() => {
+                window.print();
+            }, 100);
+        };
+
+        // --- EMAIL FUNCTION ---
+        window.sendEmail = () => {
+            if (!selectedEmployee) return;
+            const subject = `Payslip - ${editorMonth} ${editorYear} - ${selectedEmployee.name}`;
+            const body = generateEmailText();
+            // Use window.location.href for better mailto support
+            const encodedBody = encodeURIComponent(body);
+            window.location.href = `mailto:${selectedEmployee.email}?subject=${encodeURIComponent(subject)}&body=${encodedBody}`;
+        };
+
+        function generateEmailText() {
+            if (!selectedEmployee) return "";
+            const d = currentPayrollState;
+            const isEnglish = selectedEmployee.department === 'English';
+            const period = `${editorMonth} ${editorYear}`;
+            
+            // Text Formatting Helpers for Plain Text Alignment
+            // Using padding to simulate columns
+            const PAD_L = 30; // Label width
+            const PAD_R = 15; // Value width
+            
+            const formatLine = (label, value) => {
+                return `${label.padEnd(PAD_L)} : ${value.padStart(PAD_R)}`;
+            };
+            
+            const formatHeader = (text) => {
+                return `\n${"=".repeat(50)}\n  ${text.toUpperCase()}\n${"=".repeat(50)}`;
+            };
+
+            const formatBold = (label, value) => {
+                // Simulate bold with asterisks and spacing
+                return `\n*** ${label.toUpperCase().padEnd(PAD_L - 4)} : ${value.padStart(PAD_R)} ***`;
+            };
+
+            const baseId = generateEmployeeId(selectedEmployee.department, selectedEmployee.name, selectedEmployee.campus);
+            const monthIndex = MONTHS.indexOf(editorMonth) + 1;
+            const formattedMonth = monthIndex < 10 ? '0' + monthIndex : monthIndex;
+            const fullId = `${baseId}-${formattedMonth}-${editorYear}`;
+
+            let msg = `NEERADA SCHOOL PAYSLIP\n`;
+            msg += `Period: ${period}\n\n`;
+            
+            msg += `EMPLOYEE DETAILS\n`;
+            msg += `--------------------------------------------------\n`;
+            msg += `NAME       :  ${selectedEmployee.name.toUpperCase()}\n`; 
+            msg += `ID         :  ${fullId}\n`;
+            msg += `POSITION   :  ${selectedEmployee.position}\n`;
+            msg += `DEPT       :  ${selectedEmployee.department}\n`;
+            msg += `CAMPUS     :  ${selectedEmployee.campus}\n`;
+            msg += `--------------------------------------------------\n`;
+
+            if (isEnglish) {
+                 const otPayment = (parseFloat(d.otHours)||0)*(parseFloat(d.otRate)||0);
+                 const earnSum = (parseFloat(d.basicPay)||0)+(parseFloat(d.accumulated)||0)+(parseFloat(d.increase)||0)+(parseFloat(d.earningsOthersUSD)||0);
+                 const grossUSD = earnSum + otPayment;
+                 const dedUSDSum = (parseFloat(d.profTax)||0)+(parseFloat(d.absences)||0)+(parseFloat(d.visa)||0)+(parseFloat(d.deductionsOthersUSD)||0);
+                 const netUSD = grossUSD - dedUSDSum;
+                 const convertible = netUSD - (parseFloat(d.cashOut)||0);
+                 const convertedLAK = convertible * (parseFloat(d.exchangeRate)||0);
+                 const extraLAK = (parseFloat(d.itLAK)||0)+(parseFloat(d.extraWorkOthersLAK)||0)+(parseFloat(d.stipendLAK)||0);
+                 const dedLAK = (parseFloat(d.insuranceLAK)||0)+(parseFloat(d.deductionsOthersLAK)||0);
+                 const finalLAK = convertedLAK + extraLAK - dedLAK;
+
+                 msg += formatHeader("EARNINGS (USD)");
+                 msg += `\n` + formatLine("Basic Pay", `$${parseFloat(d.basicPay||0).toFixed(2)}`);
+                 msg += `\n` + formatLine("Accumulated", `$${parseFloat(d.accumulated||0).toFixed(2)}`);
+                 msg += `\n` + formatLine("Increase", `$${parseFloat(d.increase||0).toFixed(2)}`);
+                 msg += `\n` + formatLine("Others", `$${parseFloat(d.earningsOthersUSD||0).toFixed(2)}`);
+                 msg += `\n` + formatLine(`Overtime (${d.otHours}hrs @ $${d.otRate})`, `$${otPayment.toFixed(2)}`);
+                 msg += formatBold("GROSS USD", `$${grossUSD.toFixed(2)}`);
+
+                 msg += formatHeader("DEDUCTIONS (USD)");
+                 msg += `\n` + formatLine("Prof. Tax", `$${parseFloat(d.profTax||0).toFixed(2)}`);
+                 msg += `\n` + formatLine("Absences", `$${parseFloat(d.absences||0).toFixed(2)}`);
+                 msg += `\n` + formatLine("Visa", `$${parseFloat(d.visa||0).toFixed(2)}`);
+                 msg += `\n` + formatLine("Others", `$${parseFloat(d.deductionsOthersUSD||0).toFixed(2)}`);
+                 msg += formatBold("TOTAL DED (USD)", `$${dedUSDSum.toFixed(2)}`);
+
+                 msg += formatHeader("NET PAY");
+                 msg += formatBold("NET USD", `$${netUSD.toFixed(2)}`);
+                 
+                 msg += `\n\n--------------------------------------------------\n`;
+                 msg += `CALCULATION DETAILS:\n`;
+                 msg += formatLine("Cash Out", `$${parseFloat(d.cashOut||0).toFixed(2)}`);
+                 msg += `\n` + formatLine(`Convertible @ ${d.exchangeRate}`, `$${convertible.toFixed(2)}`);
+                 msg += `\n` + formatLine("Converted LAK", formatMoney(convertedLAK));
+                 msg += `\n` + formatLine("Extra Work (LAK)", formatMoney(extraLAK));
+                 msg += `\n` + formatLine("LAK Deductions", `(${formatMoney(dedLAK)})`);
+                 msg += `\n--------------------------------------------------`;
+                 msg += formatBold("FINAL PAY (LAK)", formatMoney(finalLAK));
+
+            } else {
+                const config = departmentConfigs[selectedEmployee.department] || { earnings: [], deductions: [] };
+                let tEarn = 0, tDed = 0;
+                
+                msg += formatHeader("EARNINGS (LAK)");
+                config.earnings.forEach(f => { 
+                    const v = parseFloat(d[f] || 0); 
+                    const isExcluded = (f === LAO_FIELDS.basic || f === LAO_FIELDS.start);
+                    
+                    if (v > 0) {
+                        msg += `\n` + formatLine(f, formatMoney(v));
+                        if(!isExcluded) tEarn += v; 
+                    }
+                });
+                msg += formatBold("TOTAL EARNINGS", formatMoney(tEarn));
+
+                msg += formatHeader("DEDUCTIONS (LAK)");
+                config.deductions.forEach(f => { 
+                    const v = parseFloat(d[f] || 0); 
+                    if(v > 0) {
+                        tDed += v; 
+                        msg += `\n` + formatLine(f, formatMoney(v));
+                    }
+                });
+                msg += formatBold("TOTAL DEDUCTIONS", formatMoney(tDed));
+                
+                msg += `\n` + "-".repeat(50);
+                msg += formatBold("NET PAY (LAK)", formatMoney(tEarn - tDed));
+            }
+            
+            if (d.notes) {
+                msg += `\n\nNOTES:\n${d.notes}\n`;
+            }
+            
+            return msg;
+        }
+
+        // --- WHATSAPP FUNCTIONS (UPDATED) ---
+        window.sendWhatsApp = () => {
+            if (!selectedEmployee) return;
+            let phone = selectedEmployee.whatsapp;
+            
+            if (!phone) {
+                alert("This employee has no WhatsApp number.");
+                return;
+            }
+            
+            // Clean phone number
+            phone = phone.replace(/[^0-9]/g, '');
+            if (phone.startsWith("020")) phone = "85620" + phone.substring(3);
+            else if (phone.startsWith("20")) phone = "85620" + phone.substring(2);
+            
+            let text = generatePayslipText();
+            // Add Footer
+            const year = new Date().getFullYear();
+            text += `\n\nComputer Generated message.\n© ${year} Neerada School Payroll System`;
+            
+            const url = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+            window.open(url, '_blank');
+        };
+
+        function renderPreview() { if(!selectedEmployee) return; document.getElementById('prev-name').innerText = selectedEmployee.name; document.getElementById('prev-pos').innerText = selectedEmployee.position; document.getElementById('prev-dept').innerText = selectedEmployee.department; const monthIndex = MONTHS.indexOf(editorMonth) + 1; const formattedMonth = monthIndex < 10 ? '0' + monthIndex : monthIndex; const baseId = generateEmployeeId(selectedEmployee.department, selectedEmployee.name, selectedEmployee.campus); document.getElementById('prev-id').innerText = `${baseId}-${formattedMonth}-${editorYear}`; document.getElementById('prev-email').innerText = selectedEmployee.email; document.getElementById('prev-whatsapp').innerText = selectedEmployee.whatsapp || '---'; document.getElementById('prev-campus').innerText = selectedEmployee.campus + " Campus"; document.getElementById('prev-date').innerText = getSmartPaymentDate(editorMonth, editorYear); const logoEl = document.getElementById('prev-school-logo'); if (currentSchoolLogo) { logoEl.src = currentSchoolLogo; logoEl.classList.remove('hidden'); } else { logoEl.classList.add('hidden'); } const picEl = document.getElementById('prev-profile-pic'); if (selectedEmployee.profilePic) { picEl.src = selectedEmployee.profilePic; picEl.classList.remove('hidden'); } else { picEl.classList.add('hidden'); } const container = document.getElementById('preview-content'); if (selectedEmployee.department === 'English') renderEnglishPreview(container); else renderDynamicPreview(container); }
+        function renderDynamicPreview(container) { const config = departmentConfigs[selectedEmployee.department] || { earnings: [], deductions: [] }; let totalEarn = 0, totalDed = 0; let earnHtml = config.earnings.map(f => { const v = parseFloat(currentPayrollState[f] || 0); const isExcluded = (f === LAO_FIELDS.basic || f === LAO_FIELDS.start); const isAccumulated = f === LAO_FIELDS.accumulated; const isIncrease = f === LAO_FIELDS.increase; if (!isExcluded) totalEarn += v; if (v > 0) { if (isExcluded) { let highlightClass = f === LAO_FIELDS.basic ? 'print-highlight-1 bg-green-50 text-green-800' : 'print-highlight-2 bg-orange-50 text-orange-800'; return `<div class="flex justify-between py-1.5 px-2 rounded mb-1 font-bold ${highlightClass}"><span class="truncate pr-2">${f}</span><span class="font-mono whitespace-nowrap">${formatMoney(v)}</span></div>`; } else if (isAccumulated || isIncrease) { return `<div class="flex justify-between py-1.5 px-2 rounded mb-1 print-highlight-special"><span class="truncate pr-2">${f}</span><span class="font-mono whitespace-nowrap">${formatMoney(v)}</span></div>`; } else { return `<div class="flex justify-between py-1 border-b border-gray-100 text-xs"><span class="text-gray-600 truncate pr-2">${f}</span><span class="font-mono text-gray-900 whitespace-nowrap">${formatMoney(v)}</span></div>`; } } return ''; }).join(''); let dedHtml = config.deductions.map(f => { const v = parseFloat(currentPayrollState[f] || 0); totalDed += v; return v > 0 ? `<div class="flex justify-between py-1 border-b border-gray-100 text-xs"><span class="text-gray-600 truncate pr-2">${f}</span><span class="font-mono text-red-600 whitespace-nowrap">(${formatMoney(v)})</span></div>` : ''; }).join(''); const net = totalEarn - totalDed; container.innerHTML = `<div class="flex flex-col gap-6 mb-6"><div><h3 class="font-bold text-green-700 border-b border-green-200 mb-2 pb-1">Earnings (LAK)</h3>${earnHtml}<div class="flex justify-between mt-2 pt-2 border-t print-highlight-total text-green-900"><span>Total Earnings (Calculated)</span><span>${formatMoney(totalEarn)}</span></div></div><div><h3 class="font-bold text-red-700 border-b border-red-200 mb-2 pb-1">Deductions (LAK)</h3>${dedHtml}<div class="flex justify-between mt-2 pt-2 border-t font-bold text-red-800"><span>Total Deductions</span><span>(${formatMoney(totalDed)})</span></div></div></div><div class="bg-blue-900 text-white p-4 rounded flex justify-between items-center mt-8"><span class="font-bold uppercase tracking-wider">Net Pay (LAK)</span><span class="font-bold text-xl font-mono">${formatMoney(net)}</span></div><div class="mt-6 pt-4 border-t border-gray-300 text-[10px] text-gray-600"><p class="font-bold underline mb-1">ໝາຍເຫດ:</p><ol class="list-decimal list-inside space-y-0.5"><li>ການຕອບຮັບຈາກ ຜປຄ ຫາຄູທີ່ສອນ/ຄູປະຈຳຫ້ອງ</li><li>ຄວາມເປັນລະບຽບໃນຫ້ອງທີ່ສອນ: ຄວາມເປັນລະບຽບຂອງໂຕະຕັ່ງ, ຄວາມສະອາດ ແລະ ອື່ນໆ</li><li>ທຸກໆການເຄື່ອນໄຫວໄປປະຊຸມ/ອອກວຽກກິດຈະກຳນອກ ຕ້ອງເຮັດບົດລາຍງານສົ່ງ.</li></ol></div>`; }
+        function renderEnglishPreview(container) { const d = currentPayrollState; const otPayment = (parseFloat(d.otHours)||0)*(parseFloat(d.otRate)||0); const earnSum = (parseFloat(d.basicPay)||0)+(parseFloat(d.accumulated)||0)+(parseFloat(d.increase)||0)+(parseFloat(d.earningsOthersUSD)||0); const grossUSD = earnSum + otPayment; const dedUSDSum = (parseFloat(d.profTax)||0)+(parseFloat(d.absences)||0)+(parseFloat(d.visa)||0)+(parseFloat(d.deductionsOthersUSD)||0); const netUSD = grossUSD - dedUSDSum; const convertible = netUSD - (parseFloat(d.cashOut)||0); const convertedLAK = convertible * (parseFloat(d.exchangeRate)||0); const extraLAK = (parseFloat(d.itLAK)||0)+(parseFloat(d.extraWorkOthersLAK)||0)+(parseFloat(d.stipendLAK)||0); const dedLAK = (parseFloat(d.insuranceLAK)||0)+(parseFloat(d.deductionsOthersLAK)||0); const finalLAK = convertedLAK + extraLAK - dedLAK; const fUSD = (n) => `$${parseFloat(n||0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`; const fLAK = (n) => formatMoney(n); const renderRow = (l, v, d, c) => `<div class="flex justify-between py-1 border-b border-gray-100 last:border-0"><span class="text-gray-600">${l}</span><span class="font-mono ${d?'text-red-600':''}">${c==='USD'?fUSD(v):fLAK(v)}</span></div>`; container.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-xs"><div><h4 class="font-bold text-blue-900 border-b-2 border-blue-100 mb-2 pb-1">EARNINGS</h4>${renderRow('Basic Pay ($)', d.basicPay, false, 'USD')}${renderRow('Accumulated ($)', d.accumulated, false, 'USD')}${renderRow('2025-26 Increased ($)', d.increase, false, 'USD')}${renderRow('Others ($)', d.earningsOthersUSD, false, 'USD')}<h4 class="font-bold text-blue-900 border-b-2 border-blue-100 mt-4 mb-2 pb-1">OVERTIME (USD)</h4><div class="flex justify-between py-1 text-gray-500 italic"><span>Total no. of hours</span><span>${d.otHours}</span></div><div class="flex justify-between py-1 text-gray-500 italic"><span>Rate per hour</span><span>$${d.otRate}</span></div>${renderRow('Payment', otPayment, false, 'USD')}<h4 class="font-bold text-purple-900 border-b-2 border-purple-100 mt-4 mb-2 pb-1">EXTRA WORK (LAK)</h4>${renderRow('IT (LAK)', d.itLAK, false, 'LAK')}${renderRow('Others (LAK)', d.extraWorkOthersLAK, false, 'LAK')}${renderRow('STIPEND (4 levels)', d.stipendLAK, false, 'LAK')}<div class="bg-blue-50 p-2 rounded mt-4"><div class="flex justify-between font-bold text-blue-800"><span>Gross Pay ($)</span><span>${fUSD(grossUSD)}</span></div><div class="flex justify-between text-[10px] text-gray-500 mt-1"><span>Rate USD to LAK</span><span>${formatMoney(d.exchangeRate)}</span></div></div></div><div><h4 class="font-bold text-red-900 border-b-2 border-red-100 mb-2 pb-1">DEDUCTIONS</h4>${renderRow('Professional Tax ($)', d.profTax, true, 'USD')}${renderRow('Absences ($)', d.absences, true, 'USD')}${renderRow('Visa ($)', d.visa, true, 'USD')}${renderRow('Others ($)', d.deductionsOthersUSD, true, 'USD')}<div class="flex justify-between font-bold text-red-700 border-t border-red-200 mt-1 pt-1 mb-4"><span>TOTAL DEDUCTIONS ($)</span><span>(${fUSD(dedUSDSum)})</span></div>${renderRow('Insurance (LAK)', d.insuranceLAK, true, 'LAK')}${renderRow('Others (LAK)', d.deductionsOthersLAK, true, 'LAK')}<div class="flex justify-between font-bold text-red-700 border-t border-red-200 mt-1 pt-1"><span>Deductions (LAK)</span><span>(${fLAK(dedLAK)})</span></div></div></div><div class="mt-6 border-t-2 border-gray-800 pt-4 text-xs"><div class="flex justify-between items-center mb-1"><span class="font-bold text-gray-700">Net Pay ($)</span><span class="font-mono font-bold">${fUSD(netUSD)}</span></div><div class="flex justify-between items-center mb-1 text-gray-500"><span>Cash out ${fUSD(d.cashOut)}</span><span>(${fUSD(d.cashOut)})</span></div><div class="flex justify-between items-center mb-1 text-gray-500"><span>$ convertible to LAK</span><span>${fUSD(convertible)}</span></div><div class="bg-blue-900 text-white p-4 rounded flex justify-between items-center mt-3 shadow-lg"><span class="font-bold uppercase tracking-wider text-sm">Salary Pay (LAK)</span><span class="font-bold text-2xl font-mono">${fLAK(finalLAK)}</span></div></div>${d.notes ? `<div class="mt-4 pt-2 border-t border-gray-300 text-[10px]"><p class="font-bold">Notes:</p><p class="whitespace-pre-wrap">${d.notes}</p></div>` : ''}`; }
+        function renderHistoryList(data) { const list = document.getElementById('history-list'); list.innerHTML = data && data.length ? data.map(h => `<tr class="border-b border-gray-100"><td class="py-3 px-4 text-sm font-bold text-gray-700">${h.month} ${h.year}</td><td class="py-3 px-4 text-sm">${h.employeeCount} Staff</td><td class="py-3 px-4 text-sm font-mono text-right font-bold">${formatMoney(h.totalLAK)}</td><td class="py-3 px-4 text-sm font-mono text-right font-bold text-green-700">$${(h.totalUSD||0).toFixed(2)}</td><td class="py-3 px-4 text-right"><button onclick="deleteHistory('${h.dateId}')" class="text-red-400 underline text-xs">Del</button></td></tr>`).join('') : `<tr><td colspan="5" class="text-center py-4 text-gray-400">No history found for filter.</td></tr>`; }
+        window.deleteHistory = (id) => { if(confirm("Delete record?")) { history = history.filter(h => h.dateId !== id); localStorage.setItem('neerada_history', JSON.stringify(history)); updateDashboardStats(); }};
+        window.openSaveHistoryModal = () => document.getElementById('save-modal').classList.remove('hidden'); window.closeSaveHistoryModal = () => document.getElementById('save-modal').classList.add('hidden');
+        window.savePayrollHistory = (e) => { e.preventDefault(); const year = document.getElementById('save-year').value; const month = document.getElementById('save-month').value; const dateId = `${year}-${month}`; const live = calculateLivePayroll(); const record = { dateId, year, month, totalLAK: live.lak, totalUSD: live.usd, employeeCount: employees.length, timestamp: new Date().toISOString() }; const idx = history.findIndex(h => h.dateId === dateId); if(idx >= 0) history[idx] = record; else history.push(record); localStorage.setItem('neerada_history', JSON.stringify(history)); alert("Saved!"); updateDashboardStats(); window.closeSaveHistoryModal(); };
+        window.downloadCSVReport = () => { const yearFilter = document.getElementById('filter-year').value; const monthFilter = document.getElementById('filter-month').value; let reportData = []; let grandTotalLAK = 0; let grandTotalUSD = 0; employees.forEach(emp => { if (!emp.payrollHistory) return; Object.entries(emp.payrollHistory).forEach(([periodKey, state]) => { const [pYear, pMonth] = periodKey.split('-'); if (yearFilter !== 'All' && pYear !== yearFilter) return; if (monthFilter !== 'All' && pMonth !== monthFilter) return; const result = calculatePayrollFromState(emp, state); reportData.push({ period: `${pMonth} ${pYear}`, sortPeriod: `${pYear}-${MONTHS.indexOf(pMonth).toString().padStart(2, '0')}`, id: emp.id, name: emp.name, campus: emp.campus, department: emp.department, position: emp.position, totalLAK: result.lak, totalUSD: result.usd }); grandTotalLAK += result.lak; grandTotalUSD += result.usd; }); }); if (reportData.length === 0) { alert("No data found for the selected period to export."); return; } reportData.sort((a, b) => { if (a.sortPeriod !== b.sortPeriod) return a.sortPeriod.localeCompare(b.sortPeriod); if (a.campus !== b.campus) return a.campus.localeCompare(b.campus); if (a.department !== b.department) return a.department.localeCompare(b.department); return a.name.localeCompare(b.name); }); let csvRows = []; csvRows.push(["Period", "Employee ID", "Name", "Campus", "Department", "Position", "Total LAK", "Total USD"]); reportData.forEach(row => { csvRows.push([ row.period, row.id, row.name, row.campus, row.department, row.position, row.totalLAK, row.totalUSD ]); }); csvRows.push(["GRAND TOTAL", "", "", "", "", "", grandTotalLAK, grandTotalUSD]); const csvString = csvRows.map(e => e.map(i => `"${String(i).replace(/"/g, '""')}"`).join(",")).join("\n"); const blob = new Blob(["\uFEFF" + csvString], { type: 'text/csv;charset=utf-8;' }); const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.setAttribute("href", url); link.setAttribute("download", `Neerada_Payroll_Report_${yearFilter}_${monthFilter}.csv`); document.body.appendChild(link); link.click(); document.body.removeChild(link); };
+
+        // --- NEW: Helper Function for Detailed Payslip Text ---
+        function generatePayslipText() {
+            if (!selectedEmployee) return "";
+            const d = currentPayrollState;
+            const isEnglish = selectedEmployee.department === 'English';
+            const period = `${editorMonth} ${editorYear}`;
+            
+            // Format ID with Campus Code
+            const baseId = generateEmployeeId(selectedEmployee.department, selectedEmployee.name, selectedEmployee.campus);
+            const monthIndex = MONTHS.indexOf(editorMonth) + 1;
+            const formattedMonth = monthIndex < 10 ? '0' + monthIndex : monthIndex;
+            const fullId = `${baseId}-${formattedMonth}-${editorYear}`;
+
+            let msg = `PAYSLIP - Neerada School\n`;
+            msg += `Period: ${period}\n`;
+            msg += `--------------------------------\n`;
+            msg += `Name: ${selectedEmployee.name}\n`;
+            msg += `ID: ${fullId}\n`;
+            msg += `Position: ${selectedEmployee.position}\n`;
+            msg += `Department: ${selectedEmployee.department}\n`;
+            msg += `Campus: ${selectedEmployee.campus}\n`;
+            msg += `--------------------------------\n`;
+
+            if (isEnglish) {
+                 const otPayment = (parseFloat(d.otHours)||0)*(parseFloat(d.otRate)||0);
+                 const earnSum = (parseFloat(d.basicPay)||0)+(parseFloat(d.accumulated)||0)+(parseFloat(d.increase)||0)+(parseFloat(d.earningsOthersUSD)||0);
+                 const grossUSD = earnSum + otPayment;
+                 const dedUSDSum = (parseFloat(d.profTax)||0)+(parseFloat(d.absences)||0)+(parseFloat(d.visa)||0)+(parseFloat(d.deductionsOthersUSD)||0);
+                 const netUSD = grossUSD - dedUSDSum;
+                 const convertible = netUSD - (parseFloat(d.cashOut)||0);
+                 const convertedLAK = convertible * (parseFloat(d.exchangeRate)||0);
+                 const extraLAK = (parseFloat(d.itLAK)||0)+(parseFloat(d.extraWorkOthersLAK)||0)+(parseFloat(d.stipendLAK)||0);
+                 const dedLAK = (parseFloat(d.insuranceLAK)||0)+(parseFloat(d.deductionsOthersLAK)||0);
+                 const finalLAK = convertedLAK + extraLAK - dedLAK;
+
+                 msg += `EARNINGS (USD):\n`;
+                 msg += `Basic Pay: $${parseFloat(d.basicPay||0).toFixed(2)}\n`;
+                 msg += `Accumulated: $${parseFloat(d.accumulated||0).toFixed(2)}\n`;
+                 msg += `Increase: $${parseFloat(d.increase||0).toFixed(2)}\n`;
+                 msg += `Others: $${parseFloat(d.earningsOthersUSD||0).toFixed(2)}\n`;
+                 msg += `Overtime (${d.otHours}hrs @ $${d.otRate}): $${otPayment.toFixed(2)}\n`;
+                 msg += `GROSS USD: $${grossUSD.toFixed(2)}\n\n`;
+
+                 msg += `DEDUCTIONS (USD):\n`;
+                 msg += `Prof. Tax: $${parseFloat(d.profTax||0).toFixed(2)}\n`;
+                 msg += `Absences: $${parseFloat(d.absences||0).toFixed(2)}\n`;
+                 msg += `Visa: $${parseFloat(d.visa||0).toFixed(2)}\n`;
+                 msg += `Others: $${parseFloat(d.deductionsOthersUSD||0).toFixed(2)}\n`;
+                 msg += `TOTAL DED (USD): $${dedUSDSum.toFixed(2)}\n\n`;
+
+                 msg += `NET PAY (USD): $${netUSD.toFixed(2)}\n`;
+                 msg += `--------------------------------\n`;
+                 msg += `CALCULATION:\n`;
+                 msg += `Cash Out: $${parseFloat(d.cashOut||0).toFixed(2)}\n`;
+                 msg += `Convertible: $${convertible.toFixed(2)} @ ${d.exchangeRate}\n`;
+                 msg += `Converted LAK: ${formatMoney(convertedLAK)}\n`;
+                 msg += `Extra Work (LAK): ${formatMoney(extraLAK)}\n`;
+                 msg += `LAK Deductions: ${formatMoney(dedLAK)}\n`;
+                 msg += `--------------------------------\n`;
+                 msg += `FINAL PAY (LAK): ${formatMoney(finalLAK)}\n`;
+
+            } else {
+                const config = departmentConfigs[selectedEmployee.department] || { earnings: [], deductions: [] };
+                let tEarn = 0, tDed = 0;
+                
+                // Specific Departments Logic: Filter Zeroes
+                // Departments to apply filtering: Kindergarten, Primary, Secondary, Leadership (VP/Head)
+                const isFilteredDept = ['Kindergarten', 'Primary', 'Secondary', 'Leadership (Head/VP)'].includes(selectedEmployee.department);
+
+                msg += `EARNINGS (LAK):\n`;
+                config.earnings.forEach(f => { 
+                    const v = parseFloat(d[f] || 0); 
+                    const isExcluded = (f === LAO_FIELDS.basic || f === LAO_FIELDS.start);
+                    
+                    // Logic: If filtered dept, show only > 0. Else show all > 0 (same logic currently but allows divergence)
+                    if (v > 0) {
+                        msg += `${f}: ${formatMoney(v)}\n`;
+                        if(!isExcluded) tEarn += v; 
+                    }
+                });
+                msg += `Total Earnings: ${formatMoney(tEarn)}\n\n`;
+
+                msg += `DEDUCTIONS (LAK):\n`;
+                config.deductions.forEach(f => { 
+                    const v = parseFloat(d[f] || 0); 
+                    if(v > 0) {
+                        tDed += v; 
+                        msg += `${f}: ${formatMoney(v)}\n`;
+                    }
+                });
+                msg += `Total Deductions: ${formatMoney(tDed)}\n`;
+                msg += `--------------------------------\n`;
+                msg += `NET PAY (LAK): ${formatMoney(tEarn - tDed)}\n`;
+            }
+            
+            if (d.notes) {
+                msg += `\nNotes: ${d.notes}\n`;
+            }
+            
+            return msg;
+        }
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>
