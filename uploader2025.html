@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neerada School LMS - Lesson Upload Tracking</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        neerada: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Dynamic Print Orientation Style -->
+    <style id="print-orientation-style">
+        @page { size: landscape; margin: 0.5cm; }
+    </style>
+    <style>
+        body { background-color: #f3f4f6; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Print Styles */
+        @media print {
+            body { 
+                background-color: white !important; 
+                -webkit-print-color-adjust: exact !important; 
+                print-color-adjust: exact !important;
+                width: 100% !important;
+                min-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .no-print { display: none !important; }
+            nav, footer.main-footer, #print-modal, #modal, #subject-manager-modal { display: none !important; }
+            .print-only { display: block !important; }
+            main { padding: 0; margin: 0; width: 100% !important; max-width: none !important; }
+            .overflow-x-auto { overflow: visible !important; }
+
+            .print-header {
+                display: flex !important;
+                border-bottom: 2px solid #0ea5e9;
+                margin-bottom: 10px;
+                padding-bottom: 10px;
+                align-items: center;
+                justify-content: space-between;
+                background: linear-gradient(to right, #f0f9ff, #ffffff);
+                padding: 15px;
+                border-radius: 8px 8px 0 0;
+            }
+            
+            .print-footer {
+                display: block !important;
+                position: static; 
+                width: 100%;
+                text-align: center;
+                border-top: 1px solid #64748b;
+                padding-top: 20px;
+                margin-top: 30px;
+                background: white;
+                page-break-inside: avoid;
+            }
+
+            table {
+                width: 100% !important;
+                border-collapse: collapse;
+                font-size: 7pt;
+                table-layout: auto;
+            }
+            
+            thead { display: table-row-group; }
+
+            th {
+                background-color: #e0f2fe !important; 
+                color: #0c4a6e !important; 
+                border: 1px solid #64748b !important; 
+                white-space: nowrap !important;
+                text-align: center !important;
+                font-weight: bold !important;
+                text-transform: none !important; 
+                vertical-align: middle;
+                padding: 4px !important;
+            }
+            tr:nth-child(even) { background-color: #f8fafc !important; }
+            td, th {
+                padding: 3px 2px !important; 
+                border: 1px solid #64748b !important; 
+                text-align: center;
+            }
+            td { color: #000000 !important; }
+            
+            td:first-child { 
+                text-align: left !important; 
+                padding-left: 5px !important;
+            }
+
+            .whitespace-nowrap-print { white-space: nowrap !important; }
+
+            .signatories-section {
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: flex-start;
+                gap: 2rem;
+                margin-top: 3rem;
+                page-break-inside: avoid;
+            }
+            .signatories-section > div { flex: 1; }
+            
+            .signatories-section input {
+                border: none !important;
+                border-bottom: 1px solid #000 !important;
+                font-weight: bold;
+                color: #000 !important;
+                width: 250px;
+            }
+        }
+        
+        .print-only { display: none; }
+    </style>
+</head>
+<body class="text-slate-800 font-sans min-h-screen flex flex-col">
+
+    <!-- Navigation -->
+    <nav class="bg-neerada-900 text-white shadow-lg sticky top-0 z-50 no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="document.getElementById('logo-upload').click()" title="Click to upload school logo">
+                    <div class="bg-white/10 p-2 rounded-lg overflow-hidden h-10 w-10 flex items-center justify-center relative">
+                        <i id="nav-logo-icon" class="fa-solid fa-school text-xl text-sky-300"></i>
+                        <img id="nav-logo-img" src="" class="absolute inset-0 w-full h-full object-cover hidden">
+                    </div>
+                    <span class="font-bold text-xl tracking-tight">Neerada School LMS</span>
+                    <input type="file" id="logo-upload" class="hidden" accept="image/*" onchange="handleLogoUpload(this)">
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="hidden md:block text-sm text-sky-200">
+                        <i class="fa-regular fa-calendar mr-2"></i>
+                        <span id="current-date"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- PRINT HEADER -->
+    <div class="print-header print-only max-w-7xl mx-auto w-full">
+        <div class="flex items-center gap-4">
+            <div class="h-16 w-16 flex items-center justify-center bg-white rounded-lg border border-slate-200">
+                <i id="print-logo-icon" class="fa-solid fa-school text-4xl text-neerada-500"></i>
+                <img id="print-logo-img" src="" class="h-16 w-auto object-contain hidden">
+            </div>
+            <div>
+                <h1 class="text-3xl font-bold text-neerada-900">Neerada School</h1>
+                <p class="text-neerada-600 font-medium">LMS Upload Tracking Report</p>
+            </div>
+        </div>
+        <div class="text-right">
+            <p class="text-sm text-slate-900 font-bold">INTERNAL REPORT</p>
+            <p class="text-sm text-slate-900">Generated: <span id="print-date-display"></span></p>
+            <p class="text-xs text-neerada-900 font-bold mt-1">Neerada IT Admin Team</p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+        
+        <!-- Header & Controls -->
+        <div class="mb-6">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-900">Upload Tracking System</h1>
+                    <p class="text-slate-500 mt-1">Manage lesson uploads and track uploaders performance.</p>
+                </div>
+                <div class="flex gap-2 no-print">
+                    <button onclick="openPrintModal()" class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-lg shadow-sm font-medium flex items-center transition-colors text-sm">
+                        <i class="fa-solid fa-print mr-2 text-slate-600"></i> Print Report
+                    </button>
+                    <button onclick="document.getElementById('file-input').click()" class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-lg shadow-sm font-medium flex items-center transition-colors text-sm">
+                        <i class="fa-solid fa-folder-open mr-2 text-amber-500"></i> Load Data
+                    </button>
+                    <input type="file" id="file-input" class="hidden" accept=".json" onchange="importData(this)">
+                    <button onclick="exportData()" class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-lg shadow-sm font-medium flex items-center transition-colors text-sm">
+                        <i class="fa-solid fa-save mr-2 text-green-600"></i> Save to Drive
+                    </button>
+                    <button onclick="openModal()" class="bg-neerada-600 hover:bg-neerada-500 text-white px-5 py-2.5 rounded-lg shadow-sm font-medium flex items-center transition-all transform hover:scale-105 active:scale-95 ml-2">
+                        <i class="fa-solid fa-plus mr-2"></i> Log New Upload
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="no-print mb-6">
+                <nav class="flex space-x-4 bg-white p-1.5 rounded-lg border border-slate-200 inline-flex shadow-sm" aria-label="Tabs">
+                    <button onclick="switchTab('dashboard')" id="tab-dashboard-btn" class="flex items-center px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 bg-neerada-600 text-white shadow-sm">
+                        <i class="fa-solid fa-chart-pie mr-2"></i>Dashboard (Report)
+                    </button>
+                    <button onclick="switchTab('uploaders')" id="tab-uploaders-btn" class="flex items-center px-4 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all duration-200">
+                        <i class="fa-solid fa-users mr-2"></i>Uploaders List (Manage)
+                    </button>
+                </nav>
+            </div>
+        </div>
+
+        <!-- DASHBOARD TAB -->
+        <div id="view-dashboard" class="tab-content">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-neerada-500">
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">This Month (<span id="current-month-name"></span>)</p>
+                    <h3 class="text-3xl font-bold text-slate-800 mt-1" id="stat-month-total">0</h3>
+                    <p class="text-xs text-slate-500 mt-1">Lessons Uploaded</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-purple-500">
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Active Uploaders</p>
+                    <h3 class="text-3xl font-bold text-slate-800 mt-1" id="stat-uploaders">0</h3>
+                    <p class="text-xs text-slate-500 mt-1">Contributing this month</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-green-500">
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Completed Uploads</p>
+                    <h3 class="text-3xl font-bold text-slate-800 mt-1" id="stat-uploaded">0</h3>
+                    <p class="text-xs text-slate-500 mt-1">All time successful</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-amber-500">
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Ongoing Uploads</p>
+                    <h3 class="text-3xl font-bold text-slate-800 mt-1" id="stat-pending">0</h3>
+                    <p class="text-xs text-slate-500 mt-1">In progress</p>
+                </div>
+            </div>
+
+            <div class="mb-4 flex flex-col md:flex-row justify-between items-end md:items-center">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-800 flex items-center">
+                        <i class="fa-solid fa-chart-line text-neerada-600 mr-2"></i> Uploader Progress Overview (Report)
+                    </h2>
+                    <p class="text-sm text-slate-500">Performance breakdown by individual teachers.</p>
+                </div>
+                <div class="mt-2 md:mt-0">
+                    <select id="dashboard-filter-month" class="px-3 py-1.5 border border-slate-300 rounded-md text-sm bg-white focus:ring-neerada-500 focus:border-neerada-500">
+                        <option value="current">Current Month</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-500 text-xs uppercase font-semibold border-b border-slate-200">
+                                <th class="p-4">Uploader Name</th>
+                                <th class="p-4">Assigned Grade/Section</th>
+                                <th class="p-4">Assigned Subjects</th>
+                                <th class="p-4 text-center bg-blue-50/50 text-neerada-700">Uploads (<span id="progress-month-header">Month</span>)</th>
+                                <th class="p-4 text-center">Total All Time</th>
+                            </tr>
+                        </thead>
+                        <tbody id="uploader-progress-body" class="divide-y divide-slate-100 text-sm">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- UPLOADERS LIST TAB -->
+        <div id="view-uploaders" class="tab-content hidden">
+            <div class="flex flex-col sm:flex-row items-center justify-between mb-4 gap-4">
+                <h2 class="text-lg font-bold text-slate-800 flex items-center">
+                    <i class="fa-solid fa-list text-slate-400 mr-2"></i> Detailed Upload List
+                    <span class="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-neerada-100 text-neerada-800">
+                        Active: <span id="list-active-uploaders" class="ml-1 font-bold">0</span>
+                    </span>
+                </h2>
+                <div class="flex gap-2 no-print w-full sm:w-auto">
+                    <input type="text" id="search-input" placeholder="Search..." class="flex-1 sm:flex-none px-3 py-1.5 border border-slate-300 rounded-md text-sm focus:ring-neerada-500 focus:border-neerada-500">
+                    <select id="filter-month" class="px-3 py-1.5 border border-slate-300 rounded-md text-sm bg-white">
+                        <option value="all">All Time</option>
+                        <option value="current" selected>Current Month</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-500 text-xs uppercase font-semibold border-b border-slate-200 align-bottom">
+                                <th class="px-3 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider leading-tight">Uploader<br>Name</th>
+                                <th class="px-3 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider leading-tight">Campus</th>
+                                <th class="px-3 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider leading-tight">Class &<br>Section</th>
+                                <th class="px-3 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider leading-tight">Assigned<br>Subjects</th>
+                                <th class="px-3 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider leading-tight">Month/<br>Year</th>
+                                <th class="px-3 py-3 text-center text-xs font-semibold text-purple-600 uppercase tracking-wider bg-purple-50 leading-tight">Total Lessons<br>Uploaded<br>(This Month)</th>
+                                <th class="px-3 py-3 text-center text-xs font-semibold text-neerada-600 uppercase tracking-wider bg-sky-50 leading-tight">Total Lessons<br>Uploaded<br>(All Months)</th>
+                                <th class="px-3 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider leading-tight">Subject Breakdown<br>(All Time)</th>
+                                <th class="px-3 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider leading-tight">Subject<br>Currently<br>Uploading</th>
+                                <th class="px-3 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider leading-tight">Overall<br>Status</th>
+                                <th class="px-3 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider no-print leading-tight">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lessons-table-body" class="divide-y divide-slate-100">
+                            <!-- Rows will be populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Report Signatories -->
+            <div class="mt-8 border-t border-slate-200 pt-6 signatories-section">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 print:flex print:justify-between">
+                    <!-- Sibounheuang -->
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 print:border-none print:bg-transparent print:p-0 text-center print:text-left print:flex print:flex-col print:items-start">
+                        <h4 class="font-bold text-neerada-900 mb-4 border-b border-slate-300 pb-2 inline-block px-8 print:px-0">Sibounheuang Campus</h4>
+                        <div class="flex justify-center print:justify-start">
+                            <div class="w-3/4 print:w-auto">
+                                <label class="block text-xs font-semibold text-slate-500 uppercase mb-1 text-center print:text-left">LESSONS CHECKED AND APPROVED BY</label>
+                                <input type="text" id="sig-sib-combined" class="w-full text-center border-b-2 border-slate-300 bg-transparent focus:border-neerada-500 focus:outline-none py-1 print:border-none print:border-b print:border-black print:font-medium text-sm print:text-left" placeholder="Name">
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Chommany -->
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 print:border-none print:bg-transparent print:p-0 text-center print:text-right print:flex print:flex-col print:items-end">
+                        <h4 class="font-bold text-neerada-900 mb-4 border-b border-slate-300 pb-2 inline-block px-8 print:px-0">Chommany Campus</h4>
+                        <div class="flex justify-center print:justify-end">
+                            <div class="w-3/4 print:w-auto">
+                                <label class="block text-xs font-semibold text-slate-500 uppercase mb-1 text-center print:text-right">LESSONS CHECKED AND APPROVED BY</label>
+                                <input type="text" id="sig-chom-combined" class="w-full text-center border-b-2 border-slate-300 bg-transparent focus:border-neerada-500 focus:outline-none py-1 print:border-none print:border-b print:border-black print:font-medium text-sm print:text-right" placeholder="Name">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- WEB Footer -->
+    <footer class="main-footer bg-slate-800 text-slate-400 py-6 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center">
+            <div class="mb-4 md:mb-0">
+                <div class="flex items-center space-x-2 mb-1">
+                    <i class="fa-solid fa-graduation-cap text-slate-500"></i>
+                    <span class="font-semibold text-slate-300">Neerada School</span>
+                </div>
+                <p class="text-xs text-slate-500">Empowering Education Through Technology</p>
+            </div>
+            <div class="text-sm">
+                &copy; Neerada School <span id="copyright-year"></span>. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <!-- PRINT Footer -->
+    <div class="print-footer print-only text-center">
+        <div class="flex items-center justify-center mb-1">
+            <i class="fa-solid fa-graduation-cap text-neerada-900 mr-2 text-xl"></i>
+            <p class="text-lg font-bold text-neerada-900">Neerada School</p>
+        </div>
+        <p class="text-sm text-neerada-700 italic">Empowering Education Through Technology</p>
+        <p class="text-xs text-slate-400 mt-2">&copy; Neerada School <span id="print-copyright-year"></span>. All rights reserved.</p>
+    </div>
+
+    <!-- Print Settings Modal -->
+    <div id="print-modal" class="fixed inset-0 z-[60] hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-slate-900 bg-opacity-75 transition-opacity backdrop-blur-sm" onclick="closePrintModal()"></div>
+        <div class="flex items-center justify-center min-h-screen p-4 text-center sm:p-0">
+            <div class="relative bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:max-w-sm w-full p-6">
+                <div class="text-center">
+                    <h3 class="text-lg leading-6 font-medium text-slate-900" id="modal-title">Print Settings</h3>
+                    <p class="text-sm text-slate-500 mt-2">Select your preferred paper orientation.</p>
+                </div>
+                <div class="mt-6 space-y-3">
+                    <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
+                        <input type="radio" name="print-orientation" value="landscape" checked class="form-radio text-neerada-600 h-4 w-4">
+                        <span class="ml-3 font-medium text-slate-700">Landscape (Best for Tables)</span>
+                    </label>
+                    <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
+                        <input type="radio" name="print-orientation" value="portrait" class="form-radio text-neerada-600 h-4 w-4">
+                        <span class="ml-3 font-medium text-slate-700">Portrait</span>
+                    </label>
+                </div>
+                <div class="mt-6 grid grid-cols-2 gap-3">
+                    <button onclick="closePrintModal()" class="w-full inline-flex justify-center rounded-lg border border-slate-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-slate-700">Cancel</button>
+                    <button onclick="executePrint()" class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-neerada-600 text-base font-medium text-white hover:bg-neerada-700">Print Now</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subject Manager Modal -->
+    <div id="subject-manager-modal" class="fixed inset-0 z-[70] hidden" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-slate-900 bg-opacity-75 transition-opacity backdrop-blur-sm" onclick="closeSubjectManager()"></div>
+        <div class="flex items-center justify-center min-h-screen p-4 text-center sm:p-0">
+            <div class="relative bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:max-w-md w-full">
+                <div class="bg-slate-50 px-4 py-3 sm:px-6 flex justify-between items-center border-b border-slate-200">
+                    <h3 class="text-lg leading-6 font-medium text-slate-900">Manage Subjects</h3>
+                    <button onclick="closeSubjectManager()" class="text-slate-400 hover:text-slate-500 focus:outline-none"><i class="fa-solid fa-times"></i></button>
+                </div>
+                <div class="p-6">
+                    <div class="flex gap-2 mb-4">
+                        <input type="text" id="new-subject-input" placeholder="Enter new subject name" class="flex-1 px-3 py-2 border border-slate-300 rounded-md text-sm">
+                        <button onclick="addNewSubject()" class="bg-neerada-600 text-white px-4 py-2 rounded-md text-sm">Add</button>
+                    </div>
+                    <ul id="subject-list" class="max-h-64 overflow-y-auto divide-y divide-slate-200 bg-slate-50 rounded-lg border border-slate-200"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Upload Modal -->
+    <div id="modal" class="fixed inset-0 z-50 hidden overflow-y-auto no-print" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-slate-900 bg-opacity-75 transition-opacity backdrop-blur-sm" onclick="closeModal()"></div>
+        <div class="flex items-center justify-center min-h-screen p-4 text-center sm:p-0">
+            <div class="relative bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:max-w-xl w-full">
+                <div class="bg-neerada-900 px-4 py-3 sm:px-6 flex justify-between items-center">
+                    <h3 class="text-lg leading-6 font-medium text-white" id="modal-title">Log Upload Activity</h3>
+                    <button onclick="closeModal()" class="text-slate-300 hover:text-white focus:outline-none"><i class="fa-solid fa-times"></i></button>
+                </div>
+                <form id="add-lesson-form" onsubmit="handleFormSubmit(event)">
+                    <input type="hidden" id="edit-id" value="">
+                    <input type="hidden" id="hidden-date" value="">
+                    <div class="px-4 py-5 sm:p-6 space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700">Uploader Name</label>
+                                <input type="text" id="uploader" required placeholder="Enter full name" class="mt-1 block w-full shadow-sm sm:text-sm border-slate-300 rounded-md border px-3 py-2">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700">Campus</label>
+                                <select id="campus" required class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-neerada-500 focus:border-neerada-500 sm:text-sm rounded-md border">
+                                    <option value="" disabled selected>Select...</option>
+                                    <option>Sibounheuang</option>
+                                    <option>Chommany</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 flex justify-between items-center mb-1">
+                                Assigned Classes (Grade & Section)
+                                <button type="button" onclick="addClassRow()" class="text-xs bg-neerada-100 text-neerada-700 px-2 py-1 rounded hover:bg-neerada-200"><i class="fa-solid fa-plus mr-1"></i> Add Class</button>
+                            </label>
+                            <div id="assigned-classes-list" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Assigned Subjects <span class="text-xs text-slate-500 font-normal ml-1">(Select all that apply)</span></label>
+                            <div class="border border-slate-300 rounded-md p-3 max-h-32 overflow-y-auto bg-slate-50" id="assigned-subjects-container"></div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 flex justify-between items-center mb-1">
+                                Subjects Currently Uploading
+                                <div>
+                                    <button type="button" onclick="openSubjectManager()" class="text-xs text-neerada-600 hover:text-neerada-800 underline mr-3"><i class="fa-solid fa-cog mr-1"></i> Manage List</button>
+                                    <button type="button" onclick="addCurrentUploadRow()" class="text-xs bg-neerada-100 text-neerada-700 px-2 py-1 rounded hover:bg-neerada-200"><i class="fa-solid fa-plus mr-1"></i> Add Subject</button>
+                                </div>
+                            </label>
+                            <div id="current-uploads-list" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700">Total Number of Lessons Uploaded</label>
+                            <input type="number" id="lessonCount" min="0" value="0" readonly class="mt-1 block w-full shadow-sm sm:text-sm border-slate-300 rounded-md border px-3 py-2 bg-gray-50 text-gray-500 cursor-not-allowed">
+                            <p class="text-xs text-slate-500 mt-1">Calculated automatically from subject rows above.</p>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                        <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-neerada-600 text-base font-medium text-white hover:bg-neerada-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">Save Record</button>
+                        <button type="button" onclick="closeModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-slate-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-slate-700 hover:bg-slate-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 transform translate-y-20 transition-transform duration-300 z-50 no-print">
+        <div class="bg-slate-800 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-3">
+            <i class="fa-solid fa-check-circle text-green-400"></i>
+            <span id="toast-message">Operation successful</span>
+        </div>
+    </div>
+
+    <script>
+        const STORE_KEY = 'neerada_lms_v2';
+        const SUBJECTS_KEY = 'neerada_subjects_v1';
+        const LOGO_KEY = 'neerada_logo_v1';
+        const SIG_KEY = 'neerada_signatories_v2'; 
+        const LAST_CLASS_KEY = 'neerada_last_class_v1'; 
+        
+        let lessons = [];
+        let subjects = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentYear = new Date().getFullYear();
+            document.getElementById('copyright-year').textContent = currentYear;
+            document.getElementById('print-copyright-year').textContent = currentYear;
+            
+            const options = { weekday: 'short', year: 'numeric', month: 'long', day: 'numeric' };
+            const formattedDate = new Date().toLocaleDateString('en-US', options);
+            document.getElementById('current-date').textContent = formattedDate;
+            document.getElementById('print-date-display').textContent = formattedDate;
+            
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            document.getElementById('current-month-name').textContent = monthNames[new Date().getMonth()];
+            document.getElementById('progress-month-header').textContent = monthNames[new Date().getMonth()];
+
+            loadData();
+            loadSubjects();
+            loadLogo();
+            loadSignatories();
+            
+            document.getElementById('search-input').addEventListener('input', renderUI);
+            document.getElementById('filter-month').addEventListener('change', renderUI);
+            document.getElementById('dashboard-filter-month').addEventListener('change', renderUI);
+            
+            const sigIds = ['sig-sib-combined', 'sig-chom-combined'];
+            sigIds.forEach(id => {
+                document.getElementById(id).addEventListener('input', saveSignatories);
+            });
+        });
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`view-${tabName}`).classList.remove('hidden');
+
+            const dashBtn = document.getElementById('tab-dashboard-btn');
+            const uploadBtn = document.getElementById('tab-uploaders-btn');
+
+            [dashBtn, uploadBtn].forEach(btn => {
+                btn.className = "flex items-center px-4 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all duration-200";
+            });
+
+            const activeBtn = tabName === 'dashboard' ? dashBtn : uploadBtn;
+            activeBtn.className = "flex items-center px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 bg-neerada-600 text-white shadow-sm hover:bg-neerada-700";
+        }
+
+        function populateMonthSelectors() {
+            const listSelect = document.getElementById('filter-month');
+            const dashSelect = document.getElementById('dashboard-filter-month');
+            const currentListVal = listSelect.value;
+            const currentDashVal = dashSelect.value;
+
+            const months = new Set();
+            lessons.forEach(l => {
+                const d = new Date(l.date);
+                if(!isNaN(d.getTime())) {
+                    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                    months.add(key);
+                }
+            });
+
+            const sortedMonths = Array.from(months).sort().reverse();
+
+            const createOptions = (selectedValue, includeAllTime = true) => {
+                let html = '';
+                if(includeAllTime) html += `<option value="all" ${selectedValue === 'all' ? 'selected' : ''}>All Time</option>`;
+                html += `<option value="current" ${selectedValue === 'current' ? 'selected' : ''}>Current Month</option>`;
+                
+                sortedMonths.forEach(m => {
+                    const [year, month] = m.split('-');
+                    const dateObj = new Date(parseInt(year), parseInt(month) - 1, 1);
+                    const label = dateObj.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                    const now = new Date();
+                    if(year == now.getFullYear() && (parseInt(month)-1) == now.getMonth()) return;
+                    html += `<option value="${m}" ${selectedValue === m ? 'selected' : ''}>${label}</option>`;
+                });
+                return html;
+            };
+
+            listSelect.innerHTML = createOptions(currentListVal, true);
+            dashSelect.innerHTML = createOptions(currentDashVal, false);
+        }
+
+        function loadSubjects() {
+            const stored = localStorage.getItem(SUBJECTS_KEY);
+            if(stored) {
+                subjects = JSON.parse(stored);
+            } else {
+                subjects = [
+                    "Mathematics", "Physics", "Chemistry", "Biology", 
+                    "Science (Gen)", "English", "History", "Geography", 
+                    "Computer Science", "Art"
+                ].sort();
+                saveSubjects();
+            }
+        }
+
+        function saveSubjects() {
+            localStorage.setItem(SUBJECTS_KEY, JSON.stringify(subjects));
+        }
+
+        function renderAssignedSubjectsUI(selectedSubjects = []) {
+            const container = document.getElementById('assigned-subjects-container');
+            container.innerHTML = '';
+            if (subjects.length === 0) {
+                container.innerHTML = '<p class="text-xs text-slate-400 italic">No subjects available. Add subjects via Manage List.</p>';
+                return;
+            }
+            subjects.forEach(sub => {
+                const label = document.createElement('label');
+                label.className = 'flex items-center space-x-2 p-1 hover:bg-slate-100 rounded cursor-pointer';
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = sub;
+                checkbox.name = 'assigned_subjects_check';
+                checkbox.className = 'form-checkbox text-neerada-600 rounded h-4 w-4 border-slate-300 focus:ring-neerada-500';
+                
+                if (selectedSubjects && selectedSubjects.includes(sub)) {
+                    checkbox.checked = true;
+                }
+                
+                const span = document.createElement('span');
+                span.textContent = sub;
+                span.className = 'text-sm text-slate-700';
+                
+                label.appendChild(checkbox);
+                label.appendChild(span);
+                container.appendChild(label);
+            });
+        }
+
+        function openSubjectManager() {
+            document.getElementById('subject-manager-modal').classList.remove('hidden');
+            renderSubjectManagerList();
+        }
+
+        function closeSubjectManager() {
+            document.getElementById('subject-manager-modal').classList.add('hidden');
+        }
+
+        function renderSubjectManagerList() {
+            const list = document.getElementById('subject-list');
+            list.innerHTML = '';
+            if(subjects.length === 0) {
+                list.innerHTML = '<li class="px-4 py-3 text-sm text-slate-500 text-center">No subjects defined.</li>';
+                return;
+            }
+            subjects.forEach(sub => {
+                const li = document.createElement('li');
+                li.className = "px-4 py-3 flex justify-between items-center text-sm hover:bg-slate-50";
+                li.innerHTML = `
+                    <span class="text-slate-700">${sub}</span>
+                    <button onclick="deleteSubject('${sub}')" class="text-red-400 hover:text-red-600 transition-colors" title="Delete Subject">
+                        <i class="fa-solid fa-trash-alt"></i>
+                    </button>
+                `;
+                list.appendChild(li);
+            });
+        }
+
+        function addNewSubject() {
+            const input = document.getElementById('new-subject-input');
+            const val = input.value.trim();
+            if(val) {
+                if(!subjects.includes(val)) {
+                    subjects.push(val);
+                    subjects.sort();
+                    saveSubjects();
+                    renderSubjectManagerList();
+                    input.value = '';
+                    showToast(`Subject "${val}" added.`);
+                } else {
+                    alert('Subject already exists.');
+                }
+            }
+        }
+
+        function deleteSubject(name) {
+            if(confirm(`Remove "${name}" from the list? \n(Note: This does not affect past records)`)) {
+                subjects = subjects.filter(s => s !== name);
+                saveSubjects();
+                renderSubjectManagerList();
+            }
+        }
+
+        // --- DYNAMIC ROWS ---
+        function addCurrentUploadRow(data = null) {
+            const container = document.getElementById('current-uploads-list');
+            const div = document.createElement('div');
+            div.className = "flex gap-2 items-center mb-2";
+            
+            let options = '<option value="" disabled selected>Subject...</option>';
+            subjects.forEach(s => {
+                const isSel = (data && data.name === s) ? 'selected' : '';
+                options += `<option value="${s}" ${isSel}>${s}</option>`;
+            });
+            
+            const statusNotStarted = (!data || data.status === 'Not Started') ? 'selected' : '';
+            const statusOngoing = (data && data.status === 'Ongoing') ? 'selected' : '';
+            const statusCompleted = (data && data.status === 'Uploaded') ? 'selected' : ''; 
+            const qty = (data && data.count) ? data.count : 0;
+
+            div.innerHTML = `
+                <select class="curr-subject-select flex-1 block w-full pl-3 pr-8 py-2 text-sm border-slate-300 focus:outline-none focus:ring-neerada-500 focus:border-neerada-500 rounded-md border">
+                    ${options}
+                </select>
+                <input type="number" min="0" value="${qty}" class="curr-qty-input w-20 px-2 py-2 text-sm border-slate-300 rounded-md border text-center" placeholder="Qty" oninput="calculateTotalLessons()">
+                <select class="curr-status-select block w-32 pl-3 pr-8 py-2 text-sm border-slate-300 focus:outline-none focus:ring-neerada-500 focus:border-neerada-500 rounded-md border">
+                    <option value="Not Started" ${statusNotStarted}>Not Started</option>
+                    <option value="Ongoing" ${statusOngoing}>Ongoing</option>
+                    <option value="Uploaded" ${statusCompleted}>Completed</option>
+                </select>
+                <button type="button" onclick="this.parentElement.remove(); calculateTotalLessons();" class="text-red-400 hover:text-red-600 p-2">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            `;
+            container.appendChild(div);
+            calculateTotalLessons();
+        }
+
+        function calculateTotalLessons() {
+            let total = 0;
+            const rows = document.querySelectorAll('.curr-qty-input');
+            rows.forEach(input => {
+                const val = parseInt(input.value);
+                if (!isNaN(val)) total += val;
+            });
+            document.getElementById('lessonCount').value = total;
+        }
+
+        function addClassRow(data = null) {
+            const container = document.getElementById('assigned-classes-list');
+            const div = document.createElement('div');
+            div.className = "flex gap-2 items-center";
+            
+            const grade = data ? data.grade : '';
+            const section = data ? data.section : '';
+
+            const createOpts = (items, selected) => {
+                let opts = '<option value="" disabled selected>Select...</option>';
+                items.forEach(i => {
+                    opts += `<option value="${i}" ${i === selected ? 'selected' : ''}>${i}</option>`;
+                });
+                return opts;
+            };
+
+            const grades = ['Primary 1','Primary 2','Primary 3','Primary 4','Primary 5'];
+            const sections = ['Section A','Section B','Section C','Section D','Section E','Section F','Section G','Combined'];
+
+            div.innerHTML = `
+                <select class="class-grade-select flex-1 block w-full pl-3 pr-8 py-2 text-sm border-slate-300 focus:outline-none focus:ring-neerada-500 focus:border-neerada-500 rounded-md border">
+                    ${createOpts(grades, grade)}
+                </select>
+                <select class="class-section-select flex-1 block w-full pl-3 pr-8 py-2 text-sm border-slate-300 focus:outline-none focus:ring-neerada-500 focus:border-neerada-500 rounded-md border">
+                    ${createOpts(sections, section)}
+                </select>
+                <button type="button" onclick="this.parentElement.remove()" class="text-red-400 hover:text-red-600 p-2">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            `;
+            container.appendChild(div);
+        }
+
+        // --- SIGNATORIES ---
+        function loadSignatories() {
+            const data = JSON.parse(localStorage.getItem(SIG_KEY) || '{}');
+            document.getElementById('sig-sib-combined').value = data.sibCombined || '';
+            document.getElementById('sig-chom-combined').value = data.chomCombined || '';
+        }
+
+        function saveSignatories() {
+            const data = {
+                sibCombined: document.getElementById('sig-sib-combined').value,
+                chomCombined: document.getElementById('sig-chom-combined').value
+            };
+            localStorage.setItem(SIG_KEY, JSON.stringify(data));
+        }
+
+        // --- LOGO MGMT ---
+        function handleLogoUpload(input) {
+            const file = input.files[0];
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const base64 = e.target.result;
+                    localStorage.setItem(LOGO_KEY, base64);
+                    updateLogoUI(base64);
+                    showToast('Logo updated!');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function loadLogo() {
+            const storedLogo = localStorage.getItem(LOGO_KEY);
+            if(storedLogo) {
+                updateLogoUI(storedLogo);
+            }
+        }
+
+        function updateLogoUI(src) {
+            document.getElementById('nav-logo-icon').classList.add('hidden');
+            const navImg = document.getElementById('nav-logo-img');
+            navImg.src = src;
+            navImg.classList.remove('hidden');
+
+            document.getElementById('print-logo-icon').classList.add('hidden');
+            const printImg = document.getElementById('print-logo-img');
+            printImg.src = src;
+            printImg.classList.remove('hidden');
+        }
+
+        // --- DATA MGMT ---
+        function loadData() {
+            const stored = localStorage.getItem(STORE_KEY);
+            if (stored) {
+                try {
+                    let raw = JSON.parse(stored);
+                    lessons = raw.map(l => {
+                        // Migration for old data structure
+                        if (l.currentUploads) {
+                             l.currentUploads = l.currentUploads.map(cu => {
+                                 if (cu.count === undefined) cu.count = 1; // Default old records
+                                 return cu;
+                             });
+                        } else {
+                            l.currentUploads = [{ name: l.subject, status: l.status, count: 1 }];
+                        }
+                        
+                        // Recalculate total
+                        l.lessonCount = l.currentUploads.reduce((sum, item) => sum + (parseInt(item.count) || 0), 0);
+                        
+                        if (l.grade && l.section && !l.assignedClasses) {
+                            l.assignedClasses = [{grade: l.grade, section: l.section}];
+                        }
+                        return l;
+                    });
+                } catch(e) { console.error("Data corrupted", e); lessons = []; }
+            } else {
+                const now = new Date();
+                const lastMonth = new Date(); lastMonth.setMonth(now.getMonth() - 1);
+
+                lessons = [
+                    { 
+                        id: 1, uploader: 'Mrs. Das', campus: 'Sibounheuang', 
+                        assignedClasses: [{grade: 'Primary 5', section: 'Section A'}], 
+                        assignedSubjects: ['Mathematics'], 
+                        currentUploads: [{name: 'Mathematics', status: 'Uploaded', count: 10}], 
+                        lessonCount: 10, date: now.toISOString() 
+                    },
+                    { 
+                        id: 2, uploader: 'Mr. Rao', campus: 'Chommany', 
+                        assignedClasses: [{grade: 'Primary 4', section: 'Section B'}], 
+                        assignedSubjects: ['Physics'], 
+                        currentUploads: [{name: 'Physics', status: 'Ongoing', count: 5}], 
+                        lessonCount: 5, date: now.toISOString() 
+                    }
+                ];
+                saveData();
+            }
+            populateMonthSelectors();
+            renderUI();
+        }
+
+        function saveData() {
+            localStorage.setItem(STORE_KEY, JSON.stringify(lessons));
+            populateMonthSelectors();
+            renderUI();
+        }
+
+        // --- EXPORT/IMPORT ---
+        function exportData() {
+            const fullData = { lessons: lessons, subjects: subjects };
+            const dataStr = JSON.stringify(fullData, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', 'neerada_lms_data.json');
+            linkElement.click();
+            showToast("Data downloaded.");
+        }
+
+        function importData(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (Array.isArray(parsed)) { lessons = parsed; } 
+                    else if(parsed.lessons) {
+                        lessons = parsed.lessons;
+                        if(parsed.subjects) { subjects = parsed.subjects; saveSubjects(); }
+                    }
+                    saveData();
+                    showToast("Data loaded successfully!");
+                } catch (e) { alert("Error reading file."); }
+            };
+            reader.readAsText(file);
+            input.value = ''; 
+        }
+
+        // --- PRINT ---
+        function openPrintModal() { document.getElementById('print-modal').classList.remove('hidden'); }
+        function closePrintModal() { document.getElementById('print-modal').classList.add('hidden'); }
+        function executePrint() {
+            const orientation = document.querySelector('input[name="print-orientation"]:checked').value;
+            document.getElementById('print-orientation-style').innerHTML = `@page { size: ${orientation}; margin: 0.5cm; }`;
+            closePrintModal();
+            switchTab('uploaders'); 
+            setTimeout(() => { window.print(); }, 500);
+        }
+
+        // --- RENDERERS ---
+        function renderUI() {
+            renderTable();
+            renderDashboard();
+            updateGlobalStats();
+        }
+
+        function renderDashboard() {
+            const tbody = document.getElementById('uploader-progress-body');
+            tbody.innerHTML = '';
+            
+            const filterVal = document.getElementById('dashboard-filter-month').value;
+            const monthHeader = document.getElementById('progress-month-header');
+            
+            if(filterVal === 'current') {
+                const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+                monthHeader.textContent = monthNames[new Date().getMonth()];
+            } else if(filterVal !== 'all') {
+                const [y, m] = filterVal.split('-');
+                const d = new Date(parseInt(y), parseInt(m)-1);
+                monthHeader.textContent = d.toLocaleDateString('en-US', {month: 'long', year: 'numeric'});
+            } else {
+                monthHeader.textContent = "All Time";
+            }
+
+            const uploaderStats = getUploaderStats(filterVal);
+            const uploaders = Object.values(uploaderStats);
+
+            if (uploaders.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">No uploader data available.</td></tr>`;
+                return;
+            }
+
+            uploaders.forEach(u => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 border-b border-slate-50 last:border-0';
+                tr.innerHTML = `
+                    <td class="p-4 font-medium text-slate-900 flex items-center gap-3">
+                        <div class="h-8 w-8 rounded-full bg-neerada-100 text-neerada-600 flex items-center justify-center font-bold text-xs">
+                            ${u.name.charAt(0)}
+                        </div>
+                        ${u.name}
+                    </td>
+                    <td class="p-4 text-slate-900">${Array.from(u.grades).join(', ')}</td>
+                    <td class="p-4 text-slate-900"><span class="bg-slate-100 px-2 py-1 rounded text-xs">${Array.from(u.subjects).join(', ')}</span></td>
+                    <td class="p-4 text-center font-bold bg-blue-50/30 text-neerada-700">${u.periodCount}</td>
+                    <td class="p-4 text-center font-semibold text-slate-900">${u.totalCount}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function getUploaderStats(filterDate = 'current') {
+            const uploaderStats = {};
+            let targetMonth = -1, targetYear = -1;
+            
+            if(filterDate === 'current') {
+                const now = new Date();
+                targetMonth = now.getMonth();
+                targetYear = now.getFullYear();
+            } else if(filterDate !== 'all') {
+                const [y, m] = filterDate.split('-');
+                targetYear = parseInt(y);
+                targetMonth = parseInt(m) - 1;
+            }
+
+            lessons.forEach(l => {
+                const name = l.uploader;
+                if (!uploaderStats[name]) {
+                    uploaderStats[name] = { name: name, grades: new Set(), subjects: new Set(), periodCount: 0, totalCount: 0 };
+                }
+                
+                if(l.assignedClasses) {
+                    l.assignedClasses.forEach(cls => {
+                        uploaderStats[name].grades.add(`${cls.grade} (${cls.section})`);
+                    });
+                } else if(l.grade) {
+                    uploaderStats[name].grades.add(`${l.grade} (${l.section})`);
+                }
+
+                if(l.assignedSubjects) l.assignedSubjects.forEach(s => uploaderStats[name].subjects.add(s));
+                
+                const count = (l.lessonCount !== undefined) ? parseInt(l.lessonCount) : 0;
+                
+                uploaderStats[name].totalCount += count;
+                
+                const d = new Date(l.date);
+                let match = false;
+                if(filterDate === 'all') {
+                    match = true;
+                } else if(d.getMonth() === targetMonth && d.getFullYear() === targetYear) {
+                    match = true;
+                }
+                
+                if(match) {
+                    uploaderStats[name].periodCount += count;
+                }
+            });
+            return uploaderStats;
+        }
+
+        // Helper to aggregate subjects by uploader (all time)
+        function getUploaderSubjectBreakdown(uploaderName) {
+            const breakdown = {};
+            lessons.filter(l => l.uploader === uploaderName).forEach(l => {
+                if (l.currentUploads) {
+                    l.currentUploads.forEach(cu => {
+                        // Sum up counts per subject
+                        const count = parseInt(cu.count) || 0;
+                        if (count > 0) {
+                             breakdown[cu.name] = (breakdown[cu.name] || 0) + count;
+                        }
+                    });
+                }
+            });
+            // Convert to string
+            const parts = Object.entries(breakdown).map(([k, v]) => `${k}: ${v}`);
+            return parts.length > 0 ? parts.join(', ') : '-';
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('lessons-table-body');
+            const search = document.getElementById('search-input').value.toLowerCase();
+            const timeFilter = document.getElementById('filter-month').value;
+            
+            tbody.innerHTML = '';
+            const now = new Date();
+            const currMonth = now.getMonth();
+            const currYear = now.getFullYear();
+            
+            const stats = getUploaderStats('current'); 
+
+            const filteredLessons = lessons.filter(l => {
+                const matchesSearch = l.uploader.toLowerCase().includes(search) || 
+                                      (l.currentUploads && l.currentUploads.some(i => i.name.toLowerCase().includes(search)));
+                
+                let matchesTime = true;
+                const d = new Date(l.date);
+                
+                if (timeFilter === 'current') {
+                    matchesTime = d.getMonth() === currMonth && d.getFullYear() === currYear;
+                } else if (timeFilter !== 'all') {
+                    const [y, m] = timeFilter.split('-');
+                    matchesTime = d.getFullYear() === parseInt(y) && d.getMonth() === parseInt(m) - 1;
+                }
+                return matchesSearch && matchesTime;
+            }).sort((a, b) => {
+                const campusA = (a.campus || '').toLowerCase();
+                const campusB = (b.campus || '').toLowerCase();
+                if (campusA < campusB) return -1;
+                if (campusA > campusB) return 1;
+
+                const gradeAStr = (a.assignedClasses && a.assignedClasses[0]) ? a.assignedClasses[0].grade : (a.grade || '');
+                const gradeBStr = (b.assignedClasses && b.assignedClasses[0]) ? b.assignedClasses[0].grade : (b.grade || '');
+                
+                const numA = parseInt(gradeAStr.replace(/\D/g, '')) || 0;
+                const numB = parseInt(gradeBStr.replace(/\D/g, '')) || 0;
+                if (numA !== numB) return numA - numB;
+
+                const secAStr = (a.assignedClasses && a.assignedClasses[0]) ? a.assignedClasses[0].section : (a.section || '');
+                const secBStr = (b.assignedClasses && b.assignedClasses[0]) ? b.assignedClasses[0].section : (b.section || '');
+                
+                const sectionA = secAStr.toLowerCase();
+                const sectionB = secBStr.toLowerCase();
+                if (sectionA < sectionB) return -1;
+                if (sectionA > sectionB) return 1;
+
+                return new Date(b.date) - new Date(a.date);
+            });
+
+            const activeUploaderNames = new Set(filteredLessons.map(l => l.uploader));
+            document.getElementById('list-active-uploaders').textContent = activeUploaderNames.size;
+
+            if (filteredLessons.length === 0) {
+                tbody.innerHTML = `<tr class="text-center"><td colspan="11" class="py-8 text-slate-400">No logs found.</td></tr>`;
+                return;
+            }
+
+            filteredLessons.forEach(l => {
+                const dateObj = new Date(l.date);
+                const monthYear = dateObj.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                
+                const uStats = stats[l.uploader] || { totalCount: 0, periodCount: 0 };
+                const subjectBreakdownStr = getUploaderSubjectBreakdown(l.uploader);
+                
+                let statusLabel = 'Not Started';
+                let statusClass = 'bg-gray-100 text-gray-800';
+
+                if (l.currentUploads && l.currentUploads.length > 0) {
+                    const allUploaded = l.currentUploads.every(i => i.status === 'Uploaded');
+                    const allNotStarted = l.currentUploads.every(i => i.status === 'Not Started');
+                    
+                    if (allUploaded) {
+                        statusLabel = 'Completed';
+                        statusClass = 'bg-green-100 text-green-800';
+                    } else if (allNotStarted) {
+                        statusLabel = 'Not Started';
+                        statusClass = 'bg-gray-100 text-gray-600'; 
+                    } else {
+                        statusLabel = 'Ongoing';
+                        statusClass = 'bg-amber-100 text-amber-800';
+                    }
+                }
+                
+                const assignedSubs = (l.assignedSubjects && l.assignedSubjects.length > 0) ? l.assignedSubjects.join(', ') : '-';
+
+                let classesHtml = '';
+                if(l.assignedClasses && l.assignedClasses.length > 0) {
+                    l.assignedClasses.forEach(cls => {
+                        classesHtml += `<div class="whitespace-nowrap-print">${cls.grade} <span class="text-xs text-slate-500">(${cls.section})</span></div>`;
+                    });
+                } else {
+                    classesHtml = `<div class="whitespace-nowrap-print">${l.grade} <span class="text-xs text-slate-500">(${l.section})</span></div>`;
+                }
+
+                let subjectsHtml = '';
+                if(l.currentUploads && l.currentUploads.length > 0) {
+                    subjectsHtml = '<div class="space-y-1">';
+                    l.currentUploads.forEach(item => {
+                        const displayStatus = item.status === 'Uploaded' ? 'Completed' : (item.status === 'Not Started' ? 'Not Started' : 'Ongoing');
+                        const badgeColor = item.status === 'Uploaded' ? 'text-green-600' : (item.status === 'Not Started' ? 'text-slate-400' : 'text-amber-600');
+                        subjectsHtml += `<div class="text-xs whitespace-nowrap text-slate-900">${item.name} <span class="font-bold ml-1 text-slate-700">[${item.count || 0}]</span> <span class="${badgeColor} ml-1">(${displayStatus})</span></div>`;
+                    });
+                    subjectsHtml += '</div>';
+                } else {
+                    subjectsHtml = '<span class="text-xs text-slate-400 italic">None selected</span>';
+                }
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 transition-colors border-b border-slate-50';
+                tr.innerHTML = `
+                    <td class="px-3 py-3 text-center"><div class="text-sm font-bold text-slate-900">${l.uploader}</div></td>
+                    <td class="px-3 py-3 text-center"><span class="text-xs font-semibold text-slate-900 bg-slate-100 px-2 py-1 rounded">${l.campus || 'N/A'}</span></td>
+                    <td class="px-3 py-3 text-center text-sm text-slate-900">${classesHtml}</td>
+                    <td class="px-3 py-3 text-center text-xs text-slate-900 max-w-[150px] whitespace-normal">${assignedSubs}</td>
+                    <td class="px-3 py-3 text-center"><div class="text-sm text-slate-900 font-medium">${monthYear}</div></td>
+                    <td class="px-3 py-3 text-center bg-purple-200"><span class="text-sm font-bold text-purple-900">${uStats.periodCount}</span></td>
+                    <td class="px-3 py-3 text-center bg-sky-100"><span class="text-sm font-bold text-neerada-900">${uStats.totalCount}</span></td>
+                    <td class="px-3 py-3 text-center text-xs text-slate-900 whitespace-normal max-w-[150px]">${subjectBreakdownStr}</td>
+                    <td class="px-3 py-3 text-center">${subjectsHtml}</td>
+                    <td class="px-3 py-3 text-center"><span class="px-2 py-1 rounded-full text-xs font-bold ${statusClass}">${statusLabel}</span></td>
+                    <td class="px-3 py-3 text-right no-print">
+                        <button onclick="editLesson(${l.id})" class="text-slate-400 hover:text-neerada-600 transition-colors mr-3" title="Edit"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteLesson(${l.id})" class="text-slate-400 hover:text-red-500 transition-colors" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateGlobalStats() {
+            const currentMonth = new Date().getMonth();
+            const currentYear = new Date().getFullYear();
+            
+            let monthTotal = 0;
+            let allTimeUploaded = 0;
+            
+            lessons.forEach(l => {
+                const count = (l.lessonCount !== undefined) ? parseInt(l.lessonCount) : 0;
+                const d = new Date(l.date);
+                allTimeUploaded += count;
+                if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+                    monthTotal += count;
+                }
+            });
+
+            const activeUploaders = new Set(lessons.filter(l => {
+                const d = new Date(l.date);
+                return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+            }).map(l => l.uploader)).size;
+
+            const pending = lessons.filter(l => l.currentUploads.some(i => i.status === 'Ongoing')).length; 
+
+            document.getElementById("stat-month-total").innerText = monthTotal;
+            document.getElementById("stat-uploaders").innerText = activeUploaders;
+            document.getElementById("stat-uploaded").innerText = allTimeUploaded;
+            document.getElementById("stat-pending").innerText = pending;
+        }
+
+        function openModal(isEdit = false) { 
+            const modal = document.getElementById('modal');
+            const title = document.getElementById('modal-title');
+            const uploadsList = document.getElementById('current-uploads-list');
+            const classesList = document.getElementById('assigned-classes-list');
+            
+            if (!isEdit) {
+                document.getElementById('add-lesson-form').reset();
+                document.getElementById('edit-id').value = '';
+                document.getElementById('hidden-date').value = ''; 
+                document.getElementById('lessonCount').value = 0; 
+                renderAssignedSubjectsUI([]);
+                
+                uploadsList.innerHTML = ''; 
+                addCurrentUploadRow(); 
+                
+                classesList.innerHTML = '';
+                
+                const lastClass = JSON.parse(localStorage.getItem(LAST_CLASS_KEY));
+                if (lastClass && lastClass.grade && lastClass.section) {
+                     addClassRow(lastClass);
+                } else {
+                     addClassRow(); 
+                }
+
+                title.textContent = "Log New Upload";
+            } else {
+                title.textContent = "Edit Upload Record";
+            }
+            modal.classList.remove('hidden'); 
+        }
+
+        function closeModal() { 
+            document.getElementById('modal').classList.add('hidden'); 
+            document.getElementById('add-lesson-form').reset();
+            document.getElementById('edit-id').value = '';
+        }
+
+        function editLesson(id) {
+            const lesson = lessons.find(l => l.id === id);
+            if (!lesson) return;
+
+            document.getElementById('edit-id').value = lesson.id;
+            document.getElementById('uploader').value = lesson.uploader;
+            document.getElementById('campus').value = lesson.campus || 'Sibounheuang';
+            document.getElementById('hidden-date').value = lesson.date; 
+            document.getElementById('lessonCount').value = (lesson.lessonCount !== undefined) ? lesson.lessonCount : 0;
+            
+            renderAssignedSubjectsUI(lesson.assignedSubjects || []);
+            
+            const classesList = document.getElementById('assigned-classes-list');
+            classesList.innerHTML = '';
+            if(lesson.assignedClasses && lesson.assignedClasses.length > 0) {
+                lesson.assignedClasses.forEach(item => addClassRow(item));
+            } else {
+                addClassRow({grade: lesson.grade, section: lesson.section});
+            }
+
+            const uploadsList = document.getElementById('current-uploads-list');
+            uploadsList.innerHTML = '';
+            if(lesson.currentUploads && lesson.currentUploads.length > 0) {
+                lesson.currentUploads.forEach(item => addCurrentUploadRow(item));
+            } else {
+                addCurrentUploadRow();
+            }
+
+            openModal(true);
+        }
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const idVal = document.getElementById('edit-id').value;
+            const uploader = document.getElementById('uploader').value;
+            const campus = document.getElementById('campus').value;
+            const countVal = parseInt(document.getElementById('lessonCount').value);
+            const count = isNaN(countVal) ? 0 : countVal;
+            
+            const selectedAssigned = Array.from(document.querySelectorAll('input[name="assigned_subjects_check"]:checked')).map(cb => cb.value);
+
+            const assignedClasses = [];
+            const classRows = document.getElementById('assigned-classes-list').children;
+            for(let row of classRows) {
+                const grade = row.querySelector('.class-grade-select').value;
+                const section = row.querySelector('.class-section-select').value;
+                if(grade && section) {
+                    assignedClasses.push({grade, section});
+                }
+            }
+            
+            if (assignedClasses.length > 0) {
+                localStorage.setItem(LAST_CLASS_KEY, JSON.stringify(assignedClasses[0]));
+            }
+
+            const currentUploads = [];
+            const uploadRows = document.getElementById('current-uploads-list').children;
+            for(let row of uploadRows) {
+                const sub = row.querySelector('.curr-subject-select').value;
+                const qty = parseInt(row.querySelector('.curr-qty-input').value) || 0;
+                const stat = row.querySelector('.curr-status-select').value;
+                if(sub) {
+                    currentUploads.push({ name: sub, status: stat, count: qty });
+                }
+            }
+
+            let logDate = idVal ? (document.getElementById('hidden-date').value || new Date().toISOString()) : new Date().toISOString();
+
+            if (idVal) {
+                const index = lessons.findIndex(l => l.id == idVal);
+                if (index !== -1) {
+                    lessons[index] = { 
+                        ...lessons[index], uploader, campus, assignedClasses, 
+                        assignedSubjects: selectedAssigned, currentUploads, 
+                        lessonCount: count, date: logDate 
+                    };
+                    showToast('Record updated');
+                }
+            } else {
+                const newLesson = { 
+                    id: Date.now(), uploader, campus, assignedClasses, 
+                    assignedSubjects: selectedAssigned, currentUploads, 
+                    lessonCount: count, date: logDate 
+                };
+                lessons.unshift(newLesson);
+                showToast('Entry logged successfully');
+            }
+            saveData();
+            closeModal();
+        }
+
+        function deleteLesson(id) {
+            if(confirm('Delete this record?')) {
+                lessons = lessons.filter(l => l.id !== id);
+                saveData();
+                showToast('Record deleted');
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').textContent = msg;
+            toast.classList.remove('translate-y-20');
+            setTimeout(() => toast.classList.add('translate-y-20'), 3000);
+        }
+    </script>
+</body>
+</html>
