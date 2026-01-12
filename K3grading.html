@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neerada School - K3 Grading System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&family=Inter:wght@400;600&display=swap');
+        
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        h1, h2, h3, .comic-font { font-family: 'Comic Neue', cursive; }
+        
+        /* Essential Utilities for Offline/Fallback */
+        .hidden { display: none !important; }
+        
+        /* Print Styles */
+        @media print {
+            @page { size: A4 landscape; margin: 10mm; }
+            body { background: white; -webkit-print-color-adjust: exact; }
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            .print-container { 
+                width: 100%; 
+                max-width: 100%;
+                font-size: 12px; 
+            }
+            table { border-collapse: collapse; width: 100%; }
+            th, td { border: 1px solid #cbd5e1 !important; page-break-inside: avoid; }
+            #student-list-container { overflow: visible !important; }
+            main { margin: 0; padding: 0; max-width: none; }
+            
+            /* Print friendly colors */
+            .bg-emerald-100 { background-color: #dcfce7 !important; }
+            .bg-red-50 { background-color: #fef2f2 !important; }
+            
+            /* Print Header Layout */
+            .print-header {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                margin-bottom: 20px;
+                border-bottom: 2px solid #eee;
+                padding-bottom: 10px;
+            }
+            .print-logo {
+                height: 80px;
+                width: auto;
+                margin-bottom: 10px;
+                object-fit: contain;
+            }
+        }
+
+        .print-only { display: none; }
+        .grade-input:focus { outline: none; border-color: #8b5cf6; ring: 2px; ring-color: #ddd6fe; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-indigo-600 text-white shadow-lg sticky top-0 z-50 no-print">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center gap-4">
+                <!-- Logo Trigger -->
+                <div class="relative group cursor-pointer" onclick="document.getElementById('logo-upload').click()" title="Change School Logo">
+                    <div id="header-logo-container" class="w-12 h-12 bg-indigo-500 rounded-full flex items-center justify-center border-2 border-indigo-400 overflow-hidden hover:border-white transition">
+                        <svg id="default-logo-icon" class="w-6 h-6 text-indigo-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        <img id="header-logo-img" class="hidden w-full h-full object-cover" alt="School Logo">
+                    </div>
+                    <div class="absolute -bottom-1 -right-1 bg-white text-indigo-600 rounded-full p-1 shadow-sm opacity-0 group-hover:opacity-100 transition">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                    </div>
+                </div>
+                
+                <div>
+                    <h1 class="text-2xl font-bold comic-font tracking-wide leading-none">Neerada School</h1>
+                    <div class="flex items-center gap-2 mt-1">
+                        <p class="text-indigo-200 text-xs">K3 Grading App • Verson 2026</p>
+                        
+                        <!-- School Year Selector -->
+                        <select id="school-year-select" onchange="changeSchoolYear()" class="bg-indigo-700 text-white text-xs border border-indigo-500 rounded px-2 py-0.5 focus:outline-none focus:ring-1 focus:ring-white">
+                            <option value="SY 2025-2026">SY 2025-2026</option>
+                            <option value="SY 2026-2027">SY 2026-2027</option>
+                            <option value="SY 2027-2028">SY 2027-2028</option>
+                            <option value="SY 2028-2029">SY 2028-2029</option>
+                            <option value="SY 2029-2030">SY 2029-2030</option>
+                            <option value="SY 2030-2031">SY 2030-2031</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-2">
+                <button onclick="document.getElementById('restore-upload').click()" class="text-xs bg-orange-500 hover:bg-orange-600 px-3 py-1 rounded text-white transition flex items-center gap-1 shadow-sm border border-orange-400">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                    Restore Data
+                </button>
+                <button onclick="window.print()" class="text-xs bg-indigo-500 hover:bg-indigo-400 px-3 py-1 rounded text-white transition flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                    Print Record
+                </button>
+                <button onclick="exportData()" class="text-xs bg-indigo-800 hover:bg-indigo-900 px-3 py-1 rounded border border-indigo-500 transition">
+                    Backup Data
+                </button>
+            </div>
+        </div>
+        <input type="file" id="logo-upload" hidden accept="image/*" onchange="handleLogoUpload(event)">
+        <input type="file" id="restore-upload" hidden accept=".json" onchange="handleRestore(event)">
+    </header>
+
+    <!-- Print Header (Only visible when printing the main dashboard) -->
+    <div id="main-print-header" class="print-only mb-6">
+        <div class="print-header">
+            <img id="print-view-logo" class="print-logo hidden" alt="School Logo">
+            <h1 class="text-3xl font-bold text-center comic-font">Neerada School</h1>
+            <h2 class="text-xl font-bold text-center mt-2 comic-font">Class Record: <span id="print-section-name"></span></h2>
+            <p class="text-center text-slate-500 text-sm mt-1">English Subject • January to June • <span id="print-year-label"></span></p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl mx-auto w-full p-4 print-container">
+        
+        <!-- View Switcher -->
+        <div id="section-selector" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 mb-6 no-print">
+            <!-- Buttons injected by JS -->
+        </div>
+
+        <!-- Dashboard -->
+        <div id="app-container" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden min-h-[500px]">
+            
+            <!-- Toolbar -->
+            <div class="p-4 border-b border-slate-100 flex flex-wrap justify-between items-center bg-slate-50/50 gap-4 no-print">
+                <div class="flex items-center gap-2">
+                    <h2 id="current-section-title" class="text-xl font-bold text-slate-700 comic-font">Select a Section</h2>
+                    <button onclick="editSectionName()" id="edit-section-btn" class="hidden text-slate-400 hover:text-indigo-600 transition" title="Rename Section">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                    </button>
+                </div>
+                
+                <div id="action-buttons" class="hidden flex gap-2">
+                    <!-- Reset Scores Button -->
+                    <button onclick="resetAllScores()" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-2 rounded-lg text-sm font-semibold shadow-sm transition flex items-center gap-1" title="Reset all scores for this section and year to zero">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                        Reset All Scores
+                    </button>
+                    <!-- Import CSV Button -->
+                    <button onclick="openImportModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-lg text-sm font-semibold shadow-sm transition flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                        Import CSV
+                    </button>
+                    <!-- Add Student Button -->
+                    <button onclick="openAddStudentModal()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-sm transition flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        Add Student
+                    </button>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div id="empty-state" class="flex flex-col items-center justify-center h-64 text-slate-400 no-print">
+                <p>Select a section to begin.</p>
+            </div>
+
+            <!-- Student List Table -->
+            <div id="student-list-container" class="hidden overflow-x-auto pb-12">
+                <table class="w-full text-left text-sm border-collapse">
+                    <thead class="bg-slate-50 text-slate-600 font-bold border-b border-slate-300">
+                        <tr id="table-header-row">
+                            <!-- Headers injected by JS -->
+                        </tr>
+                    </thead>
+                    <tbody id="student-table-body" class="divide-y divide-slate-100">
+                        <!-- Rows injected by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 mt-auto py-6 no-print">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-slate-400 text-sm">
+                &copy; <span id="copyright-year"></span> Neerada School. All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+    <!-- Modal: Add Student -->
+    <div id="add-modal" class="fixed inset-0 bg-black/50 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm no-print">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+            <h3 class="text-xl font-bold mb-4 comic-font">Add New Student</h3>
+            <p class="text-xs text-slate-500 mb-4 bg-slate-100 p-2 rounded">Adding to: <span class="font-bold" id="add-modal-year-display"></span></p>
+            <form onsubmit="handleAddStudent(event)">
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Full Name</label>
+                <input type="text" id="student-name-input" required class="w-full p-3 rounded border border-slate-300 mb-4 focus:ring-2 ring-indigo-500 outline-none" placeholder="e.g. Juan dela Cruz">
+                
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Nickname (Optional)</label>
+                <input type="text" id="student-nickname-input" class="w-full p-3 rounded border border-slate-300 mb-6 focus:ring-2 ring-indigo-500 outline-none" placeholder="e.g. Juany">
+
+                <div class="flex justify-end gap-2">
+                    <button type="button" onclick="closeModal('add-modal')" class="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded transition">Cancel</button>
+                    <button type="submit" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded font-medium shadow transition">Add Student</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Edit Student -->
+    <div id="edit-student-modal" class="fixed inset-0 bg-black/50 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm no-print">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+            <h3 class="text-xl font-bold mb-4 comic-font">Edit Student Details</h3>
+            <form onsubmit="handleEditStudent(event)">
+                <input type="hidden" id="edit-student-id">
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Full Name</label>
+                <input type="text" id="edit-student-name" required class="w-full p-3 rounded border border-slate-300 mb-4 focus:ring-2 ring-indigo-500 outline-none">
+                
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Nickname (Optional)</label>
+                <input type="text" id="edit-student-nickname" class="w-full p-3 rounded border border-slate-300 mb-6 focus:ring-2 ring-indigo-500 outline-none">
+
+                <div class="flex justify-end gap-2">
+                    <button type="button" onclick="closeModal('edit-student-modal')" class="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded transition">Cancel</button>
+                    <button type="submit" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium shadow transition">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Import CSV -->
+    <div id="import-modal" class="fixed inset-0 bg-black/50 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm no-print">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+            <h3 class="text-xl font-bold mb-2 comic-font">Import Students via CSV</h3>
+            <!-- FIXED: Added missing spans for import display -->
+            <p class="text-sm text-slate-500 mb-6">Importing to: <span class="font-bold text-indigo-700" id="import-section-name"></span> (<span id="import-year-display" class="font-medium"></span>)</p>
+            
+            <div class="bg-slate-50 border border-slate-200 rounded p-4 mb-6">
+                <p class="text-xs font-bold text-slate-700 mb-2 uppercase">CSV Format:</p>
+                <p class="text-xs text-slate-600 mb-2">Column 1: Full Name<br>Column 2: Nickname</p>
+                <button onclick="downloadTemplate()" class="text-xs text-indigo-600 hover:text-indigo-800 underline flex items-center gap-1">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    Download Template
+                </button>
+            </div>
+
+            <input type="file" id="csv-file-input" accept=".csv" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 mb-6"/>
+
+            <div class="flex justify-end gap-2">
+                <button type="button" onclick="closeModal('import-modal')" class="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded transition">Cancel</button>
+                <button type="button" onclick="handleCSVUpload()" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded font-medium shadow transition">Import Now</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Edit Section Name -->
+    <div id="rename-modal" class="fixed inset-0 bg-black/50 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm no-print">
+        <div class="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6">
+            <h3 class="text-lg font-bold mb-2 comic-font">Rename Section</h3>
+            <form onsubmit="handleRenameSection(event)">
+                <input type="text" id="section-rename-input" required class="w-full p-3 rounded border border-slate-300 mb-4">
+                <div class="flex justify-end gap-2">
+                    <button type="button" onclick="closeModal('rename-modal')" class="px-3 py-1 text-slate-600">Cancel</button>
+                    <button type="submit" class="px-4 py-1 bg-indigo-600 text-white rounded">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Set Perfect Score -->
+    <div id="max-score-modal" class="fixed inset-0 bg-black/50 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm no-print">
+        <div class="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6">
+            <h3 class="text-lg font-bold mb-1 comic-font" id="max-score-month-title">January</h3>
+            <p class="text-xs text-slate-500 mb-4">Set Perfect Score for this month. Grades recalculate automatically.</p>
+            <form onsubmit="handleSetMaxScore(event)">
+                <input type="number" id="max-score-input" required min="1" class="w-full p-3 text-center text-2xl font-mono rounded border border-slate-300 mb-4 focus:ring-2 ring-indigo-500 outline-none">
+                <div class="flex justify-end gap-2">
+                    <button type="button" onclick="closeModal('max-score-modal')" class="px-3 py-1 text-slate-600">Cancel</button>
+                    <button type="submit" class="px-4 py-1 bg-indigo-600 text-white rounded">Set Score</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Input Student Score -->
+    <div id="score-modal" class="fixed inset-0 bg-black/50 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm no-print">
+        <div class="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <h3 class="text-lg font-bold comic-font" id="score-student-name">Student</h3>
+                    <p class="text-xs text-slate-500" id="score-month-label">January</p>
+                </div>
+                <div class="text-right">
+                    <div class="text-xs text-slate-400 uppercase">Perfect Score</div>
+                    <div class="text-lg font-bold text-indigo-600" id="score-perfect-display">20</div>
+                </div>
+            </div>
+
+            <form onsubmit="handleSaveScore(event)">
+                <input type="hidden" id="score-student-id">
+                <input type="hidden" id="score-month-key">
+                
+                <label class="block text-sm font-bold text-slate-700 mb-2">Enter Raw Score</label>
+                <input type="number" step="0.1" id="raw-score-input" class="w-full p-4 text-3xl font-mono text-center rounded border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none mb-6" placeholder="0" oninput="calculatePreview()">
+
+                <div class="text-center mb-6">
+                    <div class="text-xs text-slate-400 uppercase">Grade Preview</div>
+                    <div id="grade-preview" class="text-4xl font-bold text-slate-300 comic-font">1.0</div>
+                </div>
+
+                <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded font-bold shadow transition">Save Grade</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Printable Area (Hidden, populated dynamically when printing specific month) -->
+    <div id="print-area" class="hidden"></div>
+
+    <script>
+        // --- Configuration ---
+        const DB_NAME = 'K3GradingDB';
+        const DB_VERSION = 7; // Bump for safety
+        const MONTHS = [
+            { key: 'jan', label: 'January' },
+            { key: 'feb', label: 'February' },
+            { key: 'mar', label: 'March' },
+            { key: 'apr', label: 'April' },
+            { key: 'may', label: 'May' },
+            { key: 'jun', label: 'June' }
+        ];
+
+        let db;
+        let currentSectionId = null;
+        let currentSectionData = null;
+        let currentMonthForMax = null;
+        let currentSchoolYear = 'SY 2025-2026';
+        let cachedLogo = null;
+
+        // --- Init DB ---
+        const initDB = () => {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+                request.onerror = (e) => { 
+                    console.error("DB Error", e); 
+                    alert("App failed to start: Database permission error or private mode detected.");
+                    reject(); 
+                };
+
+                request.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains('students')) {
+                        const store = db.createObjectStore('students', { keyPath: 'id' });
+                        store.createIndex('sectionId', 'sectionId', { unique: false });
+                    }
+                    if (!db.objectStoreNames.contains('sections')) {
+                        const store = db.createObjectStore('sections', { keyPath: 'id' });
+                        for (let i = 1; i <= 7; i++) {
+                            store.add({ id: `sec_${i}`, name: `Section ${i}`, maxScores: {} });
+                        }
+                    }
+                    if (!db.objectStoreNames.contains('settings')) {
+                        db.createObjectStore('settings', { keyPath: 'id' });
+                    }
+                };
+
+                request.onsuccess = (e) => {
+                    db = e.target.result;
+                    resolve(db);
+                };
+            });
+        };
+
+        // --- Data Integrity & Access ---
+
+        const ensureDataIntegrity = async () => {
+            const sections = await getAllSections();
+            if (sections.length === 0) {
+                console.log("No sections found. Reseeding default sections...");
+                const tx = db.transaction(['sections'], 'readwrite');
+                const store = tx.objectStore('sections');
+                for (let i = 1; i <= 7; i++) {
+                    store.add({ id: `sec_${i}`, name: `Section ${i}`, maxScores: {} });
+                }
+                await new Promise(r => tx.oncomplete = r);
+                return true;
+            }
+            return false;
+        };
+        
+        const getAllSections = () => {
+            return new Promise((resolve) => {
+                const tx = db.transaction(['sections'], 'readonly');
+                tx.objectStore('sections').getAll().onsuccess = (e) => resolve(e.target.result);
+            });
+        };
+
+        const getSectionData = (id) => {
+            return new Promise((resolve) => {
+                const tx = db.transaction(['sections'], 'readonly');
+                tx.objectStore('sections').get(id).onsuccess = (e) => resolve(e.target.result);
+            });
+        };
+
+        const updateSectionData = (data) => {
+            return new Promise((resolve) => {
+                const tx = db.transaction(['sections'], 'readwrite');
+                tx.objectStore('sections').put(data);
+                tx.oncomplete = () => resolve();
+            });
+        };
+
+        const getStudents = (sectionId) => {
+            return new Promise((resolve) => {
+                const tx = db.transaction(['students'], 'readonly');
+                const index = tx.objectStore('students').index('sectionId');
+                index.getAll(sectionId).onsuccess = (e) => {
+                    const allStudents = e.target.result;
+                    // Filter by School Year. Default legacy data to 'SY 2025-2026'
+                    const filtered = allStudents.filter(s => (s.schoolYear || 'SY 2025-2026') === currentSchoolYear);
+                    resolve(filtered.sort((a, b) => (a.nickname || a.name).localeCompare(b.nickname || b.name)));
+                };
+            });
+        };
+
+        const addStudent = (name, nickname, sectionId) => {
+            const tx = db.transaction(['students'], 'readwrite');
+            tx.objectStore('students').add({
+                id: Date.now().toString() + Math.random().toString(36).substr(2, 5), // Unique ID
+                name,
+                nickname: nickname || '',
+                sectionId,
+                schoolYear: currentSchoolYear, // Associate with current selected year
+                scores: {}
+            });
+            return new Promise(r => tx.oncomplete = r);
+        };
+
+        const updateStudent = (id, name, nickname) => {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(['students'], 'readwrite');
+                const store = tx.objectStore('students');
+                store.get(id).onsuccess = (e) => {
+                    const student = e.target.result;
+                    if (student) {
+                        student.name = name;
+                        student.nickname = nickname;
+                        store.put(student);
+                        tx.oncomplete = () => resolve();
+                    } else {
+                        reject('Student not found');
+                    }
+                };
+            });
+        };
+
+        const updateStudentScore = (studentId, monthKey, raw) => {
+            const tx = db.transaction(['students'], 'readwrite');
+            const store = tx.objectStore('students');
+            store.get(studentId).onsuccess = (e) => {
+                const s = e.target.result;
+                if (!s.scores) s.scores = {};
+                s.scores[monthKey] = parseFloat(raw);
+                store.put(s);
+            };
+            return new Promise(r => tx.oncomplete = r);
+        };
+
+        const deleteStudent = (id) => {
+            if(!confirm("Delete this student?")) return;
+            const tx = db.transaction(['students'], 'readwrite');
+            tx.objectStore('students').delete(id);
+            tx.oncomplete = () => loadDashboard(currentSectionId);
+        };
+
+        const resetAllScores = async () => {
+            if(!confirm(`Are you sure you want to reset ALL scores to default (zero) for ${currentSectionData.name} in ${currentSchoolYear}? This cannot be undone.`)) return;
+            
+            const students = await getStudents(currentSectionId);
+            const tx = db.transaction(['students'], 'readwrite');
+            const store = tx.objectStore('students');
+            
+            let count = 0;
+            students.forEach(s => {
+                s.scores = {}; // Wipe scores object
+                store.put(s);
+                count++;
+            });
+            
+            tx.oncomplete = () => {
+                alert(`Reset complete. ${count} students updated.`);
+                loadDashboard(currentSectionId);
+            };
+        };
+
+        // --- Logo Logic ---
+
+        const handleLogoUpload = (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64 = e.target.result;
+                if (db.objectStoreNames.contains('settings')) {
+                    const tx = db.transaction(['settings'], 'readwrite');
+                    tx.objectStore('settings').put({ id: 'school_logo', data: base64 });
+                    tx.oncomplete = () => {
+                        displayLogo(base64);
+                        alert("Logo updated successfully!");
+                    };
+                } else {
+                    alert("Error: Settings storage not available. Please refresh.");
+                }
+            };
+            reader.readAsDataURL(file);
+        };
+
+        const loadLogo = () => {
+            if (!db.objectStoreNames.contains('settings')) return;
+            const tx = db.transaction(['settings'], 'readonly');
+            tx.objectStore('settings').get('school_logo').onsuccess = (e) => {
+                if (e.target.result) {
+                    displayLogo(e.target.result.data);
+                }
+            };
+        };
+
+        const displayLogo = (base64) => {
+            cachedLogo = base64;
+            document.getElementById('default-logo-icon').classList.add('hidden');
+            const img = document.getElementById('header-logo-img');
+            img.src = base64;
+            img.classList.remove('hidden');
+            const printImg = document.getElementById('print-view-logo');
+            printImg.src = base64;
+            printImg.classList.remove('hidden');
+        };
+
+        // --- School Year Logic ---
+        
+        const loadSettings = () => {
+            const tx = db.transaction(['settings'], 'readonly');
+            tx.objectStore('settings').get('selected_year').onsuccess = (e) => {
+                if (e.target.result) {
+                    currentSchoolYear = e.target.result.val;
+                    document.getElementById('school-year-select').value = currentSchoolYear;
+                }
+                // Refresh dashboard with loaded year
+                if (currentSectionId) loadDashboard(currentSectionId);
+                document.getElementById('print-year-label').textContent = currentSchoolYear;
+            };
+        };
+
+        const changeSchoolYear = () => {
+            const newVal = document.getElementById('school-year-select').value;
+            currentSchoolYear = newVal;
+            
+            // Save preference
+            const tx = db.transaction(['settings'], 'readwrite');
+            tx.objectStore('settings').put({ id: 'selected_year', val: newVal });
+            
+            document.getElementById('print-year-label').textContent = currentSchoolYear;
+            
+            // Refresh
+            if (currentSectionId) loadDashboard(currentSectionId);
+        };
+
+        // --- UI Logic ---
+
+        const initApp = async () => {
+            try {
+                if (navigator.storage && navigator.storage.persist) {
+                    await navigator.storage.persist();
+                }
+                
+                await initDB();
+                await ensureDataIntegrity(); 
+                
+                const sections = await getAllSections();
+                await renderSectionTabs(sections);
+                loadLogo(); 
+                loadSettings(); // Load year preference
+                document.getElementById('copyright-year').textContent = new Date().getFullYear();
+
+                if (sections.length > 0) {
+                    selectSection(sections[0].id);
+                }
+
+            } catch (err) {
+                console.error("Initialization error:", err);
+                document.getElementById('empty-state').innerHTML = `<p class="text-red-500">Error loading application data.<br>Please try refreshing the page.</p>`;
+            }
+        };
+
+        const renderSectionTabs = async (sections) => {
+            const container = document.getElementById('section-selector');
+            container.innerHTML = sections.map(sec => `
+                <button onclick="selectSection('${sec.id}')"
+                    class="py-3 px-2 rounded-lg text-sm font-semibold transition border border-slate-200 shadow-sm truncate
+                    ${currentSectionId === sec.id ? 'bg-indigo-600 text-white ring-2 ring-indigo-300' : 'bg-white text-slate-600 hover:bg-slate-50'}">
+                    ${sec.name}
+                </button>
+            `).join('');
+        };
+
+        const selectSection = async (id) => {
+            currentSectionId = id;
+            currentSectionData = await getSectionData(id);
+            
+            document.getElementById('current-section-title').textContent = currentSectionData.name;
+            document.getElementById('print-section-name').textContent = currentSectionData.name;
+            
+            // Fix: Updated to target correct spans
+            const importSection = document.getElementById('import-section-name');
+            const importYear = document.getElementById('import-year-display');
+            if (importSection) importSection.textContent = currentSectionData.name;
+            // importYear is updated in openImportModal usually, but good to init here too if modal opens directly
+            // though openImportModal overwrites it.
+            
+            document.getElementById('edit-section-btn').classList.remove('hidden');
+            document.getElementById('action-buttons').classList.remove('hidden');
+            document.getElementById('action-buttons').classList.add('flex');
+            document.getElementById('empty-state').classList.add('hidden');
+            document.getElementById('student-list-container').classList.remove('hidden');
+            
+            const sections = await getAllSections();
+            renderSectionTabs(sections);
+            
+            loadDashboard(id);
+        };
+
+        const loadDashboard = async (sectionId) => {
+            const students = await getStudents(sectionId);
+            const headerRow = document.getElementById('table-header-row');
+            const tbody = document.getElementById('student-table-body');
+
+            const monthColors = [
+                'bg-rose-100 text-rose-900 border-rose-200',
+                'bg-fuchsia-100 text-fuchsia-900 border-fuchsia-200',
+                'bg-violet-100 text-violet-900 border-violet-200',
+                'bg-blue-100 text-blue-900 border-blue-200',
+                'bg-cyan-100 text-cyan-900 border-cyan-200',
+                'bg-emerald-100 text-emerald-900 border-emerald-200'
+            ];
+
+            // 1. Build Header
+            let headersHTML = `<th class="p-4 w-12 bg-slate-200 border-b border-slate-300">#</th>
+                               <th class="p-4 min-w-[180px] bg-orange-100 text-orange-900 border-b border-orange-200">Student Name</th>
+                               <th class="p-4 min-w-[120px] bg-amber-100 text-amber-900 border-b border-amber-200">Nickname</th>`;
+            
+            MONTHS.forEach((m, i) => {
+                // Key composite: currentSchoolYear + '_' + monthKey
+                const maxKey = `${currentSchoolYear}_${m.key}`;
+                const max = currentSectionData.maxScores[maxKey] || 0;
+                const maxDisplay = max > 0 ? `<span class="font-bold text-current">${max}</span>` : `<span class="text-red-500 opacity-70">Set Max</span>`;
+                const colorClass = monthColors[i];
+
+                headersHTML += `
+                    <th class="p-2 text-center border-x min-w-[100px] group relative ${colorClass}">
+                        <div class="flex flex-col items-center gap-1">
+                            <span class="text-xs uppercase tracking-wider font-bold opacity-80">${m.label.substr(0,3)}</span>
+                            <div class="flex gap-1 items-center">
+                                <button onclick="openMaxScoreModal('${m.key}')" class="text-xs border border-white/50 bg-white/40 hover:bg-white/60 px-1 py-0.5 rounded transition min-w-[30px]">
+                                    / ${maxDisplay}
+                                </button>
+                            </div>
+                            <button onclick="printMonthReport('${m.key}')" class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 hover:text-white transition no-print" title="Print ${m.label} Report">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                            </button>
+                        </div>
+                    </th>
+                `;
+            });
+            headerRow.innerHTML = headersHTML + `<th class="p-4 text-right bg-slate-200 border-b border-slate-300 no-print">Actions</th>`;
+
+            // 2. Build Rows
+            if (students.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="10" class="text-center p-8 text-slate-400 italic">No students found for ${currentSchoolYear}.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = students.map((s, idx) => {
+                let rowHTML = `<td class="p-3 text-slate-400 font-mono text-xs border-r border-slate-100 align-middle">${idx + 1}</td>
+                               <td class="p-3 font-medium text-slate-700 border-r border-slate-100 align-middle">
+                                    ${s.name}
+                               </td>
+                               <td class="p-3 text-slate-500 border-r border-slate-100 align-middle">
+                                    ${s.nickname || '-'}
+                               </td>`;
+                
+                MONTHS.forEach(m => {
+                    const maxKey = `${currentSchoolYear}_${m.key}`;
+                    const raw = s.scores[m.key];
+                    const max = currentSectionData.maxScores[maxKey] || 0;
+                    
+                    let cellContent = '-';
+                    let cellClass = 'bg-slate-50 text-slate-300';
+                    let gradeVal = 0;
+
+                    if (max > 0 && raw !== undefined && raw !== null) {
+                        gradeVal = 1 + ((raw / max) * 9);
+                        if(gradeVal > 10) gradeVal = 10;
+                        if(gradeVal < 1) gradeVal = 1;
+                        
+                        const gradeFormatted = gradeVal.toFixed(1);
+                        cellContent = `<div class="flex flex-col leading-tight">
+                                            <span class="font-bold text-lg">${gradeFormatted}</span>
+                                            <span class="text-[10px] opacity-70">(${raw}/${max})</span>
+                                           </div>`;
+
+                        if (gradeVal >= 9) cellClass = 'bg-emerald-100 text-emerald-800 border-emerald-200';
+                        else if (gradeVal >= 7.5) cellClass = 'bg-blue-50 text-blue-800 border-blue-200';
+                        else if (gradeVal >= 5) cellClass = 'bg-yellow-50 text-yellow-800 border-yellow-200';
+                        else cellClass = 'bg-red-50 text-red-800 border-red-200';
+                    } else if (raw !== undefined) {
+                        cellContent = `<span class="text-xs text-orange-500">Set Max!</span>`;
+                    }
+
+                    rowHTML += `
+                        <td class="p-1 border-r border-slate-100 text-center align-middle">
+                            <button onclick="openScoreModal('${s.id}', '${m.key}', '${s.name}')" 
+                                class="w-full h-12 rounded flex items-center justify-center transition hover:shadow-md border ${cellClass}">
+                                ${cellContent}
+                            </button>
+                        </td>
+                    `;
+                });
+
+                rowHTML += `
+                    <td class="p-3 text-right no-print align-middle">
+                        <div class="flex justify-end gap-1">
+                            <button onclick="openEditStudentModal('${s.id}', '${s.name}', '${s.nickname || ''}')" class="p-1 text-slate-400 hover:text-blue-500 transition" title="Edit Student">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                            </button>
+                            <button onclick="deleteStudent('${s.id}')" class="p-1 text-slate-400 hover:text-red-500 transition" title="Delete Student">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a2 2 0 00-1-1h-4a2 2 0 00-1 1v3M4 7h16"></path></svg>
+                            </button>
+                        </div>
+                    </td>`;
+                
+                return `<tr class="hover:bg-slate-50 border-b border-slate-100">${rowHTML}</tr>`;
+            }).join('');
+        };
+
+        // --- CSV Import Features ---
+        
+        const openImportModal = () => {
+            const sectionNameSpan = document.getElementById('import-section-name');
+            const yearSpan = document.getElementById('import-year-display');
+            
+            if (sectionNameSpan && currentSectionData) {
+                sectionNameSpan.textContent = currentSectionData.name;
+            }
+            if (yearSpan) {
+                yearSpan.textContent = currentSchoolYear;
+            }
+            
+            document.getElementById('import-modal').classList.remove('hidden');
+        };
+
+        const downloadTemplate = () => {
+            const csvContent = "data:text/csv;charset=utf-8,Full Name,Nickname\nJohn Doe,Johnny\nMaria Clara,Mia";
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "student_template.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+
+        const handleCSVUpload = async () => {
+            const fileInput = document.getElementById('csv-file-input');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert("Please select a file first.");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const text = e.target.result;
+                const lines = text.split(/\r\n|\n/);
+                let count = 0;
+                
+                let startIndex = 0;
+                if(lines[0].toLowerCase().includes('name')) startIndex = 1;
+
+                for(let i = startIndex; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if(line) {
+                        const parts = line.split(',');
+                        const name = parts[0] ? parts[0].trim() : '';
+                        const nickname = parts[1] ? parts[1].trim() : '';
+                        
+                        if(name) {
+                            await addStudent(name, nickname, currentSectionId);
+                            count++;
+                        }
+                    }
+                }
+                
+                alert(`Successfully imported ${count} students to ${currentSchoolYear}!`);
+                document.getElementById('import-modal').classList.add('hidden');
+                fileInput.value = ''; 
+                loadDashboard(currentSectionId);
+            };
+            reader.readAsText(file);
+        };
+
+
+        // --- Other Handlers (Same as V2 with updates) ---
+
+        const editSectionName = () => {
+            document.getElementById('section-rename-input').value = currentSectionData.name;
+            document.getElementById('rename-modal').classList.remove('hidden');
+        };
+        const handleRenameSection = async (e) => {
+            e.preventDefault();
+            const newName = document.getElementById('section-rename-input').value.trim();
+            if (newName) {
+                currentSectionData.name = newName;
+                await updateSectionData(currentSectionData);
+                document.getElementById('rename-modal').classList.add('hidden');
+                document.getElementById('current-section-title').textContent = newName;
+                document.getElementById('print-section-name').textContent = newName;
+                
+                // Fix: Also update the import section name if modal is open
+                const importSection = document.getElementById('import-section-name');
+                if (importSection) importSection.textContent = newName;
+                
+                // Re-render tabs
+                const sections = await getAllSections();
+                renderSectionTabs(sections);
+            }
+        };
+
+        const openMaxScoreModal = (monthKey) => {
+            currentMonthForMax = monthKey;
+            const maxKey = `${currentSchoolYear}_${monthKey}`;
+            const currentMax = currentSectionData.maxScores[maxKey] || '';
+            document.getElementById('max-score-month-title').textContent = MONTHS.find(m => m.key === monthKey).label;
+            document.getElementById('max-score-input').value = currentMax;
+            document.getElementById('max-score-modal').classList.remove('hidden');
+            setTimeout(() => document.getElementById('max-score-input').focus(), 100);
+        };
+        const handleSetMaxScore = async (e) => {
+            e.preventDefault();
+            const val = parseFloat(document.getElementById('max-score-input').value);
+            if (val > 0) {
+                const maxKey = `${currentSchoolYear}_${currentMonthForMax}`;
+                currentSectionData.maxScores[maxKey] = val;
+                await updateSectionData(currentSectionData);
+                document.getElementById('max-score-modal').classList.add('hidden');
+                loadDashboard(currentSectionId);
+            }
+        };
+
+        const openScoreModal = (studentId, monthKey, name) => {
+            const maxKey = `${currentSchoolYear}_${monthKey}`;
+            const max = currentSectionData.maxScores[maxKey];
+            if (!max) {
+                alert(`Please set the Perfect Score for ${MONTHS.find(m => m.key === monthKey).label} first.`);
+                return;
+            }
+            document.getElementById('score-modal').classList.remove('hidden');
+            document.getElementById('score-student-id').value = studentId;
+            document.getElementById('score-month-key').value = monthKey;
+            document.getElementById('score-student-name').textContent = name;
+            document.getElementById('score-month-label').textContent = MONTHS.find(m => m.key === monthKey).label;
+            document.getElementById('score-perfect-display').textContent = max;
+
+            const tx = db.transaction(['students'], 'readonly');
+            tx.objectStore('students').get(studentId).onsuccess = (e) => {
+                const s = e.target.result;
+                const raw = s.scores && s.scores[monthKey] !== undefined ? s.scores[monthKey] : '';
+                document.getElementById('raw-score-input').value = raw;
+                calculatePreview();
+            };
+            setTimeout(() => document.getElementById('raw-score-input').focus(), 100);
+        };
+
+        const calculatePreview = () => {
+            const raw = parseFloat(document.getElementById('raw-score-input').value);
+            const max = parseFloat(document.getElementById('score-perfect-display').textContent);
+            const preview = document.getElementById('grade-preview');
+
+            if (isNaN(raw)) {
+                preview.textContent = "1.0";
+                preview.className = "text-4xl font-bold text-slate-300 comic-font";
+                return;
+            }
+            let grade = 1 + ((raw / max) * 9);
+            if (grade > 10) grade = 10;
+            if (grade < 1) grade = 1;
+
+            preview.textContent = grade.toFixed(1);
+
+            if (grade >= 9) preview.className = "text-4xl font-bold text-emerald-500 comic-font";
+            else if (grade >= 7.5) preview.className = "text-4xl font-bold text-blue-500 comic-font";
+            else if (grade >= 5) preview.className = "text-4xl font-bold text-yellow-500 comic-font";
+            else preview.className = "text-4xl font-bold text-red-500 comic-font";
+        };
+
+        const handleSaveScore = async (e) => {
+            e.preventDefault();
+            const sid = document.getElementById('score-student-id').value;
+            const mkey = document.getElementById('score-month-key').value;
+            const raw = document.getElementById('raw-score-input').value;
+            if (raw !== '') {
+                await updateStudentScore(sid, mkey, raw);
+                document.getElementById('score-modal').classList.add('hidden');
+                loadDashboard(currentSectionId);
+            }
+        };
+
+        // --- Edit Student Logic ---
+        
+        const openEditStudentModal = (id, name, nickname) => {
+            document.getElementById('edit-student-id').value = id;
+            document.getElementById('edit-student-name').value = name;
+            document.getElementById('edit-student-nickname').value = nickname;
+            document.getElementById('edit-student-modal').classList.remove('hidden');
+        };
+
+        const handleEditStudent = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('edit-student-id').value;
+            const name = document.getElementById('edit-student-name').value.trim();
+            const nickname = document.getElementById('edit-student-nickname').value.trim();
+            
+            if (id && name) {
+                await updateStudent(id, name, nickname);
+                document.getElementById('edit-student-modal').classList.add('hidden');
+                loadDashboard(currentSectionId);
+            }
+        };
+
+        const openAddStudentModal = () => {
+            document.getElementById('add-modal-year-display').textContent = currentSchoolYear;
+            document.getElementById('add-modal').classList.remove('hidden');
+            document.getElementById('student-name-input').value = '';
+            document.getElementById('student-nickname-input').value = '';
+            setTimeout(() => document.getElementById('student-name-input').focus(), 100);
+        };
+
+        const handleAddStudent = async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('student-name-input').value.trim();
+            const nick = document.getElementById('student-nickname-input').value.trim();
+            if (name) {
+                await addStudent(name, nick, currentSectionId);
+                document.getElementById('add-modal').classList.add('hidden');
+                loadDashboard(currentSectionId);
+            }
+        };
+
+        const closeModal = (id) => document.getElementById(id).classList.add('hidden');
+
+        // --- Export ---
+        const exportData = async () => {
+            const sections = await getAllSections();
+            const tx = db.transaction(['students'], 'readonly');
+            const students = await new Promise(resolve => tx.objectStore('students').getAll().onsuccess = (e) => resolve(e.target.result));
+            
+            const data = { sections, students };
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'K3_Grading_Backup.json';
+            a.click();
+        };
+
+        // --- Restore Data ---
+        const handleRestore = (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    // Basic validation
+                    if (!data.sections || !Array.isArray(data.sections) || !data.students || !Array.isArray(data.students)) {
+                        alert("Invalid backup file format.");
+                        return;
+                    }
+
+                    if (!confirm("WARNING: This will overwrite ALL current data with the data from the backup file. This cannot be undone. Are you sure?")) {
+                        return;
+                    }
+
+                    const tx = db.transaction(['sections', 'students'], 'readwrite');
+                    const secStore = tx.objectStore('sections');
+                    const stuStore = tx.objectStore('students');
+
+                    // Clear existing data
+                    await new Promise((resolve) => {
+                        secStore.clear().onsuccess = () => resolve();
+                    });
+                    await new Promise((resolve) => {
+                        stuStore.clear().onsuccess = () => resolve();
+                    });
+
+                    // Restore sections
+                    data.sections.forEach(s => secStore.put(s));
+                    
+                    // Restore students
+                    data.students.forEach(s => stuStore.put(s));
+
+                    tx.oncomplete = () => {
+                        alert("Data restored successfully! The page will now reload.");
+                        location.reload();
+                    };
+
+                    tx.onerror = (err) => {
+                        console.error("Transaction error during restore:", err);
+                        alert("Error restoring data.");
+                    };
+
+                } catch (err) {
+                    console.error("Parse error:", err);
+                    alert("Error parsing the backup file. Please ensure it is a valid JSON file exported from this app.");
+                }
+            };
+            reader.readAsText(file);
+        };
+
+        // --- Print Logic ---
+        const printMonthReport = async (monthKey) => {
+            const students = await getStudents(currentSectionId);
+            const monthLabel = MONTHS.find(m => m.key === monthKey).label;
+            const maxKey = `${currentSchoolYear}_${monthKey}`;
+            const maxScore = currentSectionData.maxScores[maxKey] || 0;
+
+            const printArea = document.getElementById('print-area');
+            const mainContent = document.querySelector('main');
+            const header = document.querySelector('header');
+            const footer = document.querySelector('footer');
+            const mainPrintHeader = document.getElementById('main-print-header'); 
+            
+            // Re-define colors locally for print logic
+            const monthColors = [
+                'bg-rose-100 text-rose-900 border-rose-200',
+                'bg-fuchsia-100 text-fuchsia-900 border-fuchsia-200',
+                'bg-violet-100 text-violet-900 border-violet-200',
+                'bg-blue-100 text-blue-900 border-blue-200',
+                'bg-cyan-100 text-cyan-900 border-cyan-200',
+                'bg-emerald-100 text-emerald-900 border-emerald-200'
+            ];
+            
+            const monthIndex = MONTHS.findIndex(m => m.key === monthKey);
+            const mColor = monthColors[monthIndex] || 'bg-gray-100 text-gray-900 border-gray-200';
+
+            // Build Logo HTML if exists
+            let logoHtml = '';
+            if (cachedLogo) {
+                logoHtml = `<img src="${cachedLogo}" style="height: 80px; width: auto; margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto;">`;
+            }
+
+            let html = `
+                <div class="p-8 font-sans">
+                    <div class="text-center mb-6 border-b-2 border-gray-100 pb-4">
+                        ${logoHtml}
+                        <h1 class="text-3xl font-bold">Neerada School</h1>
+                        <h2 class="text-2xl font-bold mt-2">${currentSectionData.name} - ${monthLabel} Report</h2>
+                        <p class="text-gray-500">English Subject • Perfect Score: ${maxScore} • ${currentSchoolYear}</p>
+                    </div>
+                    <table class="w-full border-collapse border border-gray-300 text-sm">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="border border-gray-300 p-2 w-12 text-center bg-gray-200">#</th>
+                                <th class="border border-gray-300 p-2 text-left bg-orange-100 text-orange-900">Student Name</th>
+                                <th class="border border-gray-300 p-2 text-left w-32 bg-amber-100 text-amber-900">Nickname</th>
+                                <th class="border border-gray-300 p-2 w-24 text-center ${mColor}">Raw Score</th>
+                                <th class="border border-gray-300 p-2 w-24 text-center ${mColor}">Final Grade</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            students.forEach((s, idx) => {
+                const raw = s.scores[monthKey];
+                const nick = s.nickname || '-';
+                let rawDisplay = '-', gradeDisplay = '-';
+                
+                if (maxScore > 0 && raw !== undefined) {
+                    rawDisplay = raw;
+                    let g = 1 + ((raw/maxScore)*9);
+                    if(g>10)g=10; if(g<1)g=1;
+                    gradeDisplay = g.toFixed(1);
+                }
+
+                html += `
+                    <tr>
+                        <td class="border border-gray-300 p-2 text-center text-gray-500">${idx+1}</td>
+                        <td class="border border-gray-300 p-2 font-medium">${s.name}</td>
+                        <td class="border border-gray-300 p-2 text-gray-600">${nick}</td>
+                        <td class="border border-gray-300 p-2 text-center">${rawDisplay}</td>
+                        <td class="border border-gray-300 p-2 text-center font-bold">${gradeDisplay}</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                    </tbody>
+                </table>
+                <div class="mt-8 pt-4 border-t border-slate-300 text-center text-slate-500 text-xs">
+                    &copy; ${new Date().getFullYear()} Neerada School. All rights reserved.
+                </div>
+            </div>`;
+            printArea.innerHTML = html;
+            
+            // Toggle Visibility
+            mainContent.classList.add('hidden');
+            header.classList.add('hidden');
+            footer.classList.add('hidden');
+            
+            // Force Hide main print header properly by removing the class that forces it to show
+            if (mainPrintHeader) {
+                mainPrintHeader.classList.remove('print-only');
+                mainPrintHeader.classList.add('hidden');
+            }
+            
+            printArea.classList.remove('hidden');
+            
+            window.print();
+
+            // Revert
+            printArea.classList.add('hidden');
+            if (mainPrintHeader) {
+                mainPrintHeader.classList.remove('hidden');
+                mainPrintHeader.classList.add('print-only');
+            }
+            
+            mainContent.classList.remove('hidden');
+            header.classList.remove('hidden');
+            footer.classList.remove('hidden');
+        };
+
+        window.onload = initApp;
+
+    </script>
+</body>
+</html>
