@@ -75,7 +75,7 @@
                 <div>
                     <h1 class="text-2xl font-bold comic-font tracking-wide leading-none">Neerada School</h1>
                     <div class="flex items-center gap-2 mt-1">
-                        <p class="text-indigo-200 text-xs">K3 Grading App • Verson 2026</p>
+                        <p class="text-indigo-200 text-xs">K3 Grading App • Version 2026 </p>
                         
                         <!-- School Year Selector -->
                         <select id="school-year-select" onchange="changeSchoolYear()" class="bg-indigo-700 text-white text-xs border border-indigo-500 rounded px-2 py-0.5 focus:outline-none focus:ring-1 focus:ring-white">
@@ -299,8 +299,8 @@
                 <input type="hidden" id="score-student-id">
                 <input type="hidden" id="score-month-key">
                 
-                <label class="block text-sm font-bold text-slate-700 mb-2">Enter Raw Score</label>
-                <input type="number" step="0.1" id="raw-score-input" class="w-full p-4 text-3xl font-mono text-center rounded border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none mb-6" placeholder="0" oninput="calculatePreview()">
+                <label class="block text-sm font-bold text-slate-700 mb-2">Raw Score</label>
+                <input type="number" step="1" id="raw-score-input" class="w-full p-4 text-3xl font-mono text-center rounded border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none mb-6" placeholder="0" oninput="calculatePreview()">
 
                 <div class="text-center mb-6">
                     <div class="text-xs text-slate-400 uppercase">Grade Preview</div>
@@ -308,6 +308,29 @@
                 </div>
 
                 <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded font-bold shadow transition">Save Grade</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Student Notes -->
+    <div id="notes-modal" class="fixed inset-0 bg-black/50 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm no-print">
+        <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full p-6 h-[80vh] flex flex-col">
+            <div class="mb-4">
+                <h3 class="text-xl font-bold comic-font">Progress Notes</h3>
+                <p class="text-sm text-slate-500">Reading & Writing Observations for <span id="notes-student-name" class="font-bold text-indigo-600"></span></p>
+            </div>
+            
+            <form onsubmit="handleSaveNotes(event)" class="flex-grow flex flex-col overflow-hidden">
+                <input type="hidden" id="notes-student-id">
+                
+                <div id="notes-list-container" class="flex-grow overflow-y-auto pr-2 mb-4 space-y-4">
+                    <!-- Note fields injected by JS -->
+                </div>
+
+                <div class="flex justify-end gap-2 pt-4 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('notes-modal')" class="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded transition">Close</button>
+                    <button type="submit" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded font-medium shadow transition">Save Notes</button>
+                </div>
             </form>
         </div>
     </div>
@@ -460,6 +483,19 @@
                 const s = e.target.result;
                 if (!s.scores) s.scores = {};
                 s.scores[monthKey] = parseFloat(raw);
+                store.put(s);
+            };
+            return new Promise(r => tx.oncomplete = r);
+        };
+
+        const updateStudentNotes = (studentId, notes) => {
+            const tx = db.transaction(['students'], 'readwrite');
+            const store = tx.objectStore('students');
+            store.get(studentId).onsuccess = (e) => {
+                const s = e.target.result;
+                if (!s.notes) s.notes = {};
+                // Merge notes
+                Object.assign(s.notes, notes);
                 store.put(s);
             };
             return new Promise(r => tx.oncomplete = r);
@@ -685,7 +721,12 @@
                                     ${s.name}
                                </td>
                                <td class="p-3 text-slate-500 border-r border-slate-100 align-middle">
-                                    ${s.nickname || '-'}
+                                    <div class="flex items-center justify-between gap-2">
+                                        <span>${s.nickname || '-'}</span>
+                                        <button onclick="openNotesModal('${s.id}', '${s.name.replace(/'/g, "\\'")}')" class="text-slate-300 hover:text-indigo-500 transition p-1 rounded hover:bg-indigo-50 no-print" title="Progress Notes">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                        </button>
+                                    </div>
                                </td>`;
                 
                 MONTHS.forEach(m => {
@@ -702,10 +743,11 @@
                         if(gradeVal > 10) gradeVal = 10;
                         if(gradeVal < 1) gradeVal = 1;
                         
-                        const gradeFormatted = gradeVal.toFixed(1);
+                        const gradeFormatted = gradeVal.toFixed(1); // Usually keep 1 decimal for grade precision even if inputs are integers, but request said round off. Let's start with toFixed(0) based on request.
+                        
                         cellContent = `<div class="flex flex-col leading-tight">
-                                            <span class="font-bold text-lg">${gradeFormatted}</span>
-                                            <span class="text-[10px] opacity-70">(${raw}/${max})</span>
+                                            <span class="font-bold text-lg">${parseInt(gradeVal)}</span>
+                                            <span class="text-[10px] opacity-70">(${parseInt(raw)}/${max})</span>
                                            </div>`;
 
                         if (gradeVal >= 9) cellClass = 'bg-emerald-100 text-emerald-800 border-emerald-200';
@@ -895,7 +937,7 @@
             if (grade > 10) grade = 10;
             if (grade < 1) grade = 1;
 
-            preview.textContent = grade.toFixed(1);
+            preview.textContent = grade.toFixed(0);
 
             if (grade >= 9) preview.className = "text-4xl font-bold text-emerald-500 comic-font";
             else if (grade >= 7.5) preview.className = "text-4xl font-bold text-blue-500 comic-font";
@@ -913,6 +955,74 @@
                 document.getElementById('score-modal').classList.add('hidden');
                 loadDashboard(currentSectionId);
             }
+        };
+
+        // --- Notes Logic ---
+        
+        const openNotesModal = (studentId, studentName) => {
+            document.getElementById('notes-student-id').value = studentId;
+            document.getElementById('notes-student-name').textContent = studentName;
+            
+            const container = document.getElementById('notes-list-container');
+            container.innerHTML = '<div class="text-center py-4 text-slate-400">Loading notes...</div>';
+            
+            document.getElementById('notes-modal').classList.remove('hidden');
+            
+            const tx = db.transaction(['students'], 'readonly');
+            tx.objectStore('students').get(studentId).onsuccess = (e) => {
+                const s = e.target.result;
+                const notes = s.notes || {};
+                
+                let html = '';
+                MONTHS.forEach(m => {
+                    const baseKey = `${currentSchoolYear}_${m.key}`;
+                    const valRead = notes[baseKey + '_reading'] || '';
+                    const valWrite = notes[baseKey + '_writing'] || '';
+                    
+                    html += `
+                        <div class="bg-slate-50 p-3 rounded border border-slate-200">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded text-xs font-bold uppercase">${m.label}</span>
+                            </div>
+                            <table class="w-full border-collapse">
+                                <thead>
+                                    <tr>
+                                        <th class="text-[10px] text-slate-400 uppercase text-left w-1/2 px-1 pb-1">Reading Notes</th>
+                                        <th class="text-[10px] text-slate-400 uppercase text-left w-1/2 px-1 pb-1">Writing Notes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="px-1">
+                                            <textarea name="note_${baseKey}_reading" class="w-full p-2 text-sm border border-slate-300 rounded focus:ring-1 focus:ring-indigo-500 outline-none min-h-[50px] resize-none" placeholder="Reading...">${valRead}</textarea>
+                                        </td>
+                                        <td class="px-1">
+                                            <textarea name="note_${baseKey}_writing" class="w-full p-2 text-sm border border-slate-300 rounded focus:ring-1 focus:ring-indigo-500 outline-none min-h-[50px] resize-none" placeholder="Writing...">${valWrite}</textarea>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            };
+        };
+
+        const handleSaveNotes = async (e) => {
+            e.preventDefault();
+            const studentId = document.getElementById('notes-student-id').value;
+            const textareas = document.querySelectorAll('#notes-list-container textarea');
+            const notesUpdate = {};
+            
+            textareas.forEach(ta => {
+                const key = ta.name.replace('note_', '');
+                notesUpdate[key] = ta.value.trim();
+            });
+            
+            await updateStudentNotes(studentId, notesUpdate);
+            document.getElementById('notes-modal').classList.add('hidden');
+            alert('Notes saved successfully!');
         };
 
         // --- Edit Student Logic ---
@@ -1087,10 +1197,10 @@
                 let rawDisplay = '-', gradeDisplay = '-';
                 
                 if (maxScore > 0 && raw !== undefined) {
-                    rawDisplay = raw;
+                    rawDisplay = parseInt(raw); // Integer Display
                     let g = 1 + ((raw/maxScore)*9);
                     if(g>10)g=10; if(g<1)g=1;
-                    gradeDisplay = g.toFixed(1);
+                    gradeDisplay = g.toFixed(0); // Integer Display
                 }
 
                 html += `
