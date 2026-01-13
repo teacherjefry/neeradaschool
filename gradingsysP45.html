@@ -1,0 +1,1919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neerada Grading System</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- SheetJS for Excel Parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* Add Phetsarath OT font face */
+        @font-face {
+            font-family: 'Phetsarath OT';
+            src: local('Phetsarath OT');
+        }
+
+        body { font-family: 'Inter', 'Phetsarath OT', 'Noto Sans Lao', sans-serif; }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .custom-scroll::-webkit-scrollbar { height: 8px; width: 8px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .lao-text { font-family: 'Phetsarath OT', 'Noto Sans Lao', sans-serif; }
+
+        /* Custom Score Colors */
+        .bg-score-blue { background-color: #0dbbf4 !important; }
+        .bg-score-green { background-color: #0df46a !important; }
+
+        /* Vertical Headers Class */
+        .th-vertical {
+            vertical-align: bottom;
+            padding-bottom: 8px;
+            height: 180px;
+            white-space: nowrap;
+        }
+        
+        .th-vertical > div {
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: left; 
+            gap: 4px;
+        }
+
+        /* Sticky Header Logic */
+        thead.sticky-header th {
+            position: sticky;
+            top: 0;
+            z-index: 30;
+            background-color: #f8fafc; /* bg-slate-50 */
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        /* Corner cells need higher z-index to sit above row headers and col headers */
+        thead.sticky-header th.sticky-corner {
+            z-index: 50;
+        }
+
+        /* Print Styles */
+        @media print {
+            @page { margin: 10mm; } 
+            
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            
+            body { 
+                background: white; 
+                color: black; 
+                font-size: 10pt; 
+                -webkit-print-color-adjust: exact; 
+                print-color-adjust: exact; 
+                height: auto;
+            }
+
+            /* Remove shadows and overflow clipping for print */
+            .shadow-sm, .shadow-lg, .shadow-2xl { box-shadow: none !important; }
+            .overflow-hidden { overflow: visible !important; }
+            .custom-scroll { overflow: visible !important; height: auto !important; }
+            
+            /* Table Styling for Print */
+            table { 
+                border-collapse: collapse !important; 
+                width: 100%;
+                table-layout: auto;
+            }
+            
+            /* Consistent Borders - FORCE BLACK ON ALL CELLS */
+            th, td { 
+                padding: 4px !important; 
+                border: 1px solid #000 !important; 
+            }
+            
+            /* Specific fix for the sticky headers/columns borders */
+            .border-slate-300, .border-slate-200 { border-color: #000 !important; }
+
+            /* Handle Headers */
+            thead { display: table-header-group; }
+            tr { page-break-inside: avoid; }
+            
+            .th-vertical { height: 120px; } /* Slightly shorter for print */
+            
+            /* Remove Sticky positioning in print to avoid layout issues */
+            .sticky { position: static !important; }
+            thead.sticky-header th { position: static !important; box-shadow: none !important; }
+            
+            /* Adjust Name Column Width - Make it compact */
+            th:first-child, td:first-child {
+                min-width: 0 !important;
+                width: 1% !important; /* Force shrink to content */
+                white-space: nowrap !important;
+            }
+
+            /* --- PRINT COLOR CORRECTIONS --- */
+            
+            /* 1. Remove Row Highlights (Cursor/Selection) */
+            /* Force row background to transparent to hide user selection highlights */
+            tr { background-color: transparent !important; }
+            
+            /* 2. Enforce Data Colors (Match Screen) */
+            /* Force cell backgrounds to print even if row is transparent */
+            td.bg-score-green { background-color: #0df46a !important; -webkit-print-color-adjust: exact; }
+            td.bg-score-blue { background-color: #0dbbf4 !important; -webkit-print-color-adjust: exact; }
+            
+            /* Lao Avg (Light Purple) */
+            td.bg-purple-100 { background-color: #f3e8ff !important; -webkit-print-color-adjust: exact; }
+            /* Total (Light Yellow) */
+            td.bg-yellow-50 { background-color: #fefce8 !important; -webkit-print-color-adjust: exact; }
+            /* Average (Yellow) */
+            td.bg-yellow-200 { background-color: #fef08a !important; -webkit-print-color-adjust: exact; }
+            
+            /* Other Colors */
+            td.bg-orange-100 { background-color: #ffedd5 !important; -webkit-print-color-adjust: exact; }
+            td.bg-teal-100 { background-color: #ccfbf1 !important; -webkit-print-color-adjust: exact; }
+            
+            /* Explicitly define highlight colors for print to ensure manual row highlights appear */
+            .bg-yellow-100 { background-color: #fef9c3 !important; -webkit-print-color-adjust: exact; }
+            .bg-green-100 { background-color: #dcfce7 !important; -webkit-print-color-adjust: exact; }
+            .bg-red-100 { background-color: #fee2e2 !important; -webkit-print-color-adjust: exact; }
+            .bg-blue-100 { background-color: #dbeafe !important; -webkit-print-color-adjust: exact; }
+
+            /* Force text colors */
+            .text-red-600 { color: #dc2626 !important; } 
+            .text-green-900 { color: #14532d !important; }
+            .text-blue-900 { color: #1e3a8a !important; }
+            .text-purple-900 { color: #581c87 !important; }
+            .text-yellow-900 { color: #713f12 !important; }
+            .text-black { color: #000 !important; }
+            
+            /* Hide inputs, show text */
+            input.score-input { display: none !important; }
+            span.score-print { display: inline-block !important; width: 100%; text-align: center; color: black !important; }
+            
+            /* Footer */
+            footer.print-footer {
+                display: block;
+                position: static; /* Appears at end of flow (Last Page) */
+                width: 100%;
+                text-align: center;
+                font-size: 8pt;
+                color: #000;
+                padding-top: 10px;
+                margin-top: 10px;
+                border-top: 1px solid #000;
+                background: white;
+                page-break-inside: avoid;
+            }
+        }
+        
+        .print-only { display: none; }
+        span.score-print { display: none; } /* Default hidden on screen */
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col">
+
+    <!-- Header & Navigation -->
+    <header id="main-header" class="bg-blue-900 text-white shadow-lg sticky top-0 z-30 no-print flex-none transition-colors duration-300">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="h-16 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="bg-white/10 p-2 rounded-lg overflow-hidden w-10 h-10 flex items-center justify-center">
+                        <img id="header-logo" src="" alt="" class="w-full h-full object-contain hidden">
+                        <i id="header-icon" data-lucide="graduation-cap" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-baseline gap-2">
+                            <h1 class="text-lg font-bold tracking-tight" id="header-class-name">My Class</h1>
+                            <span class="text-sm font-normal text-blue-200 border-l border-blue-700 pl-2">
+                                School Year (ສົກຮຽນ) <span id="header-year-display"></span>
+                            </span>
+                        </div>
+                        <p class="text-xs text-blue-200">Grading System</p>
+                    </div>
+                </div>
+                
+                <!-- Desktop Navigation Tabs -->
+                <nav class="hidden md:flex items-center gap-2">
+                    <button onclick="switchTab('dashboard')" id="tab-dashboard" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-white/10 text-blue-100">
+                        <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard
+                    </button>
+                    <button onclick="switchTab('class')" id="tab-class" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-white/10 text-blue-100">
+                        <i data-lucide="table" class="w-4 h-4"></i> Class View
+                    </button>
+                    <button onclick="switchTab('settings')" id="tab-settings" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-white/10 text-blue-100">
+                        <i data-lucide="settings" class="w-4 h-4"></i> Settings
+                    </button>
+                </nav>
+            </div>
+        </div>
+        <!-- Mobile Nav -->
+        <div class="md:hidden flex justify-around border-t border-blue-800 py-2">
+            <button onclick="switchTab('dashboard')" class="text-xs flex flex-col items-center gap-1 text-blue-200"><i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dash</button>
+            <button onclick="switchTab('class')" class="text-xs flex flex-col items-center gap-1 text-blue-200"><i data-lucide="table" class="w-5 h-5"></i> Class</button>
+            <button onclick="switchTab('settings')" class="text-xs flex flex-col items-center gap-1 text-blue-200"><i data-lucide="settings" class="w-5 h-5"></i> Set</button>
+        </div>
+    </header>
+
+    <!-- Notification Toast -->
+    <div id="notification" class="fixed top-24 right-6 z-[60] px-6 py-4 rounded-lg shadow-lg hidden items-center gap-3 transition-all duration-300 transform translate-x-full no-print">
+        <i id="notif-icon" data-lucide="check-circle" class="w-5 h-5"></i>
+        <p id="notif-msg" class="font-medium">Message</p>
+    </div>
+
+    <!-- Main Content Area -->
+    <main id="app" class="flex-grow w-full mx-auto p-4 flex flex-col">
+        <!-- Dynamic Content Injected Here -->
+    </main>
+
+    <!-- Screen Footer -->
+    <footer class="bg-white border-t border-slate-200 py-4 no-print flex-none">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-400">
+            &copy; Neerada <span id="footer-year"></span>. All rights reserved.
+        </div>
+    </footer>
+
+    <!-- Print Settings Modal -->
+    <div id="print-settings-modal" class="fixed inset-0 bg-black/30 z-[70] hidden items-center justify-center p-4 no-print">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden fade-in">
+            <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <h3 class="text-lg font-bold text-slate-800">Print Options</h3>
+                <button onclick="closeModal('print-settings-modal')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="p-6 space-y-6">
+                <!-- Orientation -->
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Orientation</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="setPrintOrientation('portrait')" id="btn-portrait" class="flex flex-col items-center justify-center p-3 rounded-lg border-2 border-slate-200 hover:border-blue-500 hover:bg-blue-50 transition-all text-slate-600">
+                            <i data-lucide="file" class="w-6 h-6 mb-1"></i>
+                            <span class="text-xs font-medium">Portrait</span>
+                        </button>
+                        <button onclick="setPrintOrientation('landscape')" id="btn-landscape" class="flex flex-col items-center justify-center p-3 rounded-lg border-2 border-blue-600 bg-blue-50 text-blue-700 transition-all">
+                            <i data-lucide="file-minus" class="w-6 h-6 mb-1"></i>
+                            <span class="text-xs font-medium">Landscape</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Scale -->
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Scale: <span id="scale-value" class="text-blue-600">100%</span></label>
+                    <input type="range" id="print-scale" min="50" max="100" value="100" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                    <div class="flex justify-between text-xs text-slate-400 mt-1">
+                        <span>50%</span>
+                        <span>Fit to Page</span>
+                        <span>100%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="p-5 border-t border-slate-100 bg-slate-50 flex justify-end">
+                <button onclick="executePrint()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium flex items-center gap-2">
+                    <i data-lucide="printer" class="w-4 h-4"></i> Print
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manage Students Modal -->
+    <div id="manage-students-modal" class="fixed inset-0 bg-black/30 z-50 hidden items-center justify-center p-4 no-print">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden fade-in flex flex-col max-h-[90vh]">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <div>
+                    <h3 class="text-xl font-bold text-slate-800">Manage Students</h3>
+                    <p class="text-sm text-slate-500">Add, edit, or remove students from <span id="manage-modal-class-name" class="font-bold"></span></p>
+                </div>
+                <button onclick="closeModal('manage-students-modal')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-6 h-6"></i></button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto custom-scroll space-y-8">
+                <!-- Add Single -->
+                <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                    <label class="block text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
+                        <i data-lucide="user-plus" class="w-4 h-4"></i> Add Single Student
+                    </label>
+                    <div class="flex flex-col md:flex-row gap-3">
+                        <input type="text" id="new-student-name" placeholder="Full Name (ຊື່ແລະນາມສະກຸນ)" class="flex-1 border border-slate-300 rounded-lg p-2.5 outline-none focus:border-blue-500 lao-text">
+                        <input type="text" id="new-student-nick" placeholder="Nickname (ຊື່ນ້ອຍ)" class="md:w-40 border border-slate-300 rounded-lg p-2.5 outline-none focus:border-blue-500 lao-text">
+                        <button onclick="addStudent()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors">Add</button>
+                    </div>
+                </div>
+
+                <!-- Bulk Add -->
+                <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                    <label class="block text-sm font-bold text-slate-700 mb-2 flex items-center gap-2">
+                        <i data-lucide="users" class="w-4 h-4"></i> Bulk Add (CSV Style)
+                    </label>
+                    <p class="text-xs text-slate-500 mb-3">Format: <code>Name, Nickname</code> (One student per line)</p>
+                    <textarea id="bulk-students" rows="4" class="w-full border border-slate-300 rounded-lg p-3 text-sm mb-3 outline-none focus:border-blue-500 custom-scroll lao-text" placeholder="Somchai Vong, Chai&#10;Noy Phommasone, Noy"></textarea>
+                    <button onclick="addBulkStudents()" class="bg-slate-700 hover:bg-slate-800 text-white px-6 py-2.5 rounded-lg w-full font-medium transition-colors">Process Bulk List</button>
+                </div>
+
+                <!-- Current Roster -->
+                <div>
+                    <div class="flex justify-between items-center mb-4">
+                        <h4 class="text-sm font-bold text-slate-400 uppercase tracking-wider">Current Roster</h4>
+                        <button onclick="deleteAllStudents()" class="text-red-600 text-xs hover:underline flex items-center gap-1 font-medium bg-red-50 px-3 py-1.5 rounded-full border border-red-100">
+                            <i data-lucide="trash-2" class="w-3 h-3"></i> Delete All
+                        </button>
+                    </div>
+                    <div id="roster-list-container" class="bg-slate-50 rounded-xl border border-slate-200 max-h-60 overflow-y-auto custom-scroll p-2">
+                        <!-- Roster injected here -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+                <button onclick="closeModal('manage-students-modal'); loadClassData(); render();" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 px-6 py-2 rounded-lg font-medium">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Modal -->
+    <div id="upload-modal" class="fixed inset-0 bg-black/30 z-50 hidden items-center justify-center p-4 no-print">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden fade-in">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+                <h3 class="text-xl font-bold text-slate-800 lao-text">ອັບໂຫລດຄະແນນ (Upload Grades)</h3>
+                <button onclick="closeModal('upload-modal')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="p-8">
+                <p class="text-sm text-slate-500 mb-4 lao-text">
+                    Importing for <strong id="modal-month" class="text-blue-600">September</strong> <strong id="modal-year" class="text-blue-600"></strong>.
+                </p>
+                <div id="drop-zone" class="border-2 border-dashed border-slate-300 hover:border-blue-400 rounded-xl p-8 flex flex-col items-center justify-center text-center transition-colors cursor-pointer bg-slate-50 hover:bg-blue-50">
+                    <div class="bg-blue-100 p-4 rounded-full mb-4"><i data-lucide="upload" class="w-8 h-8 text-blue-600"></i></div>
+                    <p class="font-medium text-slate-700 lao-text">Click or Drag File Here</p>
+                    <input type="file" id="file-input" class="hidden" accept=".xlsx,.xls,.csv">
+                </div>
+                <div class="mt-6 flex justify-between items-center">
+                     <button onclick="downloadTemplate()" class="text-sm text-blue-600 hover:underline flex items-center gap-1 lao-text">
+                        <i data-lucide="download" class="w-4 h-4"></i> Download Template
+                    </button>
+                    <button onclick="closeModal('upload-modal')" class="text-slate-500 hover:text-slate-800 text-sm font-medium lao-text">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Grades Modal -->
+    <div id="edit-grades-modal" class="fixed inset-0 bg-black/30 z-50 hidden items-center justify-center p-4 no-print">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden fade-in flex flex-col max-h-[90vh]">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+                <h3 class="text-xl font-bold text-slate-800 lao-text">Edit Scores</h3>
+                <button onclick="closeModal('edit-grades-modal')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="px-6 pt-4 pb-2 bg-slate-50 border-b border-slate-100">
+                <div class="flex items-center justify-between">
+                    <p class="text-sm text-slate-500">Editing <span id="edit-student-name" class="font-bold text-slate-800"></span></p>
+                    <div class="flex items-center gap-2">
+                        <label class="text-xs font-medium text-slate-500">Month:</label>
+                        <select id="edit-modal-month-select" class="text-sm border border-slate-300 rounded px-2 py-1 outline-none focus:border-blue-500 lao-text bg-white">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="p-6 overflow-y-auto custom-scroll">
+                <div id="grades-input-container" class="space-y-3">
+                    <!-- Inputs injected here -->
+                </div>
+            </div>
+            <div class="p-6 border-t border-slate-100 flex justify-end gap-3">
+                <button onclick="closeModal('edit-grades-modal')" class="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
+                <button onclick="saveEditedGrades()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">Save Scores</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Student Modal -->
+    <div id="edit-student-modal" class="fixed inset-0 bg-black/30 z-50 hidden items-center justify-center p-4 no-print">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden fade-in">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+                <h3 class="text-lg font-bold">Edit Student</h3>
+                <button onclick="closeModal('edit-student-modal')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <input type="hidden" id="edit-student-id">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
+                    <input type="text" id="edit-student-fullname" class="w-full border border-slate-300 rounded-lg p-2">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Nickname</label>
+                    <input type="text" id="edit-student-nickname" class="w-full border border-slate-300 rounded-lg p-2">
+                </div>
+            </div>
+            <div class="p-6 border-t border-slate-100 flex justify-between items-center">
+                <button onclick="deleteStudentFromModal()" class="text-red-500 hover:text-red-700 text-sm font-medium flex items-center gap-1">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i> Delete
+                </button>
+                <div class="flex gap-2">
+                    <button onclick="closeModal('edit-student-modal')" class="px-4 py-2 text-slate-600">Cancel</button>
+                    <button onclick="saveStudentDetails()" class="bg-blue-600 text-white px-4 py-2 rounded-lg">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Logic -->
+    <script>
+        // --- CONSTANTS ---
+        const MONTHS = ['September', 'October', 'November', 'December', 'January', 'February', 'March', 'April', 'May', 'June'];
+        const SEM1_MONTHS = ['September', 'October', 'November', 'December', 'January'];
+        const SEM2_MONTHS = ['February', 'March', 'April', 'May'];
+        
+        const MONTH_DISPLAY_MAP = {
+            'September': 'ກັນຍາ (Sep)', 'October': 'ຕຸລາ (Oct)', 'November': 'ພະຈິກ (Nov)', 'December': 'ທັນວາ (Dec)',
+            'January': 'ມັງກອນ (Jan)', 'February': 'ກຸມພາ (Feb)', 'March': 'ມີນາ (Mar)', 'April': 'ເມສາ (Apr)',
+            'May': 'ພຶດສະພາ (May)', 'June': 'ມິຖຸນາ (Jun)',
+            'Semester 1': 'ພາກຮຽນ 1 (Sem 1)',
+            'Semester 2': 'ພາກຮຽນ 2 (Sem 2)',
+            'All Year': 'ສະເລ່ຍ ມົດ​ປີ​ (All Year)'
+        };
+
+        const LAO_SUB_SUBJECTS = ['Reading', 'Rewriting', 'Speaking', 'Writing', 'Dictation'];
+        const OTHER_SUBJECTS = ['Mathematics', 'Science', 'Values Education', 'Music', 'Art', 'Physical Education', 'Handicraft', 'Civic Education', 'English'];
+        const ALL_SUBJECTS = [...LAO_SUB_SUBJECTS, ...OTHER_SUBJECTS];
+
+        const SUBJECT_DISPLAY_MAP = {
+            'Reading': 'ຫັດອ່ານ READING',
+            'Rewriting': 'ຫັດກ່າຍ REWRITING',
+            'Speaking': 'ຟັງ+ເວົ້າ SPEAKING',
+            'Writing': 'ຫັດແຕ່ງ WRITING',
+            'Dictation': 'ຂຽນທວາຍ DICTATION',
+            'LaoTotal': 'ລວມພາສາລາວ LAO TOTAL',
+            'LaoAvg': 'ສະເລ່ຍພາສາລາວ LAO AVG',
+            'Mathematics': 'ຄະນິດສາດ MATH',
+            'Science': 'ວິທະຍາສາດ SCIENCE',
+            'Values Education': 'ຄຸນສົມບັດ VALUES',
+            'Music': 'ສິ​ລະ​ດົນ​ຕີ MUSIC',
+            'Art': 'ສີລະປະກຳ ART',
+            'Physical Education': 'ພາລະສຶກສາ PE',
+            'Handicraft': 'ຫັດຖະກຳ HANDICRAFT',
+            'Civic Education': 'ສັງຄົມສືກສາ CIVIC',
+            'English': 'ພາສາອັງກິດ ENGLISH',
+            'GrandTotal': 'ຄະແນນລວມ TOTAL',
+            'GrandAvg': 'ສະເລ່ຍ AVERAGE',
+            'Rank': 'ຈັດທີ RANK',
+            'Grade': 'ເກດ GRADE',
+            'Result': 'ຜົນການສອບເສັງ'
+        };
+
+        const SUBJECT_TO_EXCEL_MAP = {
+            'Reading': 'ຫັດອ່ານ READING', 'Rewriting': 'ຫັດກ່າຍ REWRITING', 'Speaking': 'ຟັງ + ເວົ້າ ຫຼື ບົດທ່ອງຂື້ນໃຈ SPEAKING & LISTENING',
+            'Writing': 'ຫັດແຕ່ງ WRITING', 'Dictation': 'ຂຽນທວາຍ+ໄວຍາກອນ DICTATION', 'Mathematics': 'ຄະນິດສາດ MATHEMATICS',
+            'Science': 'ວິທະຍາສາດ ແລະ ສິ່ງແວດລ້ອມ SCIENCE', 'Values Education': 'ຄຸນສົມບັດສຶກສາ VALUES EDUCATION',
+            'Music': 'ສິ​ລະ​ດົນ​ຕີ MUSIC', 'Art': 'ສີລະປະກຳ ART', 'Physical Education': 'ພາລະສຶກສາ PHYSICAL EDUCATION',
+            'Handicraft': 'ຫັດຖະກຳ HANDICRAFT', 'Civic Education': 'ສັງຄົມສືກສາ CIVIC EDUCATION', 'English': 'ພາສາອັງກິດ ENGLISH'
+        };
+
+        // --- STATE MANAGEMENT ---
+        const state = {
+            activeTab: 'dashboard', 
+            view: 'class', 
+            className: 'Grade 4',
+            schoolLogo: null,
+            selectedStudent: null,
+            currentMonth: 'September',
+            currentYear: '2025-2026', 
+            availableYears: [], 
+            students: [],
+            grades: {}, 
+            studentHistory: {},
+            sortKey: 'rank', // 'rank' or 'name'
+            sortDesc: true,
+            editModalMonth: 'September', // Temp state for modal
+            theme: 'blue', // Default theme
+            printOrientation: 'landscape',
+            printScale: 100
+        };
+
+        const THEMES = {
+            blue: { name: 'Ocean Blue', header: 'bg-blue-900', btn: 'bg-blue-600', btnHover: 'hover:bg-blue-700', activeTab: 'bg-white/20' },
+            emerald: { name: 'Emerald Green', header: 'bg-emerald-900', btn: 'bg-emerald-600', btnHover: 'hover:bg-emerald-700', activeTab: 'bg-white/20' },
+            violet: { name: 'Royal Violet', header: 'bg-violet-900', btn: 'bg-violet-600', btnHover: 'hover:bg-violet-700', activeTab: 'bg-white/20' },
+            amber: { name: 'Warm Amber', header: 'bg-amber-900', btn: 'bg-amber-600', btnHover: 'hover:bg-amber-700', activeTab: 'bg-white/20' },
+            slate: { name: 'Corporate Slate', header: 'bg-slate-900', btn: 'bg-slate-600', btnHover: 'hover:bg-slate-700', activeTab: 'bg-white/20' }
+        };
+
+        // --- INDEXEDDB MANAGER ---
+        class DBManager {
+            constructor() {
+                this.dbName = 'NeeradaSchoolDB_v4'; 
+                this.version = 1;
+                this.db = null;
+            }
+
+            async open() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(this.dbName, this.version);
+                    request.onupgradeneeded = (event) => {
+                        const db = event.target.result;
+                        if (!db.objectStoreNames.contains('students')) {
+                            db.createObjectStore('students', { keyPath: 'id' });
+                        }
+                        if (!db.objectStoreNames.contains('grades')) {
+                            const gradeStore = db.createObjectStore('grades', { keyPath: 'id' });
+                            gradeStore.createIndex('studentId', 'studentId', { unique: false });
+                            gradeStore.createIndex('month', 'month', { unique: false });
+                        }
+                        if (!db.objectStoreNames.contains('settings')) db.createObjectStore('settings', { keyPath: 'key' });
+                    };
+                    request.onsuccess = (event) => {
+                        this.db = event.target.result;
+                        resolve(this.db);
+                    };
+                    request.onerror = (event) => reject(event.target.error);
+                });
+            }
+
+            async put(storeName, data) {
+                if (!this.db) await this.open();
+                return new Promise((resolve) => {
+                    const tx = this.db.transaction([storeName], 'readwrite');
+                    const store = tx.objectStore(storeName);
+                    store.put(data);
+                    tx.oncomplete = () => resolve();
+                });
+            }
+
+            async getAll(storeName) {
+                if (!this.db) await this.open();
+                return new Promise((resolve) => {
+                    const tx = this.db.transaction([storeName], 'readonly');
+                    const store = tx.objectStore(storeName);
+                    const req = store.getAll();
+                    req.onsuccess = () => resolve(req.result);
+                });
+            }
+
+            async getGradesByMonthAndYear(month, year) {
+                if (!this.db) await this.open();
+                return new Promise((resolve) => {
+                    const tx = this.db.transaction(['grades'], 'readonly');
+                    const store = tx.objectStore('grades');
+                    const req = store.getAll();
+                    req.onsuccess = () => {
+                        const allGrades = req.result;
+                        const filtered = allGrades.filter(g => g.month === month && g.year === year); 
+                        resolve(filtered);
+                    };
+                });
+            }
+
+            async getAllGradesForStudent(studentId) {
+                if (!this.db) await this.open();
+                return new Promise((resolve) => {
+                    const tx = this.db.transaction(['grades'], 'readonly');
+                    const index = tx.objectStore('grades').index('studentId');
+                    const req = index.getAll(IDBKeyRange.only(studentId));
+                    req.onsuccess = () => resolve(req.result);
+                });
+            }
+            
+            async saveGrade(studentId, month, year, scores) {
+                if (!this.db) await this.open();
+                return new Promise((resolve) => {
+                    const tx = this.db.transaction(['grades'], 'readwrite');
+                    const store = tx.objectStore('grades');
+                    const id = `${studentId}_${month}_${year}`;
+                    const record = { id, studentId, month, year, scores, updatedAt: new Date().toISOString() };
+                    store.put(record);
+                    tx.oncomplete = () => resolve(record);
+                });
+            }
+
+            async delete(storeName, key) {
+                if (!this.db) await this.open();
+                return new Promise((resolve) => {
+                    const tx = this.db.transaction([storeName], 'readwrite');
+                    const store = tx.objectStore(storeName);
+                    store.delete(key);
+                    tx.oncomplete = () => resolve();
+                });
+            }
+
+            async clear(storeName) {
+                if (!this.db) await this.open();
+                return new Promise((resolve) => {
+                    const tx = this.db.transaction([storeName], 'readwrite');
+                    const store = tx.objectStore(storeName);
+                    store.clear();
+                    tx.oncomplete = () => resolve();
+                });
+            }
+        }
+
+        const db = new DBManager();
+
+        function normalizeText(text) {
+            if (!text) return '';
+            return String(text).toLowerCase().replace(/\s+/g, ' ').trim();
+        }
+
+        function generateYearList() {
+            const years = [];
+            const startYear = 2025;
+            const endYear = 2030;
+            for (let y = startYear; y <= endYear; y++) {
+                years.push(`${y}-${y + 1}`);
+            }
+            return years;
+        }
+
+        async function initApp() {
+            await db.open();
+            state.availableYears = generateYearList();
+            
+            const settings = await db.getAll('settings');
+            const classSetting = settings.find(s => s.key === 'className');
+            const logoSetting = settings.find(s => s.key === 'logo');
+            
+            // Restore last active session if available
+            const lastYear = settings.find(s => s.key === 'lastYear');
+            const lastMonth = settings.find(s => s.key === 'lastMonth');
+            const themeSetting = settings.find(s => s.key === 'theme');
+
+            if (classSetting) state.className = classSetting.value;
+            if (logoSetting) state.schoolLogo = logoSetting.value;
+            if (lastYear) state.currentYear = lastYear.value;
+            if (lastMonth) state.currentMonth = lastMonth.value;
+            if (themeSetting) state.theme = themeSetting.value;
+            
+            updateTheme(); // Apply theme on load
+            updateHeader();
+            try {
+                await loadClassData();
+            } catch (e) { console.error(e); }
+            render();
+        }
+
+        function updateTheme() {
+            const theme = THEMES[state.theme] || THEMES.blue;
+            const header = document.getElementById('main-header');
+            
+            // Reset base classes for header background
+            header.className = `text-white shadow-lg sticky top-0 z-30 no-print flex-none transition-colors duration-300 ${theme.header}`;
+            
+            // We'll also update dynamic button colors via inline style or re-rendering
+            // Since we re-render often, we can use state.theme in render functions
+        }
+
+        function updateHeader() {
+            const hClass = document.getElementById('header-class-name');
+            if(hClass) hClass.innerText = state.className;
+            
+            const hYear = document.getElementById('header-year-display');
+            if(hYear) hYear.innerText = state.currentYear;
+            
+            const fYear = document.getElementById('footer-year');
+            if(fYear) fYear.innerText = state.currentYear;
+            
+            const logoImg = document.getElementById('header-logo');
+            const logoIcon = document.getElementById('header-icon');
+            if (state.schoolLogo && logoImg && logoIcon) {
+                logoImg.src = state.schoolLogo;
+                logoImg.classList.remove('hidden');
+                logoIcon.classList.add('hidden');
+            } else if (logoImg && logoIcon) {
+                logoImg.classList.add('hidden');
+                logoIcon.classList.remove('hidden');
+            }
+        }
+
+        async function loadClassData() {
+            const allStudents = await db.getAll('students');
+            state.students = allStudents.filter(s => s.year === state.currentYear).sort((a,b) => a.name.localeCompare(b.name));
+            
+            const allGrades = await db.getAll('grades');
+            const relevantGrades = allGrades.filter(g => g.year === state.currentYear);
+
+            if (state.currentMonth === 'Semester 1') {
+                state.grades = {};
+                state.students.forEach(s => {
+                    const sGrades = relevantGrades.filter(g => g.studentId === s.id && SEM1_MONTHS.includes(g.month));
+                    const agg = {};
+                    ALL_SUBJECTS.forEach(sub => {
+                        let sum = 0;
+                        SEM1_MONTHS.forEach(m => {
+                            const monthRecord = sGrades.find(g => g.month === m);
+                            if(monthRecord && monthRecord.scores && monthRecord.scores[sub] !== undefined) {
+                                sum += monthRecord.scores[sub];
+                            }
+                        });
+                        agg[sub] = sum / 5;
+                    });
+                    state.grades[s.id] = agg;
+                });
+            } else if (state.currentMonth === 'Semester 2') {
+                state.grades = {};
+                state.students.forEach(s => {
+                    const sGrades = relevantGrades.filter(g => g.studentId === s.id && SEM2_MONTHS.includes(g.month));
+                    const agg = {};
+                    ALL_SUBJECTS.forEach(sub => {
+                        let sum = 0;
+                        SEM2_MONTHS.forEach(m => {
+                            const monthRecord = sGrades.find(g => g.month === m);
+                            if(monthRecord && monthRecord.scores && monthRecord.scores[sub] !== undefined) {
+                                sum += monthRecord.scores[sub];
+                            }
+                        });
+                        // Divide by 4 months (Feb, Mar, Apr, May)
+                        agg[sub] = sum / 4;
+                    });
+                    state.grades[s.id] = agg;
+                });
+            } else if (state.currentMonth === 'All Year') {
+                state.grades = {};
+                state.students.forEach(s => {
+                    const sGrades = relevantGrades.filter(g => g.studentId === s.id);
+                    const agg = {};
+                    ALL_SUBJECTS.forEach(sub => {
+                        // Calc Sem 1
+                        let sum1 = 0;
+                        SEM1_MONTHS.forEach(m => {
+                            const monthRecord = sGrades.find(g => g.month === m);
+                            if(monthRecord && monthRecord.scores && monthRecord.scores[sub] !== undefined) sum1 += monthRecord.scores[sub];
+                        });
+                        const sem1 = sum1 / 5;
+
+                        // Calc Sem 2
+                        let sum2 = 0;
+                        SEM2_MONTHS.forEach(m => {
+                            const monthRecord = sGrades.find(g => g.month === m);
+                            if(monthRecord && monthRecord.scores && monthRecord.scores[sub] !== undefined) sum2 += monthRecord.scores[sub];
+                        });
+                        const sem2 = sum2 / 4;
+
+                        // All Year = (Sem 1 + Sem 2) / 2
+                        agg[sub] = (sem1 + sem2) / 2;
+                    });
+                    state.grades[s.id] = agg;
+                });
+            } else {
+                state.grades = {};
+                relevantGrades.filter(g => g.month === state.currentMonth).forEach(g => {
+                    state.grades[g.studentId] = g.scores;
+                });
+            }
+        }
+
+        function toggleSort(key) {
+            if (state.sortKey === key) {
+                state.sortDesc = !state.sortDesc;
+            } else {
+                state.sortKey = key;
+                state.sortDesc = key === 'rank'; // Default desc for rank, asc for name usually, but let's toggle
+                if (key === 'name') state.sortDesc = false;
+            }
+            render();
+        }
+
+        function switchTab(tabName) {
+            state.activeTab = tabName;
+            if (tabName === 'class') {
+                if(state.view === 'student') {
+                    state.view = 'class';
+                    state.selectedStudent = null;
+                }
+            }
+            render();
+        }
+
+        async function navigateToStudent(studentId) {
+            state.selectedStudent = state.students.find(s => s.id === studentId);
+            state.activeTab = 'class';
+            state.view = 'student';
+            const allGrades = await db.getAllGradesForStudent(studentId);
+            state.studentHistory = {};
+            
+            // Filter history by current selected year
+            allGrades.filter(g => g.year === state.currentYear)
+                     .forEach(g => { state.studentHistory[g.month] = g.scores; });
+            render();
+        }
+
+        async function toggleHighlight(id) {
+            const s = state.students.find(x => x.id === id);
+            if(!s) return;
+            
+            // Highlight logic per month
+            const highlightKey = `${state.currentMonth}_${state.currentYear}`;
+            if (!s.highlights) s.highlights = {};
+            
+            const colors = ['', 'bg-yellow-100', 'bg-green-100', 'bg-red-100', 'bg-blue-100'];
+            const currentColor = s.highlights[highlightKey] || '';
+            const currentIdx = colors.indexOf(currentColor);
+            const nextColor = colors[(currentIdx + 1) % colors.length];
+            
+            s.highlights[highlightKey] = nextColor;
+            
+            await db.put('students', s);
+            render(); 
+        }
+
+        function toggleRowHighlight(btn) {
+            const tr = btn.closest('tr');
+            if (tr) {
+                // Cycle colors: none -> yellow -> green -> none
+                if (tr.classList.contains('bg-yellow-50')) {
+                    tr.classList.remove('bg-yellow-50');
+                    tr.classList.add('bg-green-50');
+                } else if (tr.classList.contains('bg-green-50')) {
+                    tr.classList.remove('bg-green-50');
+                } else {
+                    tr.classList.add('bg-yellow-50');
+                }
+            }
+        }
+
+        async function quickUpdateScore(studentId, subject, value) {
+            const isCalculated = ['Semester 1', 'Semester 2', 'All Year'].includes(state.currentMonth);
+            if (isCalculated) return; 
+            const val = parseFloat(value);
+            // if (isNaN(val)) return; // Allow empty string to clear? Let's check. 
+            // If val is NaN (empty), we might want to set it to undefined or delete it?
+            // For now, let's keep it simple: if valid number, update.
+
+            // 1. Update local state
+            if (!state.grades[studentId]) state.grades[studentId] = {};
+            
+            if (isNaN(val)) {
+                delete state.grades[studentId][subject];
+            } else {
+                state.grades[studentId][subject] = val;
+            }
+
+            // 2. Save to DB
+            await db.saveGrade(studentId, state.currentMonth, state.currentYear, state.grades[studentId]);
+            
+            // 3. Auto-Calculate for this student row
+            const studentGrades = state.grades[studentId];
+            
+            // Calc Lao
+            let laoSum = 0;
+            let laoCount = 0;
+            LAO_SUB_SUBJECTS.forEach(sub => {
+                if (studentGrades[sub] !== undefined) {
+                    laoSum += studentGrades[sub];
+                    laoCount++;
+                }
+            });
+            const laoAvg = laoCount === 5 ? (laoSum / 5) : 0;
+            
+            // Calc Grand
+            let grandTotal = laoAvg;
+            let grandCount = (laoCount === 5 ? 1 : 0); // Count Lao Avg as one "score" for total? No, Total is sum of scores.
+            // Wait, logic in calculateRowData is: 
+            // grandTotal = laoAvg; 
+            // then add OTHER_SUBJECTS.
+            
+            OTHER_SUBJECTS.forEach(sub => {
+                if (studentGrades[sub] !== undefined) {
+                    grandTotal += studentGrades[sub];
+                    grandCount++; // Tracking for completeness? Not really needed for simple sum.
+                }
+            });
+            
+            const averagePoints = grandTotal / 10;
+            
+            // Calc Result
+            let result = '-';
+            const scores = [];
+             LAO_SUB_SUBJECTS.forEach(sub => { if(studentGrades[sub] !== undefined) scores.push(studentGrades[sub]) });
+             OTHER_SUBJECTS.forEach(sub => { if(studentGrades[sub] !== undefined) scores.push(studentGrades[sub]) });
+            
+            if (scores.length > 0) {
+                const minScore = Math.min(...scores);
+                const countBelowOrEqual4 = scores.filter(s => s <= 4).length;
+
+                if (minScore >= 7) {
+                    result = 'ຮອບດ້ານ';
+                } else if (countBelowOrEqual4 === 0) {
+                    result = 'ສົມບູນ';
+                } else if (countBelowOrEqual4 === 1) {
+                    result = 'ອະນຸໂລມ';
+                } else { 
+                    result = 'ຕົກ';
+                }
+            }
+
+            // Update DOM Elements
+            const laoTotalEl = document.getElementById(`lt-${studentId}`);
+            if(laoTotalEl) laoTotalEl.innerText = (laoCount === 5 ? laoSum : '-');
+            
+            const laoAvgEl = document.getElementById(`la-${studentId}`);
+            if(laoAvgEl) laoAvgEl.innerText = (laoCount === 5 ? laoAvg.toFixed(1) : '-');
+            
+            const grandTotalEl = document.getElementById(`gt-${studentId}`);
+            if(grandTotalEl) grandTotalEl.innerText = (grandTotal > 0 ? grandTotal.toFixed(1) : '-'); // Basic check
+            
+            const grandAvgEl = document.getElementById(`ga-${studentId}`);
+            if(grandAvgEl) grandAvgEl.innerText = (averagePoints > 0 ? averagePoints.toFixed(2) : '-');
+            
+            const resultEl = document.getElementById(`res-${studentId}`);
+            if(resultEl) resultEl.innerText = result;
+        }
+        
+        async function resetMonthScores() {
+             if(!confirm(`Are you sure you want to RESET all scores for ${state.currentMonth}? This cannot be undone.`)) return;
+             
+             // 1. Delete from DB
+             const allGrades = await db.getAll('grades');
+             const toDelete = allGrades.filter(g => g.month === state.currentMonth && g.year === state.currentYear);
+             
+             for (const g of toDelete) {
+                 await db.delete('grades', g.id);
+             }
+             
+             // 2. Clear Local State
+             state.students.forEach(s => {
+                 if(state.grades[s.id]) delete state.grades[s.id];
+             });
+             state.grades = {}; // Or refresh properly
+             
+             // 3. Refresh
+             showNotification("Scores reset for " + state.currentMonth);
+             await loadClassData();
+             render();
+        }
+
+        function navigateToClassList() {
+            state.activeTab = 'class';
+            state.view = 'class';
+            state.selectedStudent = null;
+            render();
+        }
+
+        function render() {
+            const app = document.getElementById('app');
+            app.innerHTML = '';
+            
+            ['dashboard', 'class', 'settings'].forEach(t => {
+                const el = document.getElementById(`tab-${t}`);
+                if(el) {
+                    if (state.activeTab === t) {
+                        el.classList.add('bg-white/20', 'text-white', 'shadow-inner');
+                        el.classList.remove('text-blue-100', 'hover:bg-white/10');
+                    } else {
+                        el.classList.remove('bg-white/20', 'text-white', 'shadow-inner');
+                        el.classList.add('text-blue-100', 'hover:bg-white/10');
+                    }
+                }
+            });
+
+            if (state.activeTab === 'dashboard') {
+                app.innerHTML = renderDashboard();
+            } else if (state.activeTab === 'class') {
+                if (state.view === 'student') {
+                    app.innerHTML = renderStudentView();
+                } else {
+                    app.innerHTML = renderClassView();
+                    const selMonth = document.getElementById('month-select');
+                    if(selMonth) selMonth.addEventListener('change', async (e) => {
+                        state.currentMonth = e.target.value;
+                        await db.put('settings', { key: 'lastMonth', value: state.currentMonth });
+                        await loadClassData();
+                        render();
+                    });
+                    
+                    const selYear = document.getElementById('year-select');
+                    if(selYear) selYear.addEventListener('change', async (e) => {
+                        state.currentYear = e.target.value;
+                        await db.put('settings', { key: 'lastYear', value: state.currentYear });
+                        updateHeader();
+                        await loadClassData();
+                        render();
+                    });
+                }
+            } else if (state.activeTab === 'settings') {
+                app.innerHTML = renderSettingsPage();
+                document.getElementById('setting-class-name').value = state.className;
+            }
+            try { lucide.createIcons(); } catch(e) {}
+        }
+
+        function renderDashboard() {
+            const totalStudents = state.students.length;
+            let totalAvg = 0;
+            let countWithGrades = 0;
+            let passCount = 0;
+            const studentPerformances = [];
+
+            state.students.forEach(s => {
+                const scores = state.grades[s.id] || {};
+                const scoreVals = Object.values(scores);
+                if (scoreVals.length > 0) {
+                    const avg = scoreVals.reduce((a,b)=>a+b,0) / scoreVals.length;
+                    totalAvg += avg;
+                    countWithGrades++;
+                    studentPerformances.push({ ...s, avg: avg });
+                    if (avg >= 5) passCount++;
+                }
+            });
+            
+            const passRate = countWithGrades > 0 ? ((passCount / countWithGrades) * 100).toFixed(1) + '%' : 'N/A';
+            studentPerformances.sort((a,b) => b.avg - a.avg);
+            const topStudents = studentPerformances.slice(0, 3);
+
+            return `
+                <div class="fade-in max-w-5xl mx-auto flex-grow flex flex-col">
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-bold text-slate-800">Welcome back!</h2>
+                        <p class="text-slate-500">Overview for <span class="font-bold text-blue-600">${state.className}</span> - ${MONTH_DISPLAY_MAP[state.currentMonth]} (${state.currentYear})</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                            <div class="flex items-center gap-4">
+                                <div class="p-3 bg-blue-100 text-blue-600 rounded-lg"><i data-lucide="users" class="w-6 h-6"></i></div>
+                                <div><p class="text-sm text-slate-500 font-medium">Total Students</p><p class="text-2xl font-bold text-slate-800">${totalStudents}</p></div>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                            <div class="flex items-center gap-4">
+                                <div class="p-3 bg-emerald-100 text-emerald-600 rounded-lg"><i data-lucide="bar-chart-3" class="w-6 h-6"></i></div>
+                                <div><p class="text-sm text-slate-500 font-medium">Passing Rate (ຜ່ານ)</p><p class="text-2xl font-bold text-slate-800">${passRate}</p></div>
+                            </div>
+                        </div>
+                         <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                            <div class="flex items-center gap-4">
+                                <div class="p-3 bg-purple-100 text-purple-600 rounded-lg"><i data-lucide="calendar" class="w-6 h-6"></i></div>
+                                <div><p class="text-sm text-slate-500 font-medium">Current Month</p><p class="text-lg font-bold text-slate-800">${state.currentMonth}</p></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+                            <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2"><i data-lucide="trophy" class="w-5 h-5 text-amber-500"></i> Top Performers (ນັກຮຽນເກ່ງ)</h3>
+                            ${topStudents.length > 0 ? `<div class="space-y-4">${topStudents.map((s, idx) => `
+                                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-xs">${idx + 1}</div>
+                                        <div><p class="font-medium text-slate-700">${s.name}</p><p class="text-xs text-slate-400">Avg: ${s.avg.toFixed(1)}</p></div>
+                                    </div>
+                                    <i data-lucide="award" class="w-5 h-5 ${idx===0?'text-amber-500':idx===1?'text-slate-400':'text-orange-700'}"></i>
+                                </div>
+                            `).join('')}</div>` : `<p class="text-slate-400 text-center py-4">No grades recorded yet.</p>`}
+                        </div>
+                        <div class="bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl shadow-sm p-6 text-white">
+                            <h3 class="text-lg font-bold mb-2">Quick Actions</h3>
+                            <div class="grid grid-cols-3 gap-4 mt-6">
+                                <button onclick="switchTab('class')" class="bg-white/10 hover:bg-white/20 p-4 rounded-lg flex flex-col items-center gap-2 transition-colors"><i data-lucide="table" class="w-6 h-6"></i><span class="text-sm font-medium">View Class List</span></button>
+                                <button onclick="switchTab('class'); openModal('upload-modal')" class="bg-white/10 hover:bg-white/20 p-4 rounded-lg flex flex-col items-center gap-2 transition-colors"><i data-lucide="upload-cloud" class="w-6 h-6"></i><span class="text-sm font-medium">Upload Grades</span></button>
+                                <button onclick="switchTab('settings')" class="bg-white/10 hover:bg-white/20 p-4 rounded-lg flex flex-col items-center gap-2 transition-colors"><i data-lucide="user-plus" class="w-6 h-6"></i><span class="text-sm font-medium">Add Students</span></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSettingsPage() {
+            return `
+                <div class="fade-in max-w-2xl mx-auto bg-white rounded-xl shadow-sm border border-slate-200">
+                    <div class="p-6 border-b border-slate-100">
+                        <h2 class="text-2xl font-bold text-slate-800">App Settings</h2>
+                    </div>
+                    <div class="p-8 space-y-10">
+                        
+                        <!-- Theme Selection -->
+                        <div>
+                            <h4 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">App Theme</h4>
+                            <div class="flex flex-wrap gap-4">
+                                ${Object.keys(THEMES).map(key => `
+                                    <button onclick="setTheme('${key}')" class="group relative w-12 h-12 rounded-full shadow-sm ring-2 ring-offset-2 transition-all ${state.theme === key ? 'ring-slate-400 scale-110' : 'ring-transparent hover:scale-105'} ${THEMES[key].header}">
+                                        ${state.theme === key ? '<div class="absolute inset-0 flex items-center justify-center"><i data-lucide="check" class="w-5 h-5 text-white"></i></div>' : ''}
+                                    </button>
+                                `).join('')}
+                            </div>
+                            <p class="mt-2 text-sm text-slate-500">Selected: <span class="font-medium text-slate-800">${THEMES[state.theme].name}</span></p>
+                        </div>
+
+                        <!-- Logo -->
+                        <div class="border-t border-slate-100 pt-8">
+                            <h4 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">School Branding</h4>
+                             <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-2">Class Name</label>
+                                <input type="text" id="setting-class-name" value="${state.className}" class="w-full border border-slate-300 rounded-lg p-2.5 mb-4">
+                                
+                                <label class="block text-sm font-medium text-slate-700 mb-2">School Logo</label>
+                                <div class="flex items-center gap-4">
+                                    ${state.schoolLogo ? `<img src="${state.schoolLogo}" class="w-16 h-16 object-contain border border-slate-200 rounded-lg p-1">` : '<div class="w-16 h-16 bg-slate-100 rounded-lg flex items-center justify-center text-slate-300"><i data-lucide="image" class="w-6 h-6"></i></div>'}
+                                    <input type="file" id="setting-logo-input" accept="image/*" class="text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                                </div>
+                             </div>
+                        </div>
+
+                        <!-- Backup & Restore -->
+                        <div class="border-t border-slate-100 pt-8">
+                            <h4 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Data Management</h4>
+                            <div class="flex flex-col sm:flex-row gap-4">
+                                <button onclick="exportData()" class="flex-1 flex items-center justify-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-100 px-4 py-3 rounded-lg hover:bg-emerald-100 transition-colors">
+                                    <i data-lucide="download" class="w-4 h-4"></i> Backup Data (Export)
+                                </button>
+                                <label class="flex-1 flex items-center justify-center gap-2 bg-amber-50 text-amber-700 border border-amber-100 px-4 py-3 rounded-lg cursor-pointer hover:bg-amber-100 transition-colors">
+                                    <i data-lucide="upload" class="w-4 h-4"></i> Restore Data (Import)
+                                    <input type="file" onchange="importData(this)" class="hidden" accept=".json">
+                                </label>
+                            </div>
+                            <p class="mt-2 text-xs text-slate-400">Save your complete database to a file or restore from a previous backup.</p>
+                        </div>
+                    </div>
+                    <div class="p-6 bg-slate-50 border-t border-slate-200 rounded-b-xl flex justify-end">
+                        <button onclick="saveSettings()" class="bg-slate-800 hover:bg-slate-900 text-white px-8 py-3 rounded-lg font-medium shadow-md transition-all hover:shadow-lg transform active:scale-95">Save Changes</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function setTheme(themeKey) {
+            state.theme = themeKey;
+            await db.put('settings', { key: 'theme', value: themeKey });
+            updateTheme();
+            render(); // Re-render to update checkmarks
+        }
+
+        // --- Roster Rendering Helper ---
+        function renderRosterList() {
+            if (state.students.length === 0) return '<p class="text-center text-slate-400 text-sm py-8">No students enrolled yet.</p>';
+            return state.students.map(s => `
+                <div class="flex justify-between items-center p-3 hover:bg-white rounded-lg transition-colors border-b border-slate-100 last:border-0 group">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-xs font-bold text-slate-500">${s.name.charAt(0)}</div>
+                        <div>
+                            <p class="text-sm font-medium text-slate-700">${s.name}</p>
+                            <p class="text-xs text-slate-400">${s.nickname || ''}</p>
+                        </div>
+                    </div>
+                    <button onclick="deleteStudent('${s.id}')" class="text-slate-400 hover:text-red-600 p-2 opacity-0 group-hover:opacity-100 transition-opacity bg-white rounded-full shadow-sm border border-slate-100 hover:border-red-200" title="Delete Student"><i data-lucide="trash" class="w-4 h-4"></i></button>
+                </div>
+            `).join('');
+        }
+
+        function openManageStudentsModal() {
+            document.getElementById('manage-modal-class-name').innerText = state.className;
+            document.getElementById('roster-list-container').innerHTML = renderRosterList();
+            openModal('manage-students-modal');
+        }
+        
+        // --- PRINT LOGIC ---
+        function openPrintModal() {
+            // Update scale text
+            document.getElementById('scale-value').innerText = state.printScale + '%';
+            document.getElementById('print-scale').value = state.printScale;
+            
+            // Set orientation active state
+            document.getElementById('btn-portrait').classList.remove('border-blue-600', 'bg-blue-50', 'text-blue-700');
+            document.getElementById('btn-landscape').classList.remove('border-blue-600', 'bg-blue-50', 'text-blue-700');
+            
+            if(state.printOrientation === 'portrait') {
+                document.getElementById('btn-portrait').classList.add('border-blue-600', 'bg-blue-50', 'text-blue-700');
+            } else {
+                document.getElementById('btn-landscape').classList.add('border-blue-600', 'bg-blue-50', 'text-blue-700');
+            }
+            
+            // Listener for scale slider
+            document.getElementById('print-scale').oninput = function() {
+                state.printScale = this.value;
+                document.getElementById('scale-value').innerText = this.value + '%';
+            }
+            
+            openModal('print-settings-modal');
+        }
+        
+        function setPrintOrientation(orient) {
+            state.printOrientation = orient;
+            document.getElementById('btn-portrait').classList.remove('border-blue-600', 'bg-blue-50', 'text-blue-700');
+            document.getElementById('btn-landscape').classList.remove('border-blue-600', 'bg-blue-50', 'text-blue-700');
+            document.getElementById(`btn-${orient}`).classList.add('border-blue-600', 'bg-blue-50', 'text-blue-700');
+        }
+        
+        function executePrint() {
+            // 1. Inject Style for @page and body zoom
+            const styleId = 'dynamic-print-style';
+            let styleEl = document.getElementById(styleId);
+            if (!styleEl) {
+                styleEl = document.createElement('style');
+                styleEl.id = styleId;
+                document.head.appendChild(styleEl);
+            }
+            
+            const zoomVal = state.printScale / 100;
+            
+            styleEl.innerHTML = `
+                @media print {
+                    @page { 
+                        size: ${state.printOrientation};
+                        margin: 5mm;
+                    }
+                    body {
+                        zoom: ${zoomVal};
+                    }
+                }
+            `;
+            
+            // 2. Close Modal
+            closeModal('print-settings-modal');
+            
+            // 3. Print
+            setTimeout(() => window.print(), 300);
+        }
+
+        // --- STUDENT VIEW ---
+        function renderStudentView() {
+            const s = state.selectedStudent;
+            if (!s) return '<div class="p-8 text-center">Student not found</div>';
+            
+            const getScore = (month, subject) => {
+                // Calculated Columns Helper
+                if (month === 'Semester 1') {
+                    let sum = 0;
+                    SEM1_MONTHS.forEach(m => { const sc = state.studentHistory[m] ? state.studentHistory[m][subject] : undefined; if(sc !== undefined) sum += sc; });
+                    return sum / 5;
+                }
+                if (month === 'Semester 2') {
+                    let sum = 0;
+                    SEM2_MONTHS.forEach(m => { const sc = state.studentHistory[m] ? state.studentHistory[m][subject] : undefined; if(sc !== undefined) sum += sc; });
+                    return sum / 4;
+                }
+                if (month === 'All Year') {
+                    const s1 = getScore('Semester 1', subject);
+                    const s2 = getScore('Semester 2', subject);
+                    return (s1 + s2) / 2;
+                }
+                const scores = state.studentHistory[month];
+                if (!scores) return null;
+                return scores[subject];
+            };
+
+            const displayMonths = [...MONTHS];
+            displayMonths.splice(5, 0, 'Semester 1'); // After Jan
+            displayMonths.splice(11, 0, 'Semester 2', 'All Year'); // After June (now index 10)
+
+            const renderRow = (subject, isBold = false) => {
+                const cells = displayMonths.map(m => {
+                    const score = getScore(m, subject);
+                    const display = score !== undefined && score !== null ? score.toFixed(isBold || ['Semester 1', 'Semester 2', 'All Year'].includes(m) ? 1 : 0).replace(/\.0$/, '') : '-';
+                    const colorClass = (score !== null && score <= 4) ? 'text-red-600 font-bold bg-green-200' : '';
+                    const cellBg = isBold ? 'bg-slate-50' : '';
+                    const isCalc = ['Semester 1', 'Semester 2', 'All Year'].includes(m);
+                    const finalBg = isCalc ? 'bg-blue-50 font-bold' : cellBg;
+                    
+                    return `<td class="p-2 border border-slate-300 text-center text-sm ${colorClass} ${finalBg}">${display}</td>`;
+                }).join('');
+
+                const subNameParts = SUBJECT_DISPLAY_MAP[subject].split(' ');
+                const mainName = subNameParts[0];
+                const subName = subNameParts.length > 1 ? subNameParts.slice(1).join(' ') : '';
+                
+                const labelClass = isBold ? 'font-bold text-slate-800' : 'font-medium text-slate-700';
+
+                return `
+                    <tr class="hover:bg-slate-50 group">
+                        <td class="p-2 border border-slate-300 sticky left-0 bg-white shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] min-w-[150px] z-10 flex justify-between items-center group-hover:bg-slate-50">
+                            <div class="${labelClass}">
+                                <div class="lao-text">${mainName}</div>
+                                <div class="text-xs text-slate-400 font-normal">${subName}</div>
+                            </div>
+                            <button onclick="toggleRowHighlight(this)" class="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-orange-400 transition-opacity"><i data-lucide="paint-bucket" class="w-3 h-3"></i></button>
+                        </td>
+                        ${cells}
+                    </tr>
+                `;
+            };
+
+            // Calculate Lao Average for each month
+            const laoAvgRow = (() => {
+                const cells = displayMonths.map(m => {
+                    let avg = null;
+                    if (['Semester 1', 'Semester 2', 'All Year'].includes(m)) {
+                          let totalSum = 0;
+                          LAO_SUB_SUBJECTS.forEach(sub => {
+                             totalSum += getScore(m, sub);
+                          });
+                          avg = totalSum / 5;
+                    } else {
+                        const scores = state.studentHistory[m];
+                        if(scores) {
+                            let sum = 0, count = 0;
+                            LAO_SUB_SUBJECTS.forEach(sub => {
+                                if(scores[sub] !== undefined) { sum += scores[sub]; count++; }
+                            });
+                            avg = count === 5 ? (sum/5) : null;
+                        }
+                    }
+                    const display = avg !== null ? avg.toFixed(1) : '-';
+                    const isCalc = ['Semester 1', 'Semester 2', 'All Year'].includes(m);
+                    return `<td class="p-2 border border-slate-300 text-center text-sm font-bold ${isCalc ? 'bg-blue-100 text-blue-900' : 'bg-teal-50 text-teal-900'}">${display}</td>`;
+                }).join('');
+                
+                return `
+                    <tr class="bg-teal-50/30">
+                        <td class="p-2 border border-slate-300 sticky left-0 bg-teal-50 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] min-w-[150px] z-10">
+                            <div class="font-bold text-teal-900">
+                                <div class="lao-text">ສະເລ່ຍພາສາລາວ</div>
+                                <div class="text-xs font-normal">LAO AVERAGE</div>
+                            </div>
+                        </td>
+                        ${cells}
+                    </tr>
+                `;
+            })();
+
+            const monthHeaders = displayMonths.map(m => {
+                let label = m.substring(0,3);
+                if(m === 'Semester 1') label = 'ພາກ 1<br>Sem 1';
+                if(m === 'Semester 2') label = 'ພາກ 2<br>Sem 2';
+                if(m === 'All Year') label = 'ມົດ​ປີ​<br>Year';
+                return `<th class="p-2 border border-slate-300 text-xs font-bold ${['Semester 1','Semester 2','All Year'].includes(m) ? 'bg-blue-50 text-blue-800' : 'bg-slate-50'} text-center min-w-[70px] whitespace-nowrap">${label}</th>`
+            }).join('');
+
+            return `
+                <div class="fade-in max-w-full mx-auto bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full print:shadow-none print:border-none print:overflow-visible print:h-auto">
+                    <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 no-print">
+                        <div class="flex items-center gap-4">
+                            <button onclick="navigateToClassList()" class="p-2 hover:bg-white rounded-full transition-colors text-slate-500"><i data-lucide="arrow-left" class="w-5 h-5"></i></button>
+                            <div>
+                                <h2 class="text-xl font-bold text-slate-800">${s.name}</h2>
+                                <p class="text-sm text-slate-500">${s.nickname || ''} • ${state.className}</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="openPrintModal()" class="flex items-center gap-2 bg-slate-100 text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-200 text-sm"><i data-lucide="printer" class="w-4 h-4"></i> Print</button>
+                            <button onclick="openEditGradesModal()" class="flex items-center gap-2 ${THEMES[state.theme].btn} ${THEMES[state.theme].btnHover} text-white px-4 py-2 rounded-lg text-sm transition-colors"><i data-lucide="edit-3" class="w-4 h-4"></i> Edit Scores</button>
+                        </div>
+                    </div>
+                    <!-- Print Only Header for Student View -->
+                    <div class="hidden print-only mb-6 text-center">
+                         ${state.schoolLogo ? `<img src="${state.schoolLogo}" class="h-16 mx-auto mb-2 object-contain">` : ''}
+                        <h2 class="text-2xl font-bold text-slate-800">${s.name}</h2>
+                        <p class="text-sm text-slate-500">
+                            ${s.nickname || ''} • ${state.className} • 
+                            School Year (ສົກຮຽນ) <span class="font-bold">${state.currentYear}</span>
+                        </p>
+                    </div>
+
+                    <div class="p-0 overflow-auto custom-scroll flex-1 print:overflow-visible print:h-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="sticky-header z-20">
+                                <tr>
+                                    <th class="p-2 border border-slate-300 bg-slate-50 z-30 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] text-sm font-bold text-slate-700 min-w-[150px]">Subject</th>
+                                    ${monthHeaders}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="bg-slate-100"><td colspan="${displayMonths.length + 1}" class="p-1 px-2 text-xs font-bold text-slate-500 uppercase tracking-wider sticky left-0 border border-slate-300">Lao Language</td></tr>
+                                ${LAO_SUB_SUBJECTS.map(sub => renderRow(sub)).join('')}
+                                ${laoAvgRow}
+                                <tr class="bg-slate-100"><td colspan="${displayMonths.length + 1}" class="p-1 px-2 text-xs font-bold text-slate-500 uppercase tracking-wider sticky left-0 border border-slate-300">General Subjects</td></tr>
+                                ${OTHER_SUBJECTS.map(sub => renderRow(sub)).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- CALCULATIONS FOR CLASS VIEW ---
+        function calculateRowData(student) {
+            const grades = state.grades[student.id] || {};
+            let laoTotal = 0, laoCount = 0;
+            LAO_SUB_SUBJECTS.forEach(sub => { if(grades[sub] !== undefined) { laoTotal += grades[sub]; laoCount++; } });
+            const laoAvg = laoCount === 5 ? (laoTotal / 5) : 0;
+            let grandTotal = laoAvg;
+            OTHER_SUBJECTS.forEach(sub => { if(grades[sub] !== undefined) grandTotal += grades[sub]; });
+            const averagePoints = grandTotal / 10;
+            return { grades, laoTotal: laoCount > 0 ? laoTotal : null, laoAvg: laoCount > 0 ? laoAvg.toFixed(1) : null, grandTotal: grandTotal > 0 ? grandTotal.toFixed(1) : null, averagePoints: averagePoints > 0 ? averagePoints.toFixed(2) : null, rawAvg: averagePoints };
+        }
+
+        function renderClassView() {
+            const hasStudents = state.students.length > 0;
+            let processedStudents = state.students.map(s => ({ ...s, ...calculateRowData(s) }));
+            const isCalculatedView = ['Semester 1', 'Semester 2', 'All Year'].includes(state.currentMonth);
+            
+            // Calculate Rank logic logic
+            const scoreMap = processedStudents.map(s => s.rawAvg || 0);
+            const sortedScores = [...scoreMap].sort((a,b) => b - a);
+            
+            const rows = processedStudents.sort((a,b) => {
+                if (state.sortKey === 'name') {
+                    return state.sortDesc ? b.name.localeCompare(a.name) : a.name.localeCompare(b.name);
+                } else {
+                    return state.sortDesc ? (b.rawAvg || 0) - (a.rawAvg || 0) : (a.rawAvg || 0) - (b.rawAvg || 0);
+                }
+            }).map((student, index) => {
+                // Compute rank
+                const rank = (student.rawAvg > 0) ? sortedScores.indexOf(student.rawAvg) + 1 : '-';
+                
+                // Result Logic Update:
+                // all subjects >= 7 -> 'ຮອບດ້ານ'
+                // any subject 5 or 6 (implies no scores <= 4, otherwise caught below) -> 'ສົມບູນ'
+                // exactly one subject <= 4 -> 'ອະນຸໂລມ'
+                // more than one subject <= 4 -> 'ຕົກ'
+                
+                let result = '-';
+                if (Object.keys(student.grades).length > 0) {
+                    const scores = [];
+                    // Add Lao Sub Subjects
+                    LAO_SUB_SUBJECTS.forEach(sub => { if(student.grades[sub] !== undefined) scores.push(student.grades[sub]) });
+                    // Add Other Subjects
+                    OTHER_SUBJECTS.forEach(sub => { if(student.grades[sub] !== undefined) scores.push(student.grades[sub]) });
+                    
+                    if (scores.length > 0) {
+                        const minScore = Math.min(...scores);
+                        const countBelowOrEqual4 = scores.filter(s => s <= 4).length;
+
+                        if (minScore >= 7) {
+                            result = 'ຮອບດ້ານ'; // All subjects >= 7
+                        } else if (countBelowOrEqual4 === 0) {
+                            // If nobody is <= 4, and not excellent, they are Complete (5-6 range usually)
+                            result = 'ສົມບູນ';
+                        } else if (countBelowOrEqual4 === 1) {
+                            result = 'ອະນຸໂລມ'; // One subject <= 4
+                        } else { 
+                            result = 'ຕົກ'; // More than 1 subject <= 4
+                        }
+                    }
+                }
+                
+                // Highlight Logic per month
+                const highlightKey = `${state.currentMonth}_${state.currentYear}`;
+                const highlightClass = student.highlights && student.highlights[highlightKey] ? student.highlights[highlightKey] : '';
+                let rowClass = `border-b border-slate-100 group transition-colors hover:bg-opacity-80 ${highlightClass || 'hover:bg-blue-50'}`;
+
+                return `
+                    <tr class="${rowClass}">
+                        <td class="px-1 py-0.5 sticky left-0 z-40 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] text-black font-bold border border-slate-300 text-center bg-white ${highlightClass || 'group-hover:bg-blue-50'}">
+                            <span class="text-sm text-slate-500 font-medium">${index + 1}</span>
+                        </td>
+                        <td class="px-1 py-0.5 sticky left-[30px] z-40 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] text-black font-bold border border-slate-300 text-left bg-white ${highlightClass || 'group-hover:bg-blue-50'}">
+                            <div class="flex items-center justify-center gap-2 cursor-pointer p-1 overflow-hidden" onclick="navigateToStudent('${student.id}')">
+                                <span class="text-sm font-bold text-slate-800 whitespace-nowrap" title="${student.name}">${student.name}</span>
+                            </div>
+                        </td>
+                        <td class="px-1 py-0.5 text-center text-sm font-bold text-black border border-slate-300">
+                            ${student.nickname || '-'}
+                        </td>
+                        <td class="p-0 text-center w-14 no-print whitespace-nowrap border border-slate-300">
+                             <button onclick="toggleHighlight('${student.id}')" class="text-slate-400 hover:text-orange-500 mr-1" title="Highlight Row"><i data-lucide="paint-bucket" class="w-3 h-3"></i></button>
+                             ${!isCalculatedView ? `<button onclick="openEditStudentModal('${student.id}')" class="text-slate-400 hover:text-blue-600"><i data-lucide="edit-2" class="w-3 h-3"></i></button>` : ''}
+                        </td>
+                        ${LAO_SUB_SUBJECTS.map(sub => {
+                            const val = student.grades[sub];
+                            // Apply new coloring logic
+                            const isLow = (typeof val === 'number' && val <= 4); // Light Green
+                            const isMedium = (typeof val === 'number' && val >= 5 && val < 7); // Light Blue
+                            
+                            // Apply styling based on logic
+                            const color = isLow ? 'bg-score-green text-black font-bold' : (isMedium ? 'bg-score-blue text-black' : 'text-black');
+                            
+                            const displayVal = val !== undefined ? (isCalculatedView ? val.toFixed(1).replace(/\.0$/, '') : val) : '';
+                            const inputHtml = isCalculatedView ? 
+                                `<span class="text-xs font-medium">${displayVal}</span>` :
+                                `<input type="number" step="0.5" class="score-input w-full h-full text-center bg-transparent focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none text-xs font-medium" value="${displayVal}" onchange="quickUpdateScore('${student.id}', '${sub}', this.value)">`;
+                            
+                            return `<td class="p-0 border border-slate-300 text-center ${color}">
+                                ${inputHtml}
+                                <span class="score-print text-xs font-medium ${isLow ? 'font-bold' : ''}">${displayVal !== '' ? displayVal : '-'}</span>
+                            </td>`
+                        }).join('')}
+                        <td id="lt-${student.id}" class="px-1 py-0.5 text-center text-xs font-bold bg-yellow-50 text-orange-900 border border-slate-300 min-w-[80px]">${student.laoTotal !== null ? (isCalculatedView ? parseFloat(student.laoTotal).toFixed(1) : student.laoTotal) : '-'}</td>
+                        <td id="la-${student.id}" class="px-1 py-0.5 text-center text-xs font-bold bg-purple-100 text-purple-900 border border-slate-300 min-w-[80px]">${student.laoAvg !== null ? student.laoAvg : '-'}</td>
+                        ${OTHER_SUBJECTS.map(sub => {
+                            const val = student.grades[sub];
+                            // Apply new coloring logic
+                            const isLow = (typeof val === 'number' && val <= 4); // Light Green
+                            const isMedium = (typeof val === 'number' && val >= 5 && val < 7); // Light Blue
+                            
+                            const color = isLow ? 'bg-score-green text-black font-bold' : (isMedium ? 'bg-score-blue text-black' : 'text-black');
+                            
+                            const displayVal = val !== undefined ? (isCalculatedView ? val.toFixed(1).replace(/\.0$/, '') : val) : '';
+                            const inputHtml = isCalculatedView ? 
+                                `<span class="text-xs font-medium">${displayVal}</span>` :
+                                `<input type="number" step="0.5" class="score-input w-full h-full text-center bg-transparent focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none text-xs font-medium" value="${displayVal}" onchange="quickUpdateScore('${student.id}', '${sub}', this.value)">`;
+
+                            return `<td class="p-0 border border-slate-300 text-center ${color}">
+                                ${inputHtml}
+                                <span class="score-print text-xs font-medium ${isLow ? 'font-bold' : ''}">${displayVal !== '' ? displayVal : '-'}</span>
+                            </td>`
+                        }).join('')}
+                        <td id="gt-${student.id}" class="px-1 py-0.5 text-center text-xs font-bold bg-yellow-50 text-yellow-900 border border-slate-300 min-w-[80px]">${student.grandTotal !== null ? (isCalculatedView ? parseFloat(student.grandTotal).toFixed(1) : student.grandTotal) : '-'}</td>
+                        <td id="ga-${student.id}" class="px-1 py-0.5 text-center text-xs font-bold bg-yellow-200 text-yellow-900 border border-slate-300 min-w-[80px]">${student.averagePoints !== null ? student.averagePoints : '-'}</td>
+                        <td class="px-1 py-0.5 text-center text-xs font-bold text-slate-800 border border-slate-300">${rank}</td>
+                        <td id="res-${student.id}" class="px-1 py-0.5 text-center text-sm font-bold text-black border border-slate-300 min-w-[100px]">${result}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Construct Dropdown Options
+            const dropdownMonths = [...MONTHS];
+            dropdownMonths.splice(5, 0, 'Semester 1'); // After Jan
+            dropdownMonths.push('Semester 2', 'All Year'); // After June
+
+            return `
+                <div class="fade-in h-full flex flex-col flex-1 max-w-[95%] xl:max-w-7xl mx-auto w-full" id="class-table-container">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4 no-print shrink-0">
+                        <div class="flex items-center gap-3">
+                            <div class="relative">
+                                <select id="year-select" class="pl-8 pr-4 py-2 bg-white border border-slate-200 rounded-lg shadow-sm focus:outline-none text-sm font-medium">
+                                    ${state.availableYears.map(y => `<option value="${y}" ${state.currentYear === y ? 'selected' : ''}>${y}</option>`).join('')}
+                                </select>
+                                <i data-lucide="clock" class="w-4 h-4 text-slate-400 absolute left-2.5 top-2.5 pointer-events-none"></i>
+                            </div>
+
+                            <div class="relative">
+                                <select id="month-select" class="pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg shadow-sm focus:outline-none text-sm lao-text font-medium min-w-[140px]">
+                                    ${dropdownMonths.map(m => `<option value="${m}" ${state.currentMonth === m ? 'selected' : ''}>${MONTH_DISPLAY_MAP[m] || m}</option>`).join('')}
+                                </select>
+                                <i data-lucide="calendar" class="w-4 h-4 text-slate-400 absolute left-2.5 top-2.5 pointer-events-none"></i>
+                            </div>
+                             <button onclick="openPrintModal()" class="p-2 text-slate-500 hover:text-blue-600 bg-white border border-slate-200 rounded-lg shadow-sm" title="Print"><i data-lucide="printer" class="w-4 h-4"></i></button>
+                             ${!isCalculatedView ? `<button onclick="resetMonthScores()" class="p-2 text-slate-500 hover:text-red-600 bg-white border border-slate-200 rounded-lg shadow-sm" title="Reset Month"><i data-lucide="rotate-ccw" class="w-4 h-4"></i></button>` : ''}
+                        </div>
+                        <div class="flex items-center gap-3">
+                            ${!isCalculatedView ? `<button onclick="openModal('upload-modal')" class="flex items-center gap-2 bg-white text-slate-600 border border-slate-200 px-3 py-2 rounded-lg hover:bg-slate-50 transition-colors shadow-sm text-sm font-medium"><i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-600"></i><span class="lao-text">Import Grades</span></button>` : ''}
+                            <button onclick="openManageStudentsModal()" class="flex items-center gap-2 ${THEMES[state.theme].btn} ${THEMES[state.theme].btnHover} text-white px-4 py-2 rounded-lg transition-colors shadow-md shadow-blue-900/10 text-sm font-medium">
+                                <i data-lucide="users" class="w-4 h-4"></i>
+                                <span>Manage Students</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="hidden print-only mb-4 text-center">
+                         ${state.schoolLogo ? `<img src="${state.schoolLogo}" class="h-12 mx-auto mb-2 object-contain">` : ''}
+                        <h2 class="text-xl font-bold">${state.className} Report Sheet</h2>
+                        <p class="text-xs text-gray-500">
+                            ${MONTH_DISPLAY_MAP[state.currentMonth]} • 
+                            School Year (ສົກຮຽນ) <span class="font-bold">${state.currentYear}</span>
+                        </p>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex-1 flex flex-col min-h-0 print:border-0 print:shadow-none">
+                        <div class="overflow-auto custom-scroll flex-1 h-full print:overflow-visible print:h-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead class="bg-slate-50 border-b border-slate-200 sticky-header">
+                                    <tr>
+                                        <th class="px-1 py-0.5 font-bold text-black text-center sticky left-0 z-50 sticky-corner shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] min-w-[30px] text-sm align-bottom border border-slate-300">
+                                            <div>No.</div>
+                                        </th>
+                                        <th class="px-1 py-0.5 font-bold text-black text-center sticky left-[30px] z-50 sticky-corner shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] min-w-[100px] text-sm align-bottom cursor-pointer hover:bg-slate-100 transition-colors group border border-slate-300" onclick="toggleSort('name')">
+                                            <div class="flex items-center justify-center gap-1">
+                                                Name
+                                                <span class="text-slate-400 text-[10px] group-hover:text-slate-600">${state.sortKey === 'name' ? (state.sortDesc ? '▼' : '▲') : ''}</span>
+                                            </div>
+                                            <div class="lao-text font-normal text-xs text-black">ຊື່ແລະນາມສະກຸນ</div>
+                                        </th>
+                                        <th class="px-1 py-0.5 font-bold text-black text-center min-w-[90px] text-sm bg-slate-50 align-bottom border border-slate-300">
+                                            <div>Nickname</div>
+                                            <div class="lao-text font-normal text-xs text-black">ຊື່ນ້ອຍ</div>
+                                        </th>
+                                        <th class="p-0 w-14 bg-slate-50 no-print border border-slate-300"></th>
+                                        ${LAO_SUB_SUBJECTS.map(sub => `<th class="th-vertical font-bold text-black text-xs px-1 border border-slate-300"><div>${SUBJECT_DISPLAY_MAP[sub]}</div></th>`).join('')}
+                                        <th class="th-vertical font-bold text-orange-900 text-xs px-1 lao-text bg-yellow-50 border border-slate-300 min-w-[60px]"><div>${SUBJECT_DISPLAY_MAP['LaoTotal']}</div></th>
+                                        <th class="th-vertical font-bold text-purple-900 text-xs px-1 lao-text bg-purple-100 border border-slate-300 min-w-[60px]"><div>${SUBJECT_DISPLAY_MAP['LaoAvg']}</div></th>
+                                        ${OTHER_SUBJECTS.map(sub => `<th class="th-vertical font-bold text-black text-xs px-1 border border-slate-300"><div>${SUBJECT_DISPLAY_MAP[sub]}</div></th>`).join('')}
+                                        <th class="th-vertical font-bold text-yellow-900 text-xs px-1 lao-text bg-yellow-50 border border-slate-300 min-w-[60px]"><div>${SUBJECT_DISPLAY_MAP['GrandTotal']}</div></th>
+                                        <th class="th-vertical font-bold text-yellow-900 text-xs px-1 lao-text bg-yellow-200 border border-slate-300 min-w-[60px]"><div>${SUBJECT_DISPLAY_MAP['GrandAvg']}</div></th>
+                                        <th class="th-vertical font-bold text-black text-xs px-1 lao-text border border-slate-300 cursor-pointer hover:bg-slate-100 transition-colors" onclick="toggleSort('rank')">
+                                            <div class="flex items-center gap-1">
+                                                ${SUBJECT_DISPLAY_MAP['Rank']}
+                                                <span class="inline-block transform -rotate-180 ml-1">${state.sortKey === 'rank' ? (state.sortDesc ? '▼' : '▲') : ''}</span>
+                                            </div>
+                                        </th>
+                                        <th class="th-vertical font-bold text-black text-xs px-1 lao-text border border-slate-300 min-w-[80px]"><div>${SUBJECT_DISPLAY_MAP['Result']}</div></th>
+                                    </tr>
+                                </thead>
+                                <tbody>${hasStudents ? rows : `<tr><td colspan="100" class="p-8 text-center text-slate-400 lao-text text-sm border border-slate-300">No students yet for ${state.currentYear}. Add them in Settings!</td></tr>`}</tbody>
+                            </table>
+                            <!-- Footer for Print (Appears at the bottom of the table content, thus last page) -->
+                            <footer class="print-only print-footer">
+                                &copy; Neerada ${state.currentYear}. All rights reserved. Generated by Neerada Grading System.
+                            </footer>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function saveSettings() {
+            const newName = document.getElementById('setting-class-name').value;
+            const logoInput = document.getElementById('setting-logo-input');
+            if (newName) { state.className = newName; await db.put('settings', { key: 'className', value: newName }); }
+            if (logoInput.files && logoInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = async (e) => { state.schoolLogo = e.target.result; await db.put('settings', { key: 'logo', value: state.schoolLogo }); finishSave(); };
+                reader.readAsDataURL(logoInput.files[0]);
+            } else { finishSave(); }
+        }
+        function finishSave() { updateHeader(); showNotification('Settings saved!', 'success'); }
+        async function addStudent() {
+            const name = document.getElementById('new-student-name').value.trim();
+            const nick = document.getElementById('new-student-nick').value.trim();
+            if (!name) return;
+            await db.put('students', { id: Date.now().toString(), name, nickname: nick, year: state.currentYear });
+            document.getElementById('new-student-name').value = '';
+            document.getElementById('new-student-nick').value = '';
+            showNotification('Student added');
+            await loadClassData();
+            // Update roster list if modal is open
+            if(document.getElementById('manage-students-modal').classList.contains('flex')) {
+                 document.getElementById('roster-list-container').innerHTML = renderRosterList();
+            }
+            if (state.activeTab === 'settings') render();
+            else render(); // Re-render class view to show new student
+        }
+        async function addBulkStudents() {
+            const text = document.getElementById('bulk-students').value;
+            if(!text) return;
+            const lines = text.split('\n');
+            let count = 0;
+            for(let line of lines) {
+                if(!line.trim()) continue;
+                const parts = line.split(',');
+                if(parts[0].trim()) { await db.put('students', { id: Date.now() + Math.random().toString(), name: parts[0].trim(), nickname: parts[1]?parts[1].trim():'', year: state.currentYear }); count++; }
+            }
+            document.getElementById('bulk-students').value = '';
+            showNotification(`Added ${count} students`);
+            await loadClassData();
+             if(document.getElementById('manage-students-modal').classList.contains('flex')) {
+                 document.getElementById('roster-list-container').innerHTML = renderRosterList();
+            }
+            if (state.activeTab === 'settings') render();
+            else render();
+        }
+        async function deleteStudent(id) {
+            if(!confirm('Are you sure you want to delete this student? All grades will be permanently removed.')) return;
+            await db.delete('students', id);
+            const allGrades = await db.getAll('grades');
+            const toDelete = allGrades.filter(g => g.studentId === id);
+            for(const g of toDelete) { await db.delete('grades', g.id); }
+            showNotification('Student deleted');
+            await loadClassData();
+            if(document.getElementById('manage-students-modal').classList.contains('flex')) { 
+                document.getElementById('roster-list-container').innerHTML = renderRosterList(); 
+                render(); 
+            } else if(document.getElementById('edit-student-modal').classList.contains('flex')) { 
+                closeModal('edit-student-modal'); render(); 
+            } else if (state.activeTab === 'settings') { render(); }
+            else { render(); }
+        }
+        function deleteStudentFromModal() { const id = document.getElementById('edit-student-id').value; if(id) deleteStudent(id); }
+        async function deleteAllStudents() {
+            if(!confirm('WARNING: This will delete ALL students for the CURRENT YEAR and their grades. This action cannot be undone. Are you sure?')) return;
+            const allStudents = await db.getAll('students');
+            const toDelete = allStudents.filter(s => s.year === state.currentYear);
+            for(const s of toDelete) {
+                await db.delete('students', s.id);
+                const allGrades = await db.getAll('grades');
+                const gradesToDelete = allGrades.filter(g => g.studentId === s.id);
+                for(const g of gradesToDelete) await db.delete('grades', g.id);
+            }
+            showNotification('Students cleared for ' + state.currentYear);
+            await loadClassData();
+            if(document.getElementById('manage-students-modal').classList.contains('flex')) {
+                 document.getElementById('roster-list-container').innerHTML = renderRosterList();
+            }
+            render();
+        }
+        async function exportData() {
+            const students = await db.getAll('students');
+            const grades = await db.getAll('grades');
+            const settings = await db.getAll('settings');
+            const dump = { students, grades, settings };
+            const blob = new Blob([JSON.stringify(dump)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            
+            const now = new Date();
+            const yyyy = now.getFullYear();
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const dd = String(now.getDate()).padStart(2, '0');
+            const filename = `neerada_gradingP45_${yyyy}_${mm}_${dd}.json`;
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        function importData(input) {
+            const file = input.files[0];
+            if(!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    if(!data.students || !data.grades) {
+                        alert("Invalid backup file: Missing student or grade data.");
+                        return;
+                    }
+
+                    if(confirm("This will overwrite current data. Continue?")) {
+                        await db.clear('students');
+                        await db.clear('grades');
+                        await db.clear('settings');
+
+                        if (data.students) {
+                            for(const s of data.students) await db.put('students', s);
+                        }
+                        if (data.grades) {
+                            for(const g of data.grades) await db.put('grades', g);
+                        }
+                        if (data.settings) {
+                            for(const st of data.settings) await db.put('settings', st);
+                        }
+                        
+                        alert("Data restored successfully!");
+                        location.reload();
+                    }
+                } catch(err) {
+                    console.error(err);
+                    alert('Error importing data: ' + err.message);
+                } finally {
+                    input.value = ''; // Reset input so same file can be selected again
+                }
+            };
+            reader.readAsText(file);
+        }
+        function openEditStudentModal(id) { const s = state.students.find(x => x.id === id); if(!s) return; document.getElementById('edit-student-id').value = s.id; document.getElementById('edit-student-fullname').value = s.name; document.getElementById('edit-student-nickname').value = s.nickname || ''; const m = document.getElementById('edit-student-modal'); m.classList.remove('hidden'); m.classList.add('flex'); }
+        async function saveStudentDetails() { 
+            const id = document.getElementById('edit-student-id').value; 
+            const name = document.getElementById('edit-student-fullname').value; 
+            const nick = document.getElementById('edit-student-nickname').value; 
+            
+            // Preserve existing student data (like color)
+            const existingStudent = state.students.find(s => s.id === id);
+            const studentData = { 
+                ...existingStudent, 
+                name, 
+                nickname: nick, 
+                year: state.currentYear 
+            };
+            
+            await db.put('students', studentData); 
+            await loadClassData(); 
+            render(); 
+            closeModal('edit-student-modal'); 
+        }
+        
+        function openEditGradesModal() { 
+            const s = state.selectedStudent; 
+            if(!s) return; 
+            document.getElementById('edit-student-name').innerText = s.name; 
+            
+            // Populate Month Select
+            state.editModalMonth = state.currentMonth;
+            const select = document.getElementById('edit-modal-month-select');
+            select.innerHTML = MONTHS.map(m => `<option value="${m}" ${m === state.currentMonth ? 'selected' : ''}>${MONTH_DISPLAY_MAP[m]}</option>`).join('');
+            select.onchange = (e) => {
+                state.editModalMonth = e.target.value;
+                renderEditInputs(state.editModalMonth);
+            };
+
+            renderEditInputs(state.currentMonth);
+            const m = document.getElementById('edit-grades-modal'); 
+            m.classList.remove('hidden'); 
+            m.classList.add('flex'); 
+        }
+
+        function renderEditInputs(month) {
+            const container = document.getElementById('grades-input-container'); 
+            container.innerHTML = ''; 
+            const currentScores = state.studentHistory[month] || {}; 
+            
+            ALL_SUBJECTS.forEach(sub => { 
+                const val = currentScores[sub] !== undefined ? currentScores[sub] : ''; 
+                const label = SUBJECT_DISPLAY_MAP[sub].split('<br>')[0]; 
+                container.innerHTML += `<div class="flex items-center gap-4"><label class="w-1/3 text-sm font-medium text-slate-700 text-right lao-text">${label}</label><input type="number" step="0.01" data-sub="${sub}" value="${val}" class="grade-input flex-1 border border-slate-300 rounded p-2 focus:ring-2 focus:ring-blue-500"></div>`; 
+            }); 
+        }
+
+        async function saveEditedGrades() { 
+            const inputs = document.querySelectorAll('.grade-input'); 
+            const scores = {}; 
+            inputs.forEach(input => { 
+                const val = parseFloat(input.value); 
+                if(!isNaN(val)) scores[input.dataset.sub] = val; 
+            }); 
+            
+            await db.saveGrade(state.selectedStudent.id, state.editModalMonth, state.currentYear, scores); 
+            
+            const allGrades = await db.getAllGradesForStudent(state.selectedStudent.id); 
+            state.studentHistory = {}; 
+            allGrades.filter(g => g.year === state.currentYear).forEach(g => { state.studentHistory[g.month] = g.scores; }); 
+            
+            // Refresh main view data if current month was edited
+            if(state.editModalMonth === state.currentMonth) await loadClassData();
+            
+            render(); 
+            closeModal('edit-grades-modal'); 
+            showNotification('Scores updated for ' + state.editModalMonth); 
+        }
+
+        function openModal(id) { document.getElementById(id).classList.remove('hidden','flex'); document.getElementById(id).classList.add('flex'); if(id==='upload-modal') { document.getElementById('modal-month').innerText = state.currentMonth; document.getElementById('modal-year').innerText = state.currentYear; }}
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); document.getElementById(id).classList.remove('flex'); }
+        function showNotification(msg, type) { const notif = document.getElementById('notification'); const msgEl = document.getElementById('notif-msg'); notif.className = `fixed top-24 right-6 z-[60] px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 transition-all duration-300 transform no-print ${type === 'error' ? 'bg-red-500 text-white' : 'bg-emerald-600 text-white'}`; msgEl.innerText = msg; notif.classList.remove('translate-x-full', 'hidden'); setTimeout(() => notif.classList.add('translate-x-full'), 3000); }
+        function downloadTemplate() { if (!window.XLSX) return alert("Generator loading..."); const data = []; const headers = ['ຊື່ແລະນາມສະກຸນ Name', 'ຊື່ນ້ອຍ Nickname', ...ALL_SUBJECTS.map(s => SUBJECT_TO_EXCEL_MAP[s])]; if (state.students && state.students.length > 0) { state.students.forEach(student => { const row = {}; row['ຊື່ແລະນາມສະກຸນ Name'] = student.name; row['ຊື່ນ້ອຍ Nickname'] = student.nickname || ''; const studentGrades = state.grades[student.id] || {}; ALL_SUBJECTS.forEach(sub => { const excelHeader = SUBJECT_TO_EXCEL_MAP[sub]; const val = studentGrades[sub]; row[excelHeader] = val !== undefined ? val : ''; }); data.push(row); }); } else { const emptyRow = {}; headers.forEach(h => emptyRow[h] = ''); data.push(emptyRow); } const ws = XLSX.utils.json_to_sheet(data, { header: headers }); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Grades"); XLSX.writeFile(wb, `Neerada_${state.className.replace(/\s/g,'')}_${state.currentMonth}.xlsx`); }
+        
+        window.addEventListener('DOMContentLoaded', initApp);
+        
+        // ... Re-add file listeners ... 
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('border-blue-500', 'bg-blue-50'); });
+        dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('border-blue-500', 'bg-blue-50'); });
+        dropZone.addEventListener('drop', (e) => { e.preventDefault(); dropZone.classList.remove('border-blue-500', 'bg-blue-50'); if (e.dataTransfer.files[0]) readExcel(e.dataTransfer.files[0]); });
+        fileInput.addEventListener('change', (e) => { if (e.target.files[0]) readExcel(e.target.files[0]); });
+
+        function readExcel(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet);
+                processGrades(jsonData);
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        async function processGrades(parsedData) {
+            let updatedCount = 0;
+            let createdCount = 0;
+            for (const row of parsedData) {
+                const rowKeys = Object.keys(row).reduce((acc, key) => { acc[normalizeText(key)] = row[key]; return acc; }, {});
+                let nameKey = Object.keys(rowKeys).find(k => k.includes('name') && !k.includes('nickname'));
+                if (!nameKey) nameKey = Object.keys(rowKeys).find(k => k.includes('ຊື່') && !k.includes('ນ້ອຍ'));
+                if(!nameKey) continue;
+                
+                const rawName = rowKeys[nameKey];
+                if (!rawName) continue;
+
+                const uploadedName = normalizeText(rawName);
+                let student = state.students.find(s => normalizeText(s.name) === uploadedName);
+                
+                if (!student) {
+                    let nickKey = Object.keys(rowKeys).find(k => k.includes('nickname'));
+                    if (!nickKey) nickKey = Object.keys(rowKeys).find(k => k.includes('ນ້ອຍ'));
+                    const rawNick = nickKey ? rowKeys[nickKey] : '';
+                    
+                    student = {
+                        id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+                        name: String(rawName).trim(),
+                        nickname: rawNick ? String(rawNick).trim() : '',
+                        year: state.currentYear
+                    };
+                    await db.put('students', student);
+                    state.students.push(student);
+                    createdCount++;
+                }
+                
+                if(student) {
+                    const scores = {};
+                    ALL_SUBJECTS.forEach(subjectKey => {
+                        const officialHeader = SUBJECT_TO_EXCEL_MAP[subjectKey];
+                        const normalizedHeader = normalizeText(officialHeader);
+                        let val = rowKeys[normalizedHeader];
+                        if (val === undefined) {
+                            const simpleKey = subjectKey.toLowerCase();
+                            const matchedKey = Object.keys(rowKeys).find(k => k.includes(simpleKey));
+                            if(matchedKey) val = rowKeys[matchedKey];
+                        }
+                        if (val === undefined) {
+                             const matchedKey = Object.keys(rowKeys).find(k => normalizedHeader.includes(k));
+                             if(matchedKey) val = rowKeys[matchedKey];
+                        }
+                        if (val !== undefined && val !== '') {
+                            const numVal = parseFloat(val);
+                            if(!isNaN(numVal)) scores[subjectKey] = numVal;
+                        }
+                    });
+                    if(Object.keys(scores).length > 0) { 
+                        await db.saveGrade(student.id, state.currentMonth, state.currentYear, scores); 
+                        updatedCount++; 
+                    }
+                }
+            }
+            if(updatedCount > 0 || createdCount > 0) { showNotification(`Processed: ${createdCount} new students, ${updatedCount} grades updated!`); await loadClassData(); render(); closeModal('upload-modal'); } 
+            else { showNotification('No matches found', 'error'); }
+            document.getElementById('file-input').value = '';
+        }
+    </script>
+</body>
+</html>
