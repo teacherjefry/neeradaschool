@@ -289,6 +289,74 @@
         <!-- CONFIGURATION VIEW -->
         <div id="view-config" class="flex-1 overflow-y-auto p-4 lg:p-8 hidden bg-gray-50">
             <div class="max-w-4xl mx-auto">
+                
+                <!-- NEW: Bulk Import Section -->
+                <div class="bg-white rounded-xl shadow border border-gray-200 overflow-hidden mb-8">
+                    <div class="p-6 border-b border-gray-100 bg-green-50">
+                        <h3 class="font-bold text-green-800 flex items-center gap-2">
+                            <i data-lucide="upload-cloud" class="w-5 h-5"></i> Bulk Payslip Data Import
+                        </h3>
+                    </div>
+                    <div class="p-6">
+                        <p class="text-sm text-gray-600 mb-6">Download a pre-filled template for a department, enter the monthly amounts, and upload to update payroll records. <br><span class="text-xs text-orange-600 font-bold">Note: Templates utilize Employee Name for matching. Please do not modify names in the CSV.</span></p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <!-- Step 1: Period for Template -->
+                             <div class="p-4 border rounded-lg bg-gray-50 flex flex-col gap-3">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="bg-green-200 text-green-800 text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full">1</span>
+                                    <h4 class="font-bold text-sm text-gray-700">Select Template Period</h4>
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] uppercase font-bold text-gray-500 mb-1">Month</label>
+                                    <select id="import-month" class="w-full text-sm p-2 border rounded bg-white"></select>
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] uppercase font-bold text-gray-500 mb-1">Year</label>
+                                    <select id="import-year" class="w-full text-sm p-2 border rounded bg-white"></select>
+                                </div>
+                                <p class="text-[10px] text-gray-400 mt-1">This date will be pre-filled in the CSV.</p>
+                            </div>
+
+                            <!-- Step 2: Download -->
+                            <div class="p-4 border rounded-lg bg-gray-50 flex flex-col gap-3">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="bg-green-200 text-green-800 text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full">2</span>
+                                    <h4 class="font-bold text-sm text-gray-700">Download Template</h4>
+                                </div>
+                                <button onclick="window.downloadPayslipTemplate('Kindergarten')" class="w-full text-left text-xs bg-white border border-gray-200 p-2.5 rounded hover:bg-green-50 flex justify-between items-center transition-colors">
+                                    <span class="font-medium">Kindergarten</span> <i data-lucide="download" class="w-3.5 h-3.5 text-gray-400"></i>
+                                </button>
+                                <button onclick="window.downloadPayslipTemplate('Primary')" class="w-full text-left text-xs bg-white border border-gray-200 p-2.5 rounded hover:bg-green-50 flex justify-between items-center transition-colors">
+                                    <span class="font-medium">Primary</span> <i data-lucide="download" class="w-3.5 h-3.5 text-gray-400"></i>
+                                </button>
+                                <button onclick="window.downloadPayslipTemplate('Secondary')" class="w-full text-left text-xs bg-white border border-gray-200 p-2.5 rounded hover:bg-green-50 flex justify-between items-center transition-colors">
+                                    <span class="font-medium">Secondary</span> <i data-lucide="download" class="w-3.5 h-3.5 text-gray-400"></i>
+                                </button>
+                                <div class="relative">
+                                    <select id="template-dept-select" onchange="if(this.value) { window.downloadPayslipTemplate(this.value); this.value=''; }" class="w-full text-xs bg-white border border-gray-200 p-2.5 rounded appearance-none cursor-pointer hover:bg-gray-50">
+                                        <option value="">Download Other Dept...</option>
+                                    </select>
+                                    <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-gray-400 absolute right-3 top-3 pointer-events-none"></i>
+                                </div>
+                            </div>
+
+                            <!-- Step 3: Upload -->
+                            <div class="p-4 border rounded-lg bg-gray-50 flex flex-col justify-center gap-3">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="bg-green-200 text-green-800 text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full">3</span>
+                                    <h4 class="font-bold text-sm text-gray-700">Upload Data</h4>
+                                </div>
+                                <button onclick="window.triggerPayslipImport()" class="w-full py-3 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 flex items-center justify-center gap-2 shadow-sm transition-all active:scale-95">
+                                    <i data-lucide="upload" class="w-5 h-5"></i> Bulk Upload CSV
+                                </button>
+                                <p class="text-[10px] text-center text-gray-500">System will update records based on Name, Month, and Year in the file.</p>
+                                <input type="file" id="payslip-csv-input" accept=".csv" class="hidden" onchange="window.handlePayslipCSV(this)">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="bg-white rounded-xl shadow border border-gray-200 overflow-hidden mb-8">
                     <div class="p-6 border-b border-gray-200 flex justify-between items-center text-blue-900">
                         <h2 class="text-xl font-bold flex items-center gap-3">
@@ -1014,7 +1082,7 @@
             }
             
             // List of all year select IDs in the app
-            const ids = ['filter-year', 'editor-year', 'save-year', 'otl-year', 'bulk-year'];
+            const ids = ['filter-year', 'editor-year', 'save-year', 'otl-year', 'bulk-year', 'import-year'];
             
             ids.forEach(id => {
                 const el = document.getElementById(id);
@@ -1036,7 +1104,7 @@
             const opts = MONTHS.map(mn => `<option value="${mn}">${mn}</option>`).join('');
             
             // List of all month select IDs in the app
-            const ids = ['filter-month', 'editor-month', 'save-month', 'otl-month', 'bulk-month'];
+            const ids = ['filter-month', 'editor-month', 'save-month', 'otl-month', 'bulk-month', 'import-month'];
             
             ids.forEach(id => {
                 const el = document.getElementById(id);
@@ -1845,14 +1913,216 @@
 
         window.loadDeptConfig = () => {
             const select = document.getElementById('config-dept-select');
+            const templateSelect = document.getElementById('template-dept-select'); // New selector for templates
             const currentDepts = getOrderedDepartments();
-            if (select && select.options.length === 0) select.innerHTML = currentDepts.map(d => `<option value="${d}">${d}</option>`).join('');
+            
+            const opts = currentDepts.map(d => `<option value="${d}">${d}</option>`).join('');
+            
+            if (select && select.options.length === 0) select.innerHTML = opts;
+            if (templateSelect) templateSelect.innerHTML = `<option value="">Download Other Dept...</option>` + opts;
+
             const dept = select.value; 
             const cfg = departmentConfigs[dept];
             if(!cfg) return;
+            // ... existing editor logic ...
             const ri = (type, list) => list.map((f, i) => `<div class="flex gap-2 mb-2 items-center"><input type="text" value="${f}" onchange="window.updateConfigFieldName('${dept}', '${type}', ${i}, this.value)" class="flex-1 p-2 border rounded text-sm"><button onclick="window.removeConfigField('${dept}', '${type}', ${i})" class="text-red-400 p-1 hover:bg-red-50 rounded"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div>`).join('');
             document.getElementById('config-editor-area').innerHTML = `<div class="p-6 bg-blue-50 rounded-xl border border-blue-100"><div class="flex justify-between items-center mb-4"><h4 class="font-bold text-blue-800 uppercase text-xs">Earnings</h4><button onclick="window.addConfigField('${dept}', 'earnings')" class="text-[10px] bg-blue-600 text-white px-2 py-1 rounded font-bold hover:bg-blue-700">+ Add</button></div><div id="cfg-earn-list">${ri('earnings', cfg.earnings)}</div></div><div class="p-6 bg-red-50 rounded-xl border border-red-100"><div class="flex justify-between items-center mb-4"><h4 class="font-bold text-red-800 uppercase text-xs">Deductions</h4><button onclick="window.addConfigField('${dept}', 'deductions')" class="text-[10px] bg-green-600 text-white px-2 py-1 rounded font-bold">+ Add</button></div><div id="cfg-ded-list">${ri('deductions', cfg.deductions)}</div></div>`;
             if (window.lucide) lucide.createIcons();
+        };
+
+        // --- BULK PAYSLIP IMPORT LOGIC ---
+        window.downloadPayslipTemplate = (deptName) => {
+            const cfg = departmentConfigs[deptName];
+            if (!cfg) return alert("Department configuration not found.");
+            
+            const m = document.getElementById('import-month').value;
+            const y = document.getElementById('import-year').value;
+
+            // 1. Define Headers
+            const headers = ['Employee Name', 'Campus', 'Department', 'Payroll Month', 'Payroll Year', ...cfg.earnings, ...cfg.deductions];
+            
+            // 2. Find Employees in Dept
+            const deptEmps = employees.filter(e => e.department === deptName);
+            
+            // 3. Create CSV Rows
+            // We pre-fill Name, Campus, Dept, Month, Year. Values are left blank (or 0).
+            let csvRows = [headers.join(',')];
+            
+            deptEmps.forEach(emp => {
+                const row = [
+                    `"${emp.name}"`, // Quote name to handle commas
+                    `"${emp.campus}"`,
+                    `"${emp.department}"`,
+                    m,
+                    y
+                ];
+                // Add empty placeholders for data columns (earnings + deductions)
+                const emptyCols = new Array(cfg.earnings.length + cfg.deductions.length).fill('0');
+                csvRows.push([...row, ...emptyCols].join(','));
+            });
+
+            // 4. Download
+            const csvContent = "data:text/csv;charset=utf-8,\ufeff" + csvRows.join("\n"); // Add BOM
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `${deptName}_Payslip_Template_${m}_${y}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+
+        window.triggerPayslipImport = () => document.getElementById('payslip-csv-input').click();
+
+        // Helper: Robust CSV Line Parser
+        function parseCSVLine(text) {
+            const result = [];
+            let cell = '';
+            let quote = false;
+            for (let i = 0; i < text.length; i++) {
+                let c = text[i];
+                if (c === '"') {
+                    if (i < text.length - 1 && text[i+1] === '"') {
+                        // handle escaped quotes
+                        cell += '"';
+                        i++;
+                    } else {
+                        quote = !quote;
+                    }
+                } else if (c === ',' && !quote) {
+                    result.push(cell.trim());
+                    cell = '';
+                } else {
+                    cell += c;
+                }
+            }
+            result.push(cell.trim());
+            return result;
+        }
+
+        window.handlePayslipCSV = (input) => {
+            const file = input.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                let text = e.target.result;
+                // Remove BOM if present (fixes invisible char issues at start of file)
+                if (text.charCodeAt(0) === 0xFEFF) {
+                    text = text.substr(1);
+                }
+
+                const rows = text.split('\n').filter(r => r.trim());
+                if (rows.length < 2) return alert("Invalid CSV: No data rows found.");
+
+                // Parse Headers (Row 0) using robust parser
+                const headers = parseCSVLine(rows[0]).map(h => h.replace(/^"|"$/g, '').trim());
+                
+                // Identify indices
+                const nameIdx = headers.indexOf('Employee Name');
+                const campusIdx = headers.indexOf('Campus');
+                const deptIdx = headers.indexOf('Department');
+                const monthIdx = headers.indexOf('Payroll Month');
+                const yearIdx = headers.indexOf('Payroll Year');
+                
+                if (nameIdx === -1) {
+                    console.error("Headers found:", headers);
+                    return alert("Invalid Format: 'Employee Name' column missing. Check console for detected headers.");
+                }
+                
+                let successCount = 0;
+                let createdCount = 0;
+                let failCount = 0;
+
+                for (let i = 1; i < rows.length; i++) {
+                    // Use robust parser instead of simple regex match
+                    const cols = parseCSVLine(rows[i]);
+                    
+                    // Basic validation: ensure row has enough columns relative to headers
+                    if (cols.length < nameIdx + 1) continue;
+
+                    // Clean up values (remove surrounding quotes)
+                    const cleanCols = cols.map(c => c.replace(/^"|"$/g, ''));
+                    
+                    const name = cleanCols[nameIdx];
+                    // Get Campus/Dept from CSV or fallback to defaults
+                    const campus = (campusIdx > -1 && cleanCols[campusIdx]) ? cleanCols[campusIdx] : "General Services";
+                    const dept = (deptIdx > -1 && cleanCols[deptIdx]) ? cleanCols[deptIdx] : "Unassigned";
+
+                    // Prioritize CSV month/year, fallback to dropdowns if empty in CSV
+                    let month = (monthIdx > -1 && cleanCols[monthIdx]) ? cleanCols[monthIdx] : document.getElementById('import-month').value;
+                    let year = (yearIdx > -1 && cleanCols[yearIdx]) ? cleanCols[yearIdx] : document.getElementById('import-year').value;
+                    
+                    if (!name || !month || !year) { 
+                        failCount++; 
+                        console.warn("Skipping row due to missing keys:", name, month, year);
+                        continue; 
+                    }
+                    
+                    // Match Employee by Name
+                    let emp = employees.find(e => e.name.trim().toLowerCase() === name.trim().toLowerCase());
+
+                    let isNew = false;
+                    if (!emp) {
+                        // Create New Employee if not found
+                        emp = {
+                            id: 'EMP_' + Date.now() + Math.floor(Math.random() * 10000) + i,
+                            name: name,
+                            campus: campus,
+                            department: dept,
+                            position: "Staff", // Default position
+                            bankLak: "",
+                            bankUsd: "",
+                            email: "",
+                            whatsapp: "",
+                            profilePic: null,
+                            lastModified: new Date().toISOString(),
+                            payrollHistory: {},
+                            activeLoans: []
+                        };
+                        employees.push(emp); // Add to local list immediately
+                        isNew = true;
+                        createdCount++;
+                    }
+
+                    const key = `${year}-${month}`;
+                    if (!emp.payrollHistory) emp.payrollHistory = {};
+                    
+                    // Initialize state for this month
+                    // We use existing data if present to avoid wiping fields not in CSV
+                    let state = emp.payrollHistory[key] || createInitialState(emp.department);
+                    
+                    // Map CSV columns to State
+                    headers.forEach((h, idx) => {
+                        // Skip metadata columns
+                        if (idx !== nameIdx && idx !== monthIdx && idx !== yearIdx && idx !== campusIdx && idx !== deptIdx) {
+                            // Check if this header maps to a valid field in our data
+                            // We clean commas from numbers (e.g. "1,000" -> 1000)
+                            const valStr = cleanCols[idx] ? cleanCols[idx].replace(/,/g, '') : "0";
+                            const val = parseFloat(valStr) || 0;
+                            
+                            // Only update if it's a number (or 0)
+                            state[h] = val;
+                        }
+                    });
+                    
+                    // Save
+                    emp.payrollHistory[key] = state;
+                    emp.lastModified = new Date().toISOString();
+                    await transact(STORE_EMPLOYEES, 'readwrite', s => s.put(emp));
+                    if (!isNew) successCount++;
+                }
+                
+                employees = await transact(STORE_EMPLOYEES, 'readonly', s => s.getAll());
+                window.updateDashboardStats();
+                renderEmployeeList(); // Refresh list
+                renderDeptSidebar();  // Refresh sidebar
+                
+                if (selectedEmployee) loadPeriodData();
+                alert(`Bulk Import Complete.\nUpdated Records: ${successCount}\nNew Employees Created: ${createdCount}\nFailed/Skipped: ${failCount}`);
+                input.value = '';
+            };
+            reader.readAsText(file);
         };
 
         window.updateConfigFieldName = (dept, type, idx, val) => { departmentConfigs[dept][type][idx] = val; };
@@ -2111,25 +2381,34 @@
         window.downloadCSVReport = () => {
             const yrFilter = document.getElementById('filter-year').value; 
             const mnFilter = document.getElementById('filter-month').value;
-            let rows = [["Period", "Employee ID", "Name", "Campus", "Department", "Position", "LAK Account", "USD Account", "Total LAK (₭)", "Total USD ($)"]];
+            // Updated Column Order: Loan Payment moved beside Total USD
+            let rows = [["Period", "Employee ID", "Name", "Campus", "Department", "Position", "LAK Account", "USD Account", "Total LAK (₭)", "Total USD ($)", "Loan Payment (₭)"]];
             let grandTotalLAK = 0;
             let grandTotalUSD = 0;
+            let grandTotalLoan = 0;
+
             employees.forEach(emp => { 
                 if(!emp.payrollHistory) return; 
                 Object.keys(emp.payrollHistory).forEach(key => { 
                     const [y, m] = key.split('-'); 
                     if((yrFilter === 'All' || y === yrFilter) && (mnFilter === 'All' || m === mnFilter)) {
                         const result = calculatePayrollFromState(emp, emp.payrollHistory[key]);
+                        const loanPayment = emp.payrollHistory[key].loanDeduction || 0;
+
                         grandTotalLAK += result.lak;
                         grandTotalUSD += result.usd;
+                        grandTotalLoan += loanPayment;
                         
                         const csvEmpId = generateEmployeeID(emp, m, y);
                         
-                        rows.push([`${m} ${y}`, csvEmpId, emp.name, emp.campus || "General Services", emp.department, emp.position, (emp.bankLak || "N/A"), (emp.bankUsd || "N/A"), result.lak, result.usd]);
+                        // Updated row push order
+                        rows.push([`${m} ${y}`, csvEmpId, emp.name, emp.campus || "General Services", emp.department, emp.position, (emp.bankLak || "N/A"), (emp.bankUsd || "N/A"), result.lak, result.usd, loanPayment]);
                     } 
                 }); 
             });
-            rows.push(["", "", "", "", "", "", "", "Grand Total", grandTotalLAK, grandTotalUSD]);
+            // Updated Grand Total row order
+            rows.push(["", "", "", "", "", "", "", "Grand Total", grandTotalLAK, grandTotalUSD, grandTotalLoan]);
+            
             const yrLabel = yrFilter === 'All' ? 'AllYears' : yrFilter;
             const mnLabel = mnFilter === 'All' ? 'AllMonths' : mnFilter;
             const filename = `Neerada_Payroll_Report_${yrLabel}_${mnLabel}_unified.csv`;
@@ -2187,6 +2466,12 @@
             let loanRows = '';
             let hasLoans = false;
             let activeLoanCount = 0;
+            
+            // Accumulators for totals
+            let gTotalLoan = 0;
+            let gTotalPaid = 0;
+            let gTotalMonthPay = 0;
+            let gTotalBalance = 0;
 
             employees.forEach(emp => {
                 if (emp.activeLoans && emp.activeLoans.length > 0) {
@@ -2209,6 +2494,12 @@
 
                     let balance = totalLoan - totalPaid;
 
+                    // Add to Grand Totals
+                    gTotalLoan += totalLoan;
+                    gTotalPaid += totalPaid;
+                    gTotalMonthPay += paymentThisMonth;
+                    gTotalBalance += balance;
+
                     loanRows += `
                         <tr class="hover:bg-gray-50 border-b border-gray-50 align-top">
                             <td class="px-2 py-3 font-medium text-gray-800">
@@ -2229,6 +2520,20 @@
                 }
             });
             
+            // Add Summary Row
+            if (hasLoans) {
+                loanRows += `
+                    <tr class="bg-orange-50 font-bold border-t-2 border-orange-100">
+                        <td colspan="4" class="px-2 py-3 text-right text-orange-900 uppercase text-xs tracking-wider">Total Summary:</td>
+                        <td class="px-2 py-3 text-right font-mono text-xs text-orange-900 whitespace-nowrap">${formatMoney(gTotalLoan)}</td>
+                        <td class="px-2 py-3 text-right font-mono text-xs text-green-800 whitespace-nowrap">${formatMoney(gTotalPaid)}</td>
+                        <td class="px-2 py-3"></td>
+                        <td class="px-2 py-3 text-right font-mono text-xs text-blue-800 whitespace-nowrap">${formatMoney(gTotalMonthPay)}</td>
+                        <td class="px-2 py-3 text-right font-mono text-xs text-red-800 whitespace-nowrap">${formatMoney(gTotalBalance)}</td>
+                    </tr>
+                `;
+            }
+
             // Update the count badge
             const countBadge = document.getElementById('active-loan-count');
             if(countBadge) countBadge.innerText = `${activeLoanCount} Staff`;
