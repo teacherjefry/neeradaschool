@@ -1502,6 +1502,7 @@
                             result = 'ສົມບູນ';
                         } else if (countBelowOrEqual4 === 1) {
                             result = 'ອະນຸໂລມ'; // One subject <= 4
+                            failCount++; // Added to Fail Percentage
                         } else { 
                             result = 'ຕົກ'; // More than 1 subject <= 4
                             failCount++;
